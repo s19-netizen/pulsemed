@@ -12,10 +12,10 @@ type MockDataModule = typeof mock1;
 // ── Section timing ─────────────────────────────────────────────────────────────
 
 const SECTIONS = [
-  { key: "VR",  label: "Verbal Reasoning",      time: 22 * 60, color: "#2563eb", tint: "#eff6ff" },
-  { key: "DM",  label: "Decision Making",        time: 37 * 60, color: "#7c3aed", tint: "#f5f3ff" },
-  { key: "QR",  label: "Quantitative Reasoning", time: 26 * 60, color: "#059669", tint: "#ecfdf5" },
-  { key: "SJT", label: "Situational Judgement",  time: 26 * 60, color: "#d97706", tint: "#fffbeb" },
+  { key: "VR",  label: "Verbal Reasoning",      time: 22 * 60, color: "#2563eb", deep: "#1d4ed8", tint: "#eff6ff" },
+  { key: "DM",  label: "Decision Making",        time: 37 * 60, color: "#7c3aed", deep: "#6d28d9", tint: "#f5f3ff" },
+  { key: "QR",  label: "Quantitative Reasoning", time: 26 * 60, color: "#059669", deep: "#047857", tint: "#ecfdf5" },
+  { key: "SJT", label: "Situational Judgement",  time: 26 * 60, color: "#d97706", deep: "#b45309", tint: "#fffbeb" },
 ] as const;
 
 type SectionKey = "VR" | "DM" | "QR" | "SJT";
@@ -150,6 +150,16 @@ export default function MockRunner({ mockId }: { mockId: "mock-1" | "mock-2" }) 
   const [reviewSection, setReviewSection] = useState<SectionKey>("VR");
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Hide sidebar when running
+  useEffect(() => {
+    if (phase === "running") {
+      document.body.classList.add("screen-question");
+    } else {
+      document.body.classList.remove("screen-question");
+    }
+    return () => document.body.classList.remove("screen-question");
+  }, [phase]);
 
   // Timer
   useEffect(() => {
@@ -567,100 +577,84 @@ export default function MockRunner({ mockId }: { mockId: "mock-1" | "mock-2" }) 
     return a !== -1;
   }
 
-  return (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 60px)" }}>
-      {/* Top bar */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 12, padding: "10px 20px",
-        borderBottom: "1px solid var(--line)", background: "white", flexShrink: 0
-      }}>
-        <span style={{
-          fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em",
-          color: sec.color, background: sec.tint, padding: "3px 9px", borderRadius: 6
-        }}>
-          {sec.label}
-        </span>
-        <span style={{ fontSize: 13, color: "var(--ink-soft)", marginRight: "auto" }}>
-          Q{qIdx + 1} of {totalQ}
-        </span>
-        <span style={{ fontSize: 15, fontWeight: 800, fontVariantNumeric: "tabular-nums", color: timeLeft < 300 ? "#dc2626" : "var(--ink)" }}>
-          {fmtTime(timeLeft)}
-        </span>
-        <button
-          onClick={handleSectionEnd}
-          style={{
-            padding: "6px 14px", background: "transparent", border: "1.5px solid var(--line)",
-            borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer"
-          }}
-        >
-          {isLast && sectionIdx === 3 ? "Finish" : "End Section"}
-        </button>
-      </div>
+  const cssVars = { "--section": sec.color, "--section-deep": sec.deep, "--section-tint": sec.tint } as React.CSSProperties;
 
-      {/* Two-column layout */}
-      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        {/* Left – context */}
-        <div style={{
-          width: "50%", padding: "20px 24px", borderRight: "1px solid var(--line)",
-          overflowY: "auto", flexShrink: 0
-        }}>
-          <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: sec.color, margin: "0 0 6px" }}>
-            {contextLabel}
-          </p>
-          <p style={{ fontSize: 13, fontWeight: 700, margin: "0 0 10px" }}>{contextTitle}</p>
-          <div style={{ fontSize: 13, lineHeight: 1.75, color: "var(--ink)", whiteSpace: "pre-wrap" }}>
-            {contextText}
-          </div>
+  return (
+    <div className="question-screen" style={cssVars}>
+      {/* Top bar — same structure as diagnostic */}
+      <div className="question-topbar">
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <i className="question-brand" style={{ background: sec.color, color: "white", fontStyle: "normal", fontWeight: 800, fontSize: 11, width: 35, height: 31, borderRadius: 8, display: "grid", placeItems: "center" }}>
+            {sec.key}
+          </i>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-soft)" }}>{sec.label}</span>
         </div>
 
-        {/* Right – question */}
-        <div style={{ flex: 1, padding: "20px 24px", overflowY: "auto" }}>
-          {renderQuestion()}
+        <div className="question-progress">
+          <span>Q{qIdx + 1} of {totalQ}</span>
+          <div><i style={{ display: "block", height: "100%", background: "var(--section)", width: `${((qIdx + 1) / totalQ) * 100}%` }} /></div>
+        </div>
 
-          {/* Navigation */}
-          <div style={{ display: "flex", gap: 10, marginTop: 24, paddingTop: 20, borderTop: "1px solid var(--line)", alignItems: "center" }}>
-            <button
-              onClick={() => setQIdx(i => Math.max(0, i - 1))}
-              disabled={isFirst}
-              style={{
-                padding: "10px 18px", border: "1.5px solid var(--line)", borderRadius: 10,
-                background: "white", fontSize: 13, fontWeight: 700, cursor: isFirst ? "default" : "pointer",
-                opacity: isFirst ? 0.3 : 1
-              }}
-            >
-              ← Prev
-            </button>
-            <button
-              onClick={() => {
-                if (isLast) handleSectionEnd();
-                else setQIdx(i => i + 1);
-              }}
-              style={{
-                padding: "10px 18px", background: sec.color, border: 0, borderRadius: 10,
-                color: "white", fontSize: 13, fontWeight: 800, cursor: "pointer"
-              }}
-            >
-              {isLast ? (sectionIdx === 3 ? "Finish →" : "Next Section →") : "Next →"}
-            </button>
+        <div className="question-tools">
+          <span style={{ fontVariantNumeric: "tabular-nums", color: timeLeft < 300 ? "#dc2626" : "var(--ink)", fontWeight: 800, fontSize: 13 }}>
+            {fmtTime(timeLeft)}
+          </span>
+          <button onClick={handleSectionEnd}>
+            {isLast && sectionIdx === 3 ? "Finish" : "End Section"}
+          </button>
+        </div>
+      </div>
 
+      {/* Main content */}
+      <div className="question-main">
+        <div className="question-meta">
+          <span>{sec.label} · Q{qIdx + 1} / {totalQ}</span>
+          <small>
             {/* Progress dots */}
-            <div style={{ marginLeft: "auto", display: "flex", gap: 3, flexWrap: "wrap", maxWidth: 200 }}>
-              {Array.from({ length: Math.min(totalQ, 50) }).map((_, i) => (
-                <div
-                  key={i}
-                  onClick={() => setQIdx(i)}
-                  title={`Q${i + 1}`}
-                  style={{
-                    width: 8, height: 8, borderRadius: "50%", cursor: "pointer",
-                    background: i === qIdx ? sec.color : isAnswered(i) ? sec.color + "66" : "var(--line)",
-                    outline: i === qIdx ? `2px solid ${sec.color}` : "none",
-                    outlineOffset: 1,
-                  }}
-                />
-              ))}
-              {totalQ > 50 && (
-                <span style={{ fontSize: 10, color: "var(--ink-soft)", lineHeight: "8px" }}>+{totalQ - 50}</span>
-              )}
+            {Array.from({ length: Math.min(totalQ, 44) }).map((_, i) => (
+              <span
+                key={i}
+                onClick={() => setQIdx(i)}
+                title={`Q${i + 1}`}
+                style={{
+                  display: "inline-block", width: 7, height: 7, borderRadius: "50%",
+                  marginRight: 2, cursor: "pointer",
+                  background: i === qIdx ? sec.color : isAnswered(i) ? sec.color + "66" : "#dfe5ed",
+                  outline: i === qIdx ? `2px solid ${sec.color}` : "none",
+                  outlineOffset: 1,
+                }}
+              />
+            ))}
+            {totalQ > 44 && <span style={{ fontSize: 9, color: "var(--ink-soft)" }}> +{totalQ - 44}</span>}
+          </small>
+        </div>
+
+        <div className="question-columns">
+          {/* Left — context (passage / stimulus / scenario) */}
+          <div className="question-context">
+            <p>{contextLabel}</p>
+            <div style={{ whiteSpace: "pre-wrap" }}>{contextText}</div>
+          </div>
+
+          {/* Right — question + options */}
+          <div className="question-answer">
+            {renderQuestion()}
+
+            <div className="question-actions" style={{ marginTop: 20 }}>
+              <button
+                className="ghost"
+                onClick={() => setQIdx(i => Math.max(0, i - 1))}
+                disabled={isFirst}
+                style={{ opacity: isFirst ? 0.3 : 1 }}
+              >
+                ← Prev
+              </button>
+              <button
+                className="question-primary"
+                onClick={() => { if (isLast) handleSectionEnd(); else setQIdx(i => i + 1); }}
+              >
+                {isLast ? (sectionIdx === 3 ? "Finish →" : "Next Section →") : "Next →"}
+              </button>
             </div>
           </div>
         </div>
@@ -676,7 +670,6 @@ function MCQQuestion({
   options,
   answer,
   setAnswer,
-  color = "#1e293b",
 }: {
   questionText: string;
   options: string[];
@@ -686,36 +679,18 @@ function MCQQuestion({
 }) {
   return (
     <div>
-      <p style={{ fontSize: 14, lineHeight: 1.65, fontWeight: 500, margin: "0 0 20px" }}>
-        {questionText}
-      </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {options.map((opt, i) => {
-          const selected = answer === i;
-          return (
-            <button
-              key={i}
-              onClick={() => setAnswer(i)}
-              style={{
-                display: "flex", alignItems: "flex-start", gap: 12, padding: "11px 14px",
-                border: `1.5px solid ${selected ? color : "var(--line)"}`,
-                borderRadius: 10, background: selected ? color + "0f" : "white",
-                cursor: "pointer", textAlign: "left", width: "100%",
-              }}
-            >
-              <span style={{
-                width: 22, height: 22, borderRadius: "50%", border: `2px solid ${selected ? color : "var(--line)"}`,
-                background: selected ? color : "transparent",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0, fontSize: 11, fontWeight: 800,
-                color: selected ? "white" : "var(--ink-soft)"
-              }}>
-                {String.fromCharCode(65 + i)}
-              </span>
-              <span style={{ fontSize: 13, lineHeight: 1.5, color: "var(--ink)", paddingTop: 2 }}>{opt}</span>
-            </button>
-          );
-        })}
+      <h2>{questionText}</h2>
+      <div className="answer-list">
+        {options.map((opt, i) => (
+          <button
+            key={i}
+            onClick={() => setAnswer(i)}
+            className={answer === i ? "selected" : ""}
+          >
+            <span>{String.fromCharCode(65 + i)}</span>
+            {opt}
+          </button>
+        ))}
       </div>
     </div>
   );
