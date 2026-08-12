@@ -3,8 +3,8 @@ import { authOptions } from "@/lib/auth";
 import Link from "next/link";
 
 const MOCKS = [
-  { key: "full-1", label: "Full Mock 1", desc: "All four UCAT sections under timed exam conditions. 178 questions, 2 hours 15 minutes.", sections: "VR · DM · QR · SJT", time: "135 min", color: "mock-icon", href: null },
-  { key: "full-2", label: "Full Mock 2", desc: "All four UCAT sections under timed exam conditions. 178 questions, 2 hours 15 minutes.", sections: "VR · DM · QR · SJT", time: "135 min", color: "mock-icon", href: null },
+  { key: "mock-1", label: "Full Mock 1", desc: "All four UCAT sections under timed exam conditions. 184 questions, 111 minutes.", sections: "VR · DM · QR · SJT", time: "111 min", color: "mock-icon", href: "/mocks/mock-1" },
+  { key: "mock-2", label: "Full Mock 2 (Hard)", desc: "All four UCAT sections under timed exam conditions. 184 questions, 111 minutes.", sections: "VR · DM · QR · SJT", time: "111 min", color: "mock-icon", href: "/mocks/mock-2" },
 ];
 
 export default async function MocksPage() {
@@ -70,8 +70,8 @@ export default async function MocksPage() {
         <div>
           <p className="section-kicker">MOCK EXAMS</p>
           <h2>Simulate the real thing</h2>
-          <p>Full papers across all four sections under timed exam conditions. 178 questions, 2 hours 15 minutes — the closest thing to sitting the real UCAT.</p>
-          <button style={{ marginTop: 18, opacity: 0.45, cursor: "not-allowed" }} disabled>Coming soon</button>
+          <p>Full papers across all four sections under timed exam conditions. 184 questions, 111 minutes — the closest thing to sitting the real UCAT.</p>
+          <Link href="/mocks/mock-1"><button style={{ marginTop: 18 }} className="start-session">Start Mock 1 →</button></Link>
         </div>
         <div>
           <span>Available mocks</span>
