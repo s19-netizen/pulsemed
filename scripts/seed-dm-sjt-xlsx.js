@@ -67,18 +67,19 @@ function runSQL(sql) {
 // ── SJT ─────────────────────────────────────────────────────────────────────
 
 function parseSJT() {
-  const wb = XLSX.readFile("/Users/sawda/Downloads/UCAT_SJT_Complete_Question_Bank_Expanded.xlsx");
+  const wb = XLSX.readFile("/Users/sawda/Downloads/UCAT_SJT_Complete_Question_Bank_Expanded (1).xlsx");
   const rows = [];
 
   // Appropriateness + Importance sheets
+  // Columns: 0=ID, 1=Scenario#, 2=Title, 3=Scenario, 4=Theme, 5=ThemeFocus, 6=Difficulty, 7=Guide,
+  //          8=Question, 9=Options(multiline), 10=CorrectAnswer, 11=Walkthrough
   for (const sheetName of ["Appropriateness", "Importance"]) {
-    const ws   = wb.Sheets[sheetName];
-    const raw  = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
-    const fmt  = sheetName === "Appropriateness" ? "appropriateness" : "importance";
-    // header row is row index 3
+    const ws  = wb.Sheets[sheetName];
+    const raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+    const fmt = sheetName === "Appropriateness" ? "appropriateness" : "importance";
     for (let i = 4; i < raw.length; i++) {
       const r = raw[i];
-      if (!r[0]) continue; // skip blank rows
+      if (!r[0]) continue;
       rows.push({
         id:                 String(r[0]).trim(),
         format:             fmt,
@@ -99,24 +100,31 @@ function parseSJT() {
   }
 
   // Most & Least sheet
+  // Columns: 0=ID, 1=Scenario#, 2=Title, 3=Scenario, 4=Theme, 5=ThemeFocus, 6=Difficulty, 7=Guide,
+  //          8=Question, 9=Options("A. text\nB. text\nC. text"), 10=CorrectAnswer("Most appropriate: A. Least appropriate: C."), 11=Walkthrough
   const mlWs  = wb.Sheets["Most & Least"];
   const mlRaw = XLSX.utils.sheet_to_json(mlWs, { header: 1, defval: "" });
-  // find header row
-  let headerIdx = mlRaw.findIndex(r => String(r[0]).toLowerCase().includes("question id") || String(r[0]).toLowerCase().includes("id"));
-  if (headerIdx < 0) headerIdx = 3;
-  for (let i = headerIdx + 1; i < mlRaw.length; i++) {
+  const headerIdx = mlRaw.findIndex(r => String(r[0]).toLowerCase().includes("question id") || String(r[0]).toLowerCase().includes("id"));
+  const startIdx  = headerIdx >= 0 ? headerIdx + 1 : 4;
+
+  for (let i = startIdx; i < mlRaw.length; i++) {
     const r = mlRaw[i];
     if (!r[0]) continue;
-    // columns: ID, scenario#, title, scenario, theme, theme_focus, difficulty, ?, question, optA, optB, optC, correct_most, correct_least, walkthrough
-    const optA = String(r[9]  || "").trim();
-    const optB = String(r[10] || "").trim();
-    const optC = String(r[11] || "").trim();
-    const most = String(r[12] || "").trim();
-    const least= String(r[13] || "").trim();
-    // correct_answer stored as "most:0|least:2" using 0-based index
-    const opts = [optA, optB, optC];
-    const mostIdx  = opts.findIndex(o => o.toLowerCase() === most.toLowerCase());
-    const leastIdx = opts.findIndex(o => o.toLowerCase() === least.toLowerCase());
+
+    // Parse options from "A. text\nB. text\nC. text"
+    const optionsRaw = String(r[9] || "").trim();
+    const optLines = optionsRaw.split("\n").map(l => l.trim()).filter(Boolean);
+    const optA = optLines[0]?.replace(/^A\.\s*/, "").trim() || "";
+    const optB = optLines[1]?.replace(/^B\.\s*/, "").trim() || "";
+    const optC = optLines[2]?.replace(/^C\.\s*/, "").trim() || "";
+
+    // Parse correct answer from "Most appropriate: A. Least appropriate: C."
+    const correctRaw = String(r[10] || "").trim();
+    const mostMatch  = correctRaw.match(/most appropriate[:\s]+([A-C])/i);
+    const leastMatch = correctRaw.match(/least appropriate[:\s]+([A-C])/i);
+    const mostIdx    = mostMatch  ? mostMatch[1].charCodeAt(0) - 65  : 0;
+    const leastIdx   = leastMatch ? leastMatch[1].charCodeAt(0) - 65 : 2;
+
     rows.push({
       id:                 String(r[0]).trim(),
       format:             "most-least",
@@ -130,8 +138,8 @@ function parseSJT() {
       option_a:           optA,
       option_b:           optB,
       option_c:           optC,
-      correct_answer:     `most:${mostIdx >= 0 ? mostIdx : 0}|least:${leastIdx >= 0 ? leastIdx : 2}`,
-      walkthrough:        String(r[14] || "").trim(),
+      correct_answer:     `most:${mostIdx}|least:${leastIdx}`,
+      walkthrough:        String(r[11] || "").trim(),
     });
   }
 

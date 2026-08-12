@@ -413,12 +413,18 @@ export default function SJTPractice() {
     const canConfirm = mostPick !== null && leastPick !== null;
 
     return (
-      <div style={cssVars}>
+      <div style={{ ...cssVars, display: "flex", flexDirection: "column", height: "calc(100vh - 120px)", minHeight: 500 } as React.CSSProperties}>
         <ProgressBar />
 
-        <div style={{ background: TINT, borderRadius: 14, padding: "16px 20px", marginBottom: 20, border: `1px solid ${C}22` }}>
-          <p style={{ fontSize: 13, lineHeight: 1.75, margin: 0 }}>{mlQ.scenario}</p>
-        </div>
+        <div style={{ display: "flex", flex: 1, gap: 0, overflow: "hidden", borderRadius: 14, border: "1px solid var(--line)" }}>
+          {/* Left — Scenario */}
+          <div style={{ width: "42%", flexShrink: 0, padding: "20px 22px", borderRight: "1px solid var(--line)", overflowY: "auto", background: TINT }}>
+            <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: C, margin: "0 0 10px" }}>SCENARIO</p>
+            <p style={{ fontSize: 13, lineHeight: 1.75, margin: 0, color: "var(--ink)" }}>{mlQ.scenario}</p>
+          </div>
+
+          {/* Right — question UI */}
+          <div style={{ flex: 1, padding: "20px 22px", overflowY: "auto", background: "white" }}>
 
         <p style={{ fontSize: 12, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 14 }}>
           {mlDone
@@ -560,6 +566,8 @@ export default function SJTPractice() {
             </button>
           )}
         </div>
+          </div>{/* end right pane */}
+        </div>{/* end split */}
       </div>
     );
   }
@@ -567,77 +575,90 @@ export default function SJTPractice() {
   // ── AR / IR question ─────────────────────────────────────────────────────────────
   const regItem = item as RegItem;
   return (
-    <div style={cssVars}>
+    <div style={{ ...cssVars, display: "flex", flexDirection: "column", height: "calc(100vh - 120px)", minHeight: 500 } as React.CSSProperties}>
       <ProgressBar />
 
-      <div className="content-card" style={{ padding: 24 }}>
-        <div style={{ background: TINT, borderRadius: 12, padding: "14px 18px", marginBottom: 20, border: `1px solid ${C}22` }}>
-          <p style={{ fontSize: 13, lineHeight: 1.75, margin: 0, whiteSpace: "pre-line" }}>{regItem.q.scenario}</p>
+      <div style={{ display: "flex", flex: 1, gap: 0, overflow: "hidden", borderRadius: 14, border: "1px solid var(--line)" }}>
+        {/* Left — Scenario */}
+        <div style={{
+          width: "48%", flexShrink: 0, padding: "20px 22px",
+          borderRight: "1px solid var(--line)", overflowY: "auto",
+          background: TINT,
+        }}>
+          <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: C, margin: "0 0 10px" }}>
+            SCENARIO
+          </p>
+          <p style={{ fontSize: 13, lineHeight: 1.75, margin: 0, color: "var(--ink)", whiteSpace: "pre-line" }}>
+            {regItem.q.scenario}
+          </p>
         </div>
 
-        <p style={{ fontWeight: 700, fontSize: 15, marginBottom: 16, lineHeight: 1.4, color: "var(--ink)" }}>
-          {regItem.q.question}
-        </p>
+        {/* Right — Question + Options */}
+        <div style={{ flex: 1, padding: "20px 22px", overflowY: "auto", background: "white" }}>
+          <p style={{ fontWeight: 700, fontSize: 14, marginBottom: 16, lineHeight: 1.5, color: "var(--ink)" }}>
+            {regItem.q.question}
+          </p>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {regItem.q.options.map((opt, i) => {
-            let bg = "white";
-            let border = "1px solid var(--line)";
-            let textColor = "var(--ink)";
-            if (confirmed) {
-              if (i === regItem.q.correct) { bg = "#EDFBF3"; border = "2px solid #3DBE6C"; textColor = "#238A4B"; }
-              else if (i === picked) { bg = "#FFF5F4"; border = `2px solid ${C}`; textColor = DEEP; }
-            } else if (i === picked) {
-              bg = TINT; border = `2px solid ${C}`;
-            }
-            return (
-              <button
-                key={i}
-                type="button"
-                onClick={() => !confirmed && setPicked(i)}
-                style={{
-                  background: bg, border, borderRadius: 12,
-                  padding: "13px 16px", textAlign: "left",
-                  cursor: confirmed ? "default" : "pointer",
-                  fontSize: 13, lineHeight: 1.5, color: textColor,
-                  fontWeight: (i === picked || (confirmed && i === regItem.q.correct)) ? 600 : 400,
-                  transition: "all .15s",
-                }}
-              >
-                {opt}
-              </button>
-            );
-          })}
-        </div>
-
-        {confirmed && (
-          <div style={{
-            marginTop: 16, padding: "14px 18px",
-            background: "#F8F9FB", borderRadius: 12,
-            borderLeft: `3px solid ${picked === regItem.q.correct ? "#3DBE6C" : C}`,
-          }}>
-            <p style={{ margin: 0, fontSize: 13, lineHeight: 1.65, color: "var(--ink)" }}>
-              {regItem.q.walkthrough}
-            </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {regItem.q.options.map((opt, i) => {
+              let bg = "white";
+              let border = "1.5px solid var(--line)";
+              let textColor = "var(--ink)";
+              if (confirmed) {
+                if (i === regItem.q.correct) { bg = "#EDFBF3"; border = "2px solid #3DBE6C"; textColor = "#238A4B"; }
+                else if (i === picked) { bg = "#FFF5F4"; border = `2px solid ${C}`; textColor = DEEP; }
+              } else if (i === picked) {
+                bg = TINT; border = `2px solid ${C}`;
+              }
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => !confirmed && setPicked(i)}
+                  style={{
+                    background: bg, border, borderRadius: 10,
+                    padding: "12px 14px", textAlign: "left",
+                    cursor: confirmed ? "default" : "pointer",
+                    fontSize: 13, lineHeight: 1.5, color: textColor,
+                    fontWeight: (i === picked || (confirmed && i === regItem.q.correct)) ? 600 : 400,
+                    transition: "all .15s",
+                  }}
+                >
+                  {opt}
+                </button>
+              );
+            })}
           </div>
-        )}
 
-        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 20, gap: 10 }}>
-          {!confirmed ? (
-            <button
-              type="button"
-              onClick={confirmRegular}
-              disabled={picked === null}
-              className="start-session"
-              style={{ margin: 0, opacity: picked === null ? 0.5 : 1, cursor: picked === null ? "not-allowed" : "pointer" }}
-            >
-              Confirm
-            </button>
-          ) : (
-            <button type="button" onClick={next} className="start-session" style={{ margin: 0 }}>
-              {idx + 1 < items.length ? "Next →" : "See results →"}
-            </button>
+          {confirmed && (
+            <div style={{
+              marginTop: 14, padding: "12px 16px",
+              background: "#F8F9FB", borderRadius: 10,
+              borderLeft: `3px solid ${picked === regItem.q.correct ? "#3DBE6C" : C}`,
+            }}>
+              <p style={{ margin: 0, fontSize: 12, lineHeight: 1.65, color: "var(--ink)", whiteSpace: "pre-line" }}>
+                {regItem.q.walkthrough}
+              </p>
+            </div>
           )}
+
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16, gap: 10 }}>
+            {!confirmed ? (
+              <button
+                type="button"
+                onClick={confirmRegular}
+                disabled={picked === null}
+                className="start-session"
+                style={{ margin: 0, opacity: picked === null ? 0.5 : 1, cursor: picked === null ? "not-allowed" : "pointer" }}
+              >
+                Confirm
+              </button>
+            ) : (
+              <button type="button" onClick={next} className="start-session" style={{ margin: 0 }}>
+                {idx + 1 < items.length ? "Next →" : "See results →"}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
