@@ -4,17 +4,18 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
 import { getAllPosts, CATEGORY_COLORS } from "@/lib/blog";
+import { BadgeCheck, BarChart2, BookOpen } from "lucide-react";
 
 
 export const metadata: Metadata = {
-  title: "Pulsemed — Free AI UCAT Prep, Completely Free | No Card Required",
+  title: "Pulsemed — Free UCAT Prep, Completely Free | No Card Required",
   description:
-    "The only completely free UCAT prep platform with AI diagnostics. Identify your weak spots in 2 minutes, get a personalised study plan, and practise VR, DM, QR and SJT with full worked explanations. 100% free — no card, no paywall, ever.",
+    "The only completely free UCAT prep platform. Identify your weak spots in 2 minutes, get a personalised study plan, and practise VR, DM, QR and SJT with full worked explanations. 100% free — no card, no paywall, ever.",
   alternates: { canonical: "/" },
   openGraph: {
-    title: "Pulsemed — Free AI UCAT Prep, Completely Free",
+    title: "Pulsemed — Free UCAT Prep, Completely Free",
     description:
-      "AI-powered UCAT diagnostic, personalised study plan, and full question banks for all 4 sections. 100% free — no card, no paywall. Built for 2026 UCAT applicants.",
+      "Personalised UCAT diagnostic, personalised study plan, and full question banks for all 4 sections. 100% free — no card, no paywall. Built for 2026 UCAT applicants.",
     url: "/",
   },
 };
@@ -232,7 +233,7 @@ export default async function Home() {
           display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 32,
         }}>
           <div>
-            <div style={{ fontSize: 28, marginBottom: 10 }}>🆓</div>
+            <div style={{ marginBottom: 10 }}><BadgeCheck size={28} color="#2D7FF9" /></div>
             <h3 style={{ fontFamily: "'Baloo 2', sans-serif", fontSize: 18, fontWeight: 800, marginBottom: 8 }}>
               Completely free — always
             </h3>
@@ -241,16 +242,16 @@ export default async function Home() {
             </p>
           </div>
           <div>
-            <div style={{ fontSize: 28, marginBottom: 10 }}>🤖</div>
+            <div style={{ marginBottom: 10 }}><BarChart2 size={28} color="#2D7FF9" /></div>
             <h3 style={{ fontFamily: "'Baloo 2', sans-serif", fontSize: 18, fontWeight: 800, marginBottom: 8 }}>
-              AI-powered diagnostics
+              Personalised diagnostics
             </h3>
             <p style={{ fontSize: 14, color: "#6B7A8C", lineHeight: 1.65 }}>
               The diagnostic analyses every answer to pinpoint the exact sub-skills holding you back — VR inference, DM syllogisms, QR ratios — and builds a study plan around them.
             </p>
           </div>
           <div>
-            <div style={{ fontSize: 28, marginBottom: 10 }}>📚</div>
+            <div style={{ marginBottom: 10 }}><BookOpen size={28} color="#2D7FF9" /></div>
             <h3 style={{ fontFamily: "'Baloo 2', sans-serif", fontSize: 18, fontWeight: 800, marginBottom: 8 }}>
               All 4 UCAT sections covered
             </h3>
