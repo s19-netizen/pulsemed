@@ -1,0 +1,112 @@
+// SJT answer patch for Mock 2
+// correct index: approp: 0=Very appropriate, 1=Appropriate but not ideal, 2=Inappropriate but not awful, 3=Very inappropriate
+// import: 0=Very important, 1=Important, 2=Of minor importance, 3=Not important at all
+// mostleast: special handling — correctMost/correctLeast stored separately
+
+// Factor lists for most/least questions (A=0, B=1, C=2, D=3)
+export const MOSTLEAST_FACTORS: Record<string, string[]> = {
+  "MOCK2-SJT-003": [
+    "A. The potential harm to the patient from the medication discrepancy being left unchecked",
+    "B. Whether the junior doctor will welcome being interrupted near the end of the review",
+    "C. How much time remains before the ward round moves to the next patient",
+    "D. Whether raising the concern might make Mina appear overly cautious",
+  ],
+  "MOCK2-SJT-027": [
+    "A. Whether the photograph has already been shared with any third parties",
+    "B. The number of likes or views the post might receive",
+    "C. Whether any patients can be identified from the image",
+    "D. Whether the group intended to include the noticeboard in the photograph",
+  ],
+  "MOCK2-SJT-069": [
+    "A. The amount of experience Marcus has with safeguarding situations",
+    "B. Preserving Marcus's image as someone the child can trust to keep secrets",
+    "C. Whether the supervisor is available to advise immediately",
+    "D. The possibility that the child may be at risk of harm at home",
+  ],
+};
+
+export const SJT_ANSWERS: Record<string, { correct: number; correctMost?: number; correctLeast?: number; explanation: string }> = {
+  "MOCK2-SJT-001": { correct: 0, explanation: "She identifies a potentially important medication discrepancy promptly without trying to decide the correct dose herself." },
+  "MOCK2-SJT-002": { correct: 3, explanation: "Changing a medication record without verification or authority exceeds a student's competence and could create a patient-safety error." },
+  // Q118 is mostleast: MOST A (index 0), LEAST D (index 3) — handled via correctMost/correctLeast
+  "MOCK2-SJT-003": { correct: -1, correctMost: 0, correctLeast: 3, explanation: "Potential medication harm is the priority; concern about appearing overly cautious should carry the least weight." },
+  "MOCK2-SJT-004": { correct: 0, explanation: "The action protects confidentiality while preserving the legitimate task information through an approved route." },
+  "MOCK2-SJT-005": { correct: 3, explanation: "A temporary educational purpose does not justify keeping identifiable patient information on a personal device." },
+  "MOCK2-SJT-006": { correct: 0, explanation: "Purpose alone does not authorise personal-device storage of identifiable patient data, so this is a major confidentiality consideration." },
+  "MOCK2-SJT-007": { correct: 0, explanation: "The university has explicitly prohibited sharing the assessment content, so declining to use it protects fairness and integrity." },
+  "MOCK2-SJT-008": { correct: 3, explanation: "Reading prohibited leaked questions still gives access to unauthorised assessment material regardless of who originally requested it." },
+  "MOCK2-SJT-009": { correct: 0, explanation: "Unequal access could undermine fairness across the cohort and is highly relevant to whether using the material is acceptable." },
+  "MOCK2-SJT-010": { correct: 0, explanation: "The patient appears less comfortable as questions become sensitive; checking their preference for professional interpretation supports privacy and accurate communication." },
+  "MOCK2-SJT-011": { correct: 2, explanation: "Earlier agreement to family translation does not automatically settle the patient's preference for later, more sensitive questions." },
+  "MOCK2-SJT-012": { correct: 0, explanation: "The ability to answer freely and accurately is central to autonomy, privacy and safe information gathering." },
+  "MOCK2-SJT-013": { correct: 0, explanation: "He has no role in the friend's care, so refusing unauthorised record access and directing the friend to proper channels is appropriate." },
+  "MOCK2-SJT-014": { correct: 3, explanation: "Even opening the record merely to check whether a result exists is unauthorised access for a personal purpose." },
+  "MOCK2-SJT-015": { correct: 0, explanation: "Technical access is not the same as professional authorisation and is fundamental to appropriate record use." },
+  "MOCK2-SJT-016": { correct: 0, explanation: "The response combines support for the colleague with proportionate escalation because a near-error has affected patient-related work." },
+  "MOCK2-SJT-017": { correct: 3, explanation: "A promise to keep the matter entirely private fails to address a demonstrated patient-safety risk." },
+  "MOCK2-SJT-018": { correct: 1, explanation: "Supporting a struggling colleague is important, but it sits alongside the separate duty to ensure patient-related work remains safe." },
+  "MOCK2-SJT-019": { correct: 0, explanation: "The clinic has a policy for valuable gifts, so thanking the patient and seeking guidance before accepting is proportionate." },
+  "MOCK2-SJT-020": { correct: 3, explanation: "Accepting a valuable gift secretly creates boundary and conflict-of-interest concerns and deliberately bypasses the stated policy." },
+  "MOCK2-SJT-021": { correct: 0, explanation: "A valuable personal gift may create or appear to create an obligation, making this a major professional-boundary consideration." },
+  "MOCK2-SJT-022": { correct: 0, explanation: "The clinician explicitly invited feedback, and Leila raises the concern privately, respectfully and in terms of patient understanding." },
+  "MOCK2-SJT-023": { correct: 2, explanation: "Giving falsely reassuring feedback because of self-interest is inappropriate, although it is less serious than direct unsafe action or public confrontation." },
+  "MOCK2-SJT-024": { correct: 0, explanation: "If the patient does not understand the medication change, adherence and safety may be affected, so this is highly important." },
+  "MOCK2-SJT-025": { correct: 0, explanation: "She identifies a confidentiality risk before publication and prevents identifiable information being shared publicly." },
+  "MOCK2-SJT-026": { correct: 3, explanation: "Patient names and procedure details remain identifiable even if they are in the background or unlikely to be noticed." },
+  // Q142 mostleast: MOST C (index 2), LEAST B (index 1)
+  "MOCK2-SJT-027": { correct: -1, correctMost: 2, correctLeast: 1, explanation: "Whether patients can be identified is the central issue; the number of likes is irrelevant." },
+  "MOCK2-SJT-028": { correct: 0, explanation: "Consent is ongoing and can be withdrawn. The student's sign-off need does not override the patient's decision." },
+  "MOCK2-SJT-029": { correct: 3, explanation: "Linking the patient's refusal to the student's placement consequences can create pressure and undermine voluntary consent." },
+  "MOCK2-SJT-030": { correct: 0, explanation: "The fact that consent can be withdrawn at any time is central to deciding whether the examination may proceed." },
+  "MOCK2-SJT-031": { correct: 0, explanation: "Prompt disclosure lets the supervisor assess the consequences and ensures the corrected data and slides can be checked properly." },
+  "MOCK2-SJT-032": { correct: 2, explanation: "Correcting the spreadsheet is useful, but concealing the error prevents the supervisor from knowing that material already used may have been inaccurate." },
+  "MOCK2-SJT-033": { correct: 0, explanation: "Because the effect of the error is not yet known, rechecking before relying on the findings is very important." },
+  "MOCK2-SJT-034": { correct: 0, explanation: "He is transparent about the limits of confidentiality, encourages the patient to disclose the symptom and does not make a clinical judgement beyond his competence." },
+  "MOCK2-SJT-035": { correct: 3, explanation: "Agreeing to conceal potentially relevant clinical information creates a safety risk, especially when the student cannot judge its significance." },
+  "MOCK2-SJT-036": { correct: 0, explanation: "His lack of competence to dismiss the symptom is a central reason to involve the clinician." },
+  "MOCK2-SJT-037": { correct: 0, explanation: "A calm challenge addresses disrespect directly and proportionately without unnecessary public escalation." },
+  "MOCK2-SJT-038": { correct: 2, explanation: "Remaining silent tolerates disrespectful behaviour; however, because this is a first incident with no patient present, it is less serious than actively joining in." },
+  "MOCK2-SJT-039": { correct: 0, explanation: "Professional respect matters even when the patient is not present because attitudes and team culture can affect future conduct." },
+  "MOCK2-SJT-040": { correct: 0, explanation: "The response protects voluntary research consent and corrects the participant's concern about consequences for care." },
+  "MOCK2-SJT-041": { correct: 2, explanation: "Encouraging completion because data might be 'wasted' applies inappropriate pressure to someone considering withdrawal." },
+  "MOCK2-SJT-042": { correct: 0, explanation: "A belief that healthcare depends on participation could undermine voluntariness, making this highly important." },
+  "MOCK2-SJT-043": { correct: 0, explanation: "For an intimate examination, the patient's explicit agreement to the student's presence matters; leaving unless that agreement is obtained protects dignity and autonomy." },
+  "MOCK2-SJT-044": { correct: 3, explanation: "Declining a formal chaperone does not imply consent to an observing student, particularly during an intimate examination." },
+  "MOCK2-SJT-045": { correct: 0, explanation: "Explicit consent to the student's presence is fundamental to privacy and dignity." },
+  "MOCK2-SJT-046": { correct: 0, explanation: "He recognises his limits and asks for supervision before attempting an unfamiliar clinical task." },
+  "MOCK2-SJT-047": { correct: 3, explanation: "A doctor's general authorisation does not remove the student's responsibility to work within competence and obtain appropriate supervision." },
+  "MOCK2-SJT-048": { correct: 0, explanation: "Whether the task can be performed safely at the student's current level is the central consideration." },
+  "MOCK2-SJT-049": { correct: 0, explanation: "A brief, factual clarification allows the qualified team to decide whether the event belongs in handover without the student overstepping their role." },
+  "MOCK2-SJT-050": { correct: 2, explanation: "Silence is inappropriate because a short prompt could prevent relevant information being missed, although the student is uncertain." },
+  "MOCK2-SJT-051": { correct: 0, explanation: "The value of a brief clarification is highly relevant because it preserves continuity without requiring the student to decide clinical significance." },
+  "MOCK2-SJT-052": { correct: 0, explanation: "Using an approved method avoids disclosing patient information to an unauthorised external service." },
+  "MOCK2-SJT-053": { correct: 3, explanation: "Removing only the patient's name is insufficient when age, occupation, dates and unusual details may still identify the patient." },
+  "MOCK2-SJT-054": { correct: 0, explanation: "Where information is stored or processed and whether the service is authorised are core data-governance considerations." },
+  "MOCK2-SJT-055": { correct: 0, explanation: "A 16-year-old's request for private discussion should be taken seriously, and the suggested response is respectful to both patient and parent." },
+  "MOCK2-SJT-056": { correct: 2, explanation: "A parent's objection does not automatically remove the young person's privacy interests; simply treating it as decisive is inappropriate." },
+  "MOCK2-SJT-057": { correct: 0, explanation: "The possibility that Alex cannot speak freely in front of the parent is highly relevant to patient-centred communication." },
+  "MOCK2-SJT-058": { correct: 0, explanation: "The response supports Ben while addressing disrespectful online behaviour and directing any legitimate concern to an appropriate route." },
+  "MOCK2-SJT-059": { correct: 2, explanation: "Professional standards can still apply in private digital spaces; treating the chat as completely separate is an inappropriate assumption." },
+  "MOCK2-SJT-060": { correct: 1, explanation: "A legitimate underlying concern should still be considered so the response is proportionate rather than dismissive, but it does not excuse the insulting messages." },
+  "MOCK2-SJT-061": { correct: 0, explanation: "She passes the patient's concern to an appropriate person and seeks the correct process rather than ignoring it or inventing a procedure." },
+  "MOCK2-SJT-062": { correct: 2, explanation: "A non-urgent concern still deserves appropriate follow-through; finishing the placement does not remove that responsibility." },
+  "MOCK2-SJT-063": { correct: 0, explanation: "Patient concerns can warrant a response even when there is no immediate safety emergency, so this is highly relevant." },
+  "MOCK2-SJT-064": { correct: 0, explanation: "A group review and fair rotation address the observed pattern proportionately without unnecessary personal accusation." },
+  "MOCK2-SJT-065": { correct: 2, explanation: "The absence of immediate patient harm does not make persistent unfairness or unequal learning access acceptable." },
+  "MOCK2-SJT-066": { correct: 0, explanation: "Fair access to learning opportunities is directly relevant to whether the task allocation needs addressing." },
+  "MOCK2-SJT-067": { correct: 0, explanation: "He listens, avoids an impossible promise of secrecy, explains the limits of confidentiality and escalates promptly to someone trained to manage safeguarding concerns." },
+  "MOCK2-SJT-068": { correct: 3, explanation: "Promising secrecy can prevent necessary safeguarding action when the child may be at risk of harm." },
+  // Q184 mostleast: MOST D (index 3), LEAST B (index 1)
+  "MOCK2-SJT-069": { correct: -1, correctMost: 3, correctLeast: 1, explanation: "Possible harm to the child is the overriding priority; keeping everything secret merely to preserve Marcus's personal image of trustworthiness should carry the least weight." },
+};
+
+// DM explanation patch for YN-5 questions
+export const DM_EXPLANATIONS: Record<string, string> = {
+  "MOCK2-DM-001": "1 Yes: conservators trained → not unaccompanied visitors. 2 Yes: some volunteers are unaccompanied visitors → not trained in object handling. 3 Yes: those unaccompanied volunteer-visitors can't be conservators. 4 No: other volunteers could also be conservators. 5 No: only some volunteers are known to be unaccompanied visitors.",
+  "MOCK2-DM-007": "1 Yes: some high-risk + incomplete ID → paused. 2 No: high-risk only gets senior review; paused needs both. 3 Yes: those paused items are not approved automatically. 4 No: senior review alone isn't sufficient for a pause. 5 Yes: no paused application is approved automatically.",
+  "MOCK2-DM-012": "1 Yes: every translator is a linguist, no linguist is an engineer. 2 Yes: some engineers are editors; engineers can't be linguists, so those editors aren't linguists. 3 No: no premise requires any editor to be a translator. 4 No: only some engineers are editors. 5 Yes: the known engineers cannot be linguists and therefore cannot be translators.",
+  "MOCK2-DM-017": "1 Yes: bus only + train only = 210 + 90 = 300. 2 Yes: both = 150 > train only = 90. 3 Yes: at least one = 450; 450/600 = 75%. 4 No: 150/360 = 41.7%, not more than half. 5 No: neither = 150 = 25%, not fewer than 20%.",
+  "MOCK2-DM-023": "J→K→M chain, L immediately after M. 1 Yes: J before K, K before M → J before M. 2 Yes: K must have M and L after it → can't be 5th. 3 Yes: L immediately after M, K before M → L after K. 4 No: M can be in slot 3 or 4. 5 Yes: N not first + J–K–M–L ordering → N always after J.",
+  "MOCK2-DM-027": "Alpine specimens are frost-tolerant; no frost-tolerant specimen is tropical. 1 Yes: alpine are frost-tolerant, frost-tolerant not tropical. 2 Yes: greenhouse tropical can't be alpine (alpine = frost-tolerant = not tropical). 3 Yes: tropical specimens exist and can't be frost-tolerant. 4 No: only some greenhouse specimens stated to be tropical. 5 No: no premise confirms any alpine specimens actually exist.",
+  "MOCK2-DM-032": "Rare-book requests after 17:00 require approval → processed next day → not same-day collection. 1 Yes: stated subset satisfies this. 2 No: only rare-book requests after 17:00 are guaranteed to require approval. 3 Yes: those requests aren't same-day. 4 No: rare-book requests before 17:00 are not stated to be next-day. 5 Yes: the stated requests both require approval and are processed next day.",
+};

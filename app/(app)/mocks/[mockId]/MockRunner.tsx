@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type * as MockData from "@/lib/mock1Data";
+import * as mock1Patch from "@/lib/mock1Patch";
+import * as mock2Patch from "@/lib/mock2Patch";
 
 type MockDataModule = typeof MockData;
 
-// ── Section timing ──────────────────────────────────────────────────────────
+// ── Section timing ─────────────────────────────────────────────────────────────
 
 const SECTIONS = [
   { key: "VR",  label: "Verbal Reasoning",      time: 22 * 60, color: "#2563eb", tint: "#eff6ff" },
@@ -17,12 +19,13 @@ const SECTIONS = [
 
 type SectionKey = "VR" | "DM" | "QR" | "SJT";
 
-// ── Flat question types ──────────────────────────────────────────────────────
+// ── Flat question types ────────────────────────────────────────────────────────
 
 interface FlatVRQ {
   id: string; num: number;
   passageTitle: string; passageText: string;
   questionText: string; options: string[];
+  isTFCT: boolean;
   correct: number; explanation: string;
 }
 
@@ -47,8 +50,18 @@ interface FlatSJTQ {
   id: string; num: number;
   scenarioTitle: string; scenarioText: string;
   questionText: string; options: string[];
-  correct: number; explanation: string;
+  fmt: string;
+  correct: number;
+  correctMost?: number;
+  correctLeast?: number;
+  factors?: string[];
+  explanation: string;
 }
+
+// MostLeast answer: { most: number; least: number } where -1 = unset
+interface MostLeastAnswer { most: number; least: number; }
+
+type SJTAnswer = number | MostLeastAnswer;
 
 type Phase = "cover" | "section-intro" | "running" | "section-break" | "results";
 
@@ -58,7 +71,7 @@ function fmtTime(sec: number) {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-// ── Component ────────────────────────────────────────────────────────────────
+// ── Component ──────────────────────────────────────────────────────────────────
 
 export default function MockRunner({
   data,
@@ -67,18 +80,29 @@ export default function MockRunner({
   data: MockDataModule;
   mockId: "mock-1" | "mock-2";
 }) {
-  // Flatten all sections
+  const patch = mockId === "mock-2" ? mock2Patch : mock1Patch;
+  const sjtPatch = patch.SJT_ANSWERS;
+  const dmPatch = patch.DM_EXPLANATIONS;
+  const mlFactors = mockId === "mock-2" ? mock2Patch.MOSTLEAST_FACTORS : {} as Record<string, string[]>;
+
+  // Flatten VR
   const vrFlat: FlatVRQ[] = data.VR_PASSAGES.flatMap(p =>
     p.questions.map(q => ({
       id: q.id, num: q.num,
       passageTitle: p.title, passageText: p.passageText,
       questionText: q.questionText, options: q.options,
+      isTFCT: !!(q as any).isTFCT,
       correct: q.correct, explanation: q.explanation,
     }))
   );
 
-  const dmFlat: FlatDMQ[] = data.DM_QUESTIONS as FlatDMQ[];
+  // Flatten DM with patched explanations
+  const dmFlat: FlatDMQ[] = (data.DM_QUESTIONS as FlatDMQ[]).map(q => ({
+    ...q,
+    explanation: dmPatch[q.id] ?? q.explanation,
+  }));
 
+  // Flatten QR
   const qrFlat: FlatQRQ[] = data.QR_DATASETS.flatMap(d =>
     d.questions.map(q => ({
       id: q.id, num: q.num,
@@ -88,13 +112,27 @@ export default function MockRunner({
     }))
   );
 
+  // Flatten SJT with patched answers
   const sjtFlat: FlatSJTQ[] = data.SJT_SCENARIOS.flatMap(s =>
-    s.questions.map(q => ({
-      id: q.id, num: q.num,
-      scenarioTitle: s.title, scenarioText: s.scenarioText,
-      questionText: q.questionText, options: q.options,
-      correct: q.correct, explanation: q.explanation,
-    }))
+    s.questions.map(q => {
+      const p = sjtPatch[q.id];
+      const fmt = (q as any).fmt ?? "appropriateness";
+      const factors = mlFactors[q.id];
+      return {
+        id: q.id, num: q.num,
+        scenarioTitle: s.title, scenarioText: s.scenarioText,
+        questionText: q.questionText,
+        options: fmt === "most/least" && factors
+          ? factors
+          : q.options,
+        fmt,
+        correct: p ? p.correct : q.correct,
+        correctMost: p?.correctMost,
+        correctLeast: p?.correctLeast,
+        factors,
+        explanation: p?.explanation ?? q.explanation,
+      };
+    })
   );
 
   // State
@@ -103,16 +141,15 @@ export default function MockRunner({
   const [qIdx, setQIdx] = useState(0);
   const [timeLeft, setTimeLeft] = useState(SECTIONS[0].time);
 
-  // Answers: for each section, an array per question
-  // DM YN-5 answers are arrays of 5 (0=Yes, 1=No, -1=unanswered)
   const [vrAnswers, setVrAnswers] = useState<number[]>(Array(vrFlat.length).fill(-1));
   const [dmAnswers, setDmAnswers] = useState<(number | number[])[]>(
     dmFlat.map(q => q.format === "YN-5" ? Array(5).fill(-1) : -1)
   );
   const [qrAnswers, setQrAnswers] = useState<number[]>(Array(qrFlat.length).fill(-1));
-  const [sjtAnswers, setSjtAnswers] = useState<number[]>(Array(sjtFlat.length).fill(-1));
+  const [sjtAnswers, setSjtAnswers] = useState<SJTAnswer[]>(
+    sjtFlat.map(q => q.fmt === "most/least" ? { most: -1, least: -1 } : -1)
+  );
 
-  const [showExplanations, setShowExplanations] = useState(false);
   const [resultView, setResultView] = useState<"summary" | "review">("summary");
   const [reviewSection, setReviewSection] = useState<SectionKey>("VR");
 
@@ -154,20 +191,18 @@ export default function MockRunner({
   }
 
   const currentSection = SECTIONS[sectionIdx];
-
-  // Current flat question arrays
   const flatQ = sectionIdx === 0 ? vrFlat : sectionIdx === 1 ? dmFlat : sectionIdx === 2 ? qrFlat : sjtFlat;
   const totalQ = flatQ.length;
   const currentQ = flatQ[qIdx];
 
-  function setAnswer(val: number | number[]) {
+  function setAnswer(val: number | number[] | MostLeastAnswer) {
     if (sectionIdx === 0) setVrAnswers(prev => { const n = [...prev]; n[qIdx] = val as number; return n; });
-    else if (sectionIdx === 1) setDmAnswers(prev => { const n = [...prev]; n[qIdx] = val; return n; });
+    else if (sectionIdx === 1) setDmAnswers(prev => { const n = [...prev]; n[qIdx] = val as number | number[]; return n; });
     else if (sectionIdx === 2) setQrAnswers(prev => { const n = [...prev]; n[qIdx] = val as number; return n; });
-    else setSjtAnswers(prev => { const n = [...prev]; n[qIdx] = val as number; return n; });
+    else setSjtAnswers(prev => { const n = [...prev]; n[qIdx] = val as SJTAnswer; return n; });
   }
 
-  function getCurrentAnswer() {
+  function getCurrentAnswer(): number | number[] | MostLeastAnswer {
     if (sectionIdx === 0) return vrAnswers[qIdx];
     if (sectionIdx === 1) return dmAnswers[qIdx];
     if (sectionIdx === 2) return qrAnswers[qIdx];
@@ -180,25 +215,42 @@ export default function MockRunner({
     const vrCorrect = vrFlat.filter((q, i) => vrAnswers[i] === q.correct).length;
     const vrScore = data.lookupScore(data.VR_SCORE_TABLE, vrCorrect);
 
-    let dmCorrect = 0;
+    // DM: MCQ=1pt; YN-5: 5/5=2pts, 4/5=1pt, ≤3/5=0pts
+    let dmRaw = 0;
     dmFlat.forEach((q, i) => {
       const ans = dmAnswers[i];
       if (q.format === "YN-5" && Array.isArray(ans) && q.correct5) {
-        if (ans.every((a, j) => a === q.correct5![j])) dmCorrect++;
-      } else if (q.format === "MCQ" && typeof ans === "number") {
-        if (ans === q.correct) dmCorrect++;
+        const correct5count = ans.filter((a, j) => a === q.correct5![j]).length;
+        if (correct5count === 5) dmRaw += 2;
+        else if (correct5count === 4) dmRaw += 1;
+      } else if (q.format === "MCQ" && typeof ans === "number" && ans === q.correct) {
+        dmRaw += 1;
       }
     });
-    const dmScore = data.lookupScore(data.DM_SCORE_TABLE, dmCorrect);
+    const dmScore = data.lookupScore(data.DM_SCORE_TABLE, dmRaw);
 
     const qrCorrect = qrFlat.filter((q, i) => qrAnswers[i] === q.correct).length;
     const qrScore = data.lookupScore(data.QR_SCORE_TABLE, qrCorrect);
 
-    const sjtCorrect = sjtFlat.filter((q, i) => sjtAnswers[i] === q.correct).length;
-    const sjtRaw = sjtCorrect;
+    // SJT: exact=2pts, 1 away=1pt, 2+ away=0pts; mostleast: both=2pts, one=1pt, none=0pts
+    let sjtRaw = 0;
+    sjtFlat.forEach((q, i) => {
+      const ans = sjtAnswers[i];
+      if (q.fmt === "most/least" && q.correctMost !== undefined && q.correctLeast !== undefined) {
+        const ml = ans as MostLeastAnswer;
+        const mostOk = ml.most === q.correctMost;
+        const leastOk = ml.least === q.correctLeast;
+        if (mostOk && leastOk) sjtRaw += 2;
+        else if (mostOk || leastOk) sjtRaw += 1;
+      } else if (typeof ans === "number" && q.correct >= 0) {
+        const diff = Math.abs(ans - q.correct);
+        if (diff === 0) sjtRaw += 2;
+        else if (diff === 1) sjtRaw += 1;
+      }
+    });
     const sjtBandNum = data.sjtBand(sjtRaw);
 
-    return { vrCorrect, vrScore, dmCorrect, dmScore, qrCorrect, qrScore, sjtCorrect, sjtBandNum };
+    return { vrCorrect, vrScore, dmRaw, dmScore, qrCorrect, qrScore, sjtRaw, sjtBandNum };
   }
 
   // ── Render phases ──────────────────────────────────────────────────────────
@@ -269,23 +321,18 @@ export default function MockRunner({
           width: 56, height: 56, borderRadius: 16, background: sec.tint,
           display: "grid", placeItems: "center", margin: "0 auto 20px"
         }}>
-          <span style={{ fontSize: 22, fontWeight: 900, color: sec.color }}>
-            {sectionIdx + 1}
-          </span>
+          <span style={{ fontSize: 22, fontWeight: 900, color: sec.color }}>{sectionIdx + 1}</span>
         </div>
         <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: sec.color, margin: "0 0 6px" }}>
           Section {sectionIdx + 1} of 4
         </p>
         <h2 style={{ fontSize: 24, fontWeight: 900, margin: "0 0 8px" }}>{sec.label}</h2>
         <p style={{ color: "var(--ink-soft)", fontSize: 14, margin: "0 0 28px" }}>
-          {counts[sectionIdx]} questions · {fmtTime(sec.time)} minutes
+          {counts[sectionIdx]} questions · {fmtTime(sec.time)}
         </p>
         <button
           onClick={() => startSection(sectionIdx)}
-          style={{
-            padding: "14px 36px", background: sec.color, color: "white",
-            border: 0, borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer"
-          }}
+          style={{ padding: "14px 36px", background: sec.color, color: "white", border: 0, borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer" }}
         >
           Begin Section →
         </button>
@@ -302,15 +349,10 @@ export default function MockRunner({
         <p style={{ color: "var(--ink-soft)", fontSize: 14, margin: "0 0 28px" }}>
           {SECTIONS[sectionIdx].label} finished. Take a short break if needed.
         </p>
-        <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 20 }}>
-          Next: {next.label}
-        </p>
+        <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 20 }}>Next: {next.label}</p>
         <button
           onClick={() => { setSectionIdx(s => s + 1); setPhase("section-intro"); }}
-          style={{
-            padding: "14px 36px", background: "#1e293b", color: "white",
-            border: 0, borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer"
-          }}
+          style={{ padding: "14px 36px", background: "#1e293b", color: "white", border: 0, borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer" }}
         >
           Continue →
         </button>
@@ -329,29 +371,21 @@ export default function MockRunner({
           <h1 style={{ fontSize: 26, fontWeight: 900, margin: "0 0 6px" }}>{data.MOCK_LABEL}</h1>
           <p style={{ color: "var(--ink-soft)", fontSize: 13, margin: "0 0 24px" }}>Full results below. Review your answers anytime.</p>
 
-          {/* Score cards */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
             {[
-              { label: "Verbal Reasoning", correct: scores.vrCorrect, total: vrFlat.length, score: scores.vrScore, color: SECTIONS[0].color, tint: SECTIONS[0].tint },
-              { label: "Decision Making", correct: scores.dmCorrect, total: dmFlat.length, score: scores.dmScore, color: SECTIONS[1].color, tint: SECTIONS[1].tint },
-              { label: "Quantitative Reasoning", correct: scores.qrCorrect, total: qrFlat.length, score: scores.qrScore, color: SECTIONS[2].color, tint: SECTIONS[2].tint },
-              { label: "Situational Judgement", correct: scores.sjtCorrect, total: sjtFlat.length, score: null, band: scores.sjtBandNum, color: SECTIONS[3].color, tint: SECTIONS[3].tint },
+              { label: "Verbal Reasoning", sub: `${scores.vrCorrect}/${vrFlat.length} correct`, score: String(scores.vrScore), color: SECTIONS[0].color, tint: SECTIONS[0].tint },
+              { label: "Decision Making", sub: `${scores.dmRaw} raw marks`, score: String(scores.dmScore), color: SECTIONS[1].color, tint: SECTIONS[1].tint },
+              { label: "Quantitative Reasoning", sub: `${scores.qrCorrect}/${qrFlat.length} correct`, score: String(scores.qrScore), color: SECTIONS[2].color, tint: SECTIONS[2].tint },
+              { label: "Situational Judgement", sub: `${scores.sjtRaw} raw pts`, score: `Band ${scores.sjtBandNum}`, color: SECTIONS[3].color, tint: SECTIONS[3].tint },
             ].map(s => (
               <div key={s.label} className="content-card" style={{ padding: "16px 18px" }}>
                 <p style={{ fontSize: 11, fontWeight: 700, color: s.color, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.06em" }}>{s.label}</p>
-                {s.score !== null ? (
-                  <p style={{ fontSize: 28, fontWeight: 900, margin: "0 0 2px", color: s.color }}>{s.score}</p>
-                ) : (
-                  <p style={{ fontSize: 28, fontWeight: 900, margin: "0 0 2px", color: s.color }}>Band {(s as any).band}</p>
-                )}
-                <p style={{ fontSize: 12, color: "var(--ink-soft)", margin: 0 }}>
-                  {s.correct}/{s.total} correct
-                </p>
+                <p style={{ fontSize: 28, fontWeight: 900, margin: "0 0 2px", color: s.color }}>{s.score}</p>
+                <p style={{ fontSize: 12, color: "var(--ink-soft)", margin: 0 }}>{s.sub}</p>
               </div>
             ))}
           </div>
 
-          {/* Total */}
           <div className="content-card" style={{ padding: "16px 20px", marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div>
               <p style={{ fontSize: 12, color: "var(--ink-soft)", margin: "0 0 2px", fontWeight: 600 }}>Combined Score (VR + DM + QR)</p>
@@ -382,7 +416,7 @@ export default function MockRunner({
 
     // Review view
     return (
-      <div style={{ maxWidth: 800, margin: "0 auto", padding: "24px 24px" }}>
+      <div style={{ maxWidth: 800, margin: "0 auto", padding: "24px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
           <button
             onClick={() => setResultView("summary")}
@@ -393,8 +427,7 @@ export default function MockRunner({
           <h2 style={{ fontSize: 18, fontWeight: 900, margin: 0 }}>Answer Review</h2>
         </div>
 
-        {/* Section tabs */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 20, overflowX: "auto" }}>
+        <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
           {SECTIONS.map(s => (
             <button
               key={s.key}
@@ -404,7 +437,7 @@ export default function MockRunner({
                 background: reviewSection === s.key ? s.color : "transparent",
                 color: reviewSection === s.key ? "white" : "var(--ink-soft)",
                 border: `1.5px solid ${reviewSection === s.key ? s.color : "var(--line)"}`,
-                whiteSpace: "nowrap", flexShrink: 0,
+                whiteSpace: "nowrap",
               }}
             >
               {s.key}
@@ -412,19 +445,16 @@ export default function MockRunner({
           ))}
         </div>
 
-        {/* Questions list */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {reviewSection === "VR" && vrFlat.map((q, i) => {
-            const ua = vrAnswers[i];
-            const correct = ua === q.correct;
-            return (
-              <ReviewCard key={q.id} num={i + 1} correct={correct}
-                context={q.passageText} contextTitle={q.passageTitle}
-                question={q.questionText}
-                options={q.options} userAnswer={ua} correctAnswer={q.correct}
-                explanation={q.explanation} />
-            );
-          })}
+          {reviewSection === "VR" && vrFlat.map((q, i) => (
+            <ReviewCard key={q.id} num={i + 1}
+              correct={vrAnswers[i] === q.correct}
+              context={q.passageText} contextTitle={q.passageTitle}
+              question={q.questionText}
+              options={q.isTFCT ? ["True", "False", "Can't tell"] : q.options}
+              userAnswer={vrAnswers[i]} correctAnswer={q.correct}
+              explanation={q.explanation} />
+          ))}
           {reviewSection === "DM" && dmFlat.map((q, i) => {
             const ua = dmAnswers[i];
             let correct = false;
@@ -433,30 +463,28 @@ export default function MockRunner({
             } else if (q.format === "MCQ" && typeof ua === "number") {
               correct = ua === q.correct;
             }
-            return (
-              <ReviewCardDM key={q.id} num={i + 1} correct={correct} q={q} userAnswer={ua} />
-            );
+            return <ReviewCardDM key={q.id} num={i + 1} correct={correct} q={q} userAnswer={ua} />;
           })}
-          {reviewSection === "QR" && qrFlat.map((q, i) => {
-            const ua = qrAnswers[i];
-            const correct = ua === q.correct;
-            return (
-              <ReviewCard key={q.id} num={i + 1} correct={correct}
-                context={q.scenario} contextTitle={q.datasetTitle}
-                question={q.questionText}
-                options={q.options} userAnswer={ua} correctAnswer={q.correct}
-                explanation={q.explanation} />
-            );
-          })}
+          {reviewSection === "QR" && qrFlat.map((q, i) => (
+            <ReviewCard key={q.id} num={i + 1}
+              correct={qrAnswers[i] === q.correct}
+              context={q.scenario} contextTitle={q.datasetTitle}
+              question={q.questionText}
+              options={q.options} userAnswer={qrAnswers[i]} correctAnswer={q.correct}
+              explanation={q.explanation} />
+          ))}
           {reviewSection === "SJT" && sjtFlat.map((q, i) => {
-            const ua = sjtAnswers[i];
-            const correct = ua === q.correct;
+            const ans = sjtAnswers[i];
+            let correct = false;
+            if (q.fmt === "most/least" && q.correctMost !== undefined && q.correctLeast !== undefined) {
+              const ml = ans as MostLeastAnswer;
+              correct = ml.most === q.correctMost && ml.least === q.correctLeast;
+            } else if (typeof ans === "number" && q.correct >= 0) {
+              correct = ans === q.correct;
+            }
             return (
-              <ReviewCard key={q.id} num={i + 1} correct={correct}
-                context={q.scenarioText} contextTitle={q.scenarioTitle}
-                question={q.questionText}
-                options={q.options} userAnswer={ua} correctAnswer={q.correct}
-                explanation={q.explanation} />
+              <ReviewCardSJT key={q.id} num={i + 1} correct={correct}
+                q={q} userAnswer={ans} />
             );
           })}
         </div>
@@ -471,28 +499,77 @@ export default function MockRunner({
   const isLast = qIdx === totalQ - 1;
   const isFirst = qIdx === 0;
 
-  // Get context for current question
+  let contextLabel = "PASSAGE";
   let contextTitle = "";
   let contextText = "";
   if (sectionIdx === 0) {
     const q = vrFlat[qIdx];
+    contextLabel = "PASSAGE";
     contextTitle = q.passageTitle;
     contextText = q.passageText;
   } else if (sectionIdx === 1) {
     const q = dmFlat[qIdx];
+    contextLabel = "STIMULUS";
     contextTitle = q.title;
     contextText = q.context;
   } else if (sectionIdx === 2) {
     const q = qrFlat[qIdx];
+    contextLabel = "DATA";
     contextTitle = q.datasetTitle;
     contextText = q.scenario;
   } else {
     const q = sjtFlat[qIdx];
+    contextLabel = "SCENARIO";
     contextTitle = q.scenarioTitle;
     contextText = q.scenarioText;
   }
 
   const dmQ = sectionIdx === 1 ? (currentQ as FlatDMQ) : null;
+  const sjtQ = sectionIdx === 3 ? (currentQ as FlatSJTQ) : null;
+  const vrQ = sectionIdx === 0 ? (currentQ as FlatVRQ) : null;
+
+  function renderQuestion() {
+    if (dmQ?.format === "YN-5") {
+      return (
+        <YN5Question
+          q={dmQ}
+          answer={userAnswer as number[]}
+          setAnswer={setAnswer}
+        />
+      );
+    }
+    if (sjtQ?.fmt === "most/least" && sjtQ.factors) {
+      return (
+        <MostLeastQuestion
+          q={sjtQ}
+          answer={userAnswer as MostLeastAnswer}
+          setAnswer={v => setAnswer(v)}
+        />
+      );
+    }
+    const opts = vrQ?.isTFCT
+      ? ["True", "False", "Can't tell"]
+      : (currentQ as any).options ?? [];
+    return (
+      <MCQQuestion
+        questionText={(currentQ as any).questionText ?? ""}
+        options={opts}
+        answer={typeof userAnswer === "number" ? userAnswer : -1}
+        setAnswer={setAnswer}
+        color={sec.color}
+      />
+    );
+  }
+
+  // Progress dot helpers
+  function isAnswered(i: number): boolean {
+    if (sectionIdx === 0) return vrAnswers[i] !== -1;
+    if (sectionIdx === 1) return Array.isArray(dmAnswers[i]) ? (dmAnswers[i] as number[]).some(a => a !== -1) : dmAnswers[i] !== -1;
+    if (sectionIdx === 2) return qrAnswers[i] !== -1;
+    const a = sjtAnswers[i];
+    if (typeof a === "object") return (a as MostLeastAnswer).most !== -1 || (a as MostLeastAnswer).least !== -1;
+    return a !== -1;
+  }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 60px)" }}>
@@ -510,57 +587,42 @@ export default function MockRunner({
         <span style={{ fontSize: 13, color: "var(--ink-soft)", marginRight: "auto" }}>
           Q{qIdx + 1} of {totalQ}
         </span>
-        <span style={{
-          fontSize: 15, fontWeight: 800, fontVariantNumeric: "tabular-nums",
-          color: timeLeft < 300 ? "#dc2626" : "var(--ink)"
-        }}>
+        <span style={{ fontSize: 15, fontWeight: 800, fontVariantNumeric: "tabular-nums", color: timeLeft < 300 ? "#dc2626" : "var(--ink)" }}>
           {fmtTime(timeLeft)}
         </span>
         <button
           onClick={handleSectionEnd}
           style={{
             padding: "6px 14px", background: "transparent", border: "1.5px solid var(--line)",
-            borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", color: "var(--ink)"
+            borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer"
           }}
         >
           {isLast && sectionIdx === 3 ? "Finish" : "End Section"}
         </button>
       </div>
 
-      {/* Main content */}
+      {/* Two-column layout */}
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        {/* Left — context */}
+        {/* Left – context */}
         <div style={{
           width: "50%", padding: "20px 24px", borderRight: "1px solid var(--line)",
           overflowY: "auto", flexShrink: 0
         }}>
-          <p style={{
-            fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase",
-            color: sec.color, margin: "0 0 6px"
-          }}>
-            {sectionIdx === 0 ? "PASSAGE" : sectionIdx === 1 ? "STIMULUS" : sectionIdx === 2 ? "DATA" : "SCENARIO"}
+          <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: sec.color, margin: "0 0 6px" }}>
+            {contextLabel}
           </p>
-          <p style={{ fontSize: 13, fontWeight: 700, margin: "0 0 10px", color: "var(--ink)" }}>{contextTitle}</p>
-          <div style={{ fontSize: 13, lineHeight: 1.7, color: "var(--ink)", whiteSpace: "pre-wrap" }}>
+          <p style={{ fontSize: 13, fontWeight: 700, margin: "0 0 10px" }}>{contextTitle}</p>
+          <div style={{ fontSize: 13, lineHeight: 1.75, color: "var(--ink)", whiteSpace: "pre-wrap" }}>
             {contextText}
           </div>
         </div>
 
-        {/* Right — question */}
+        {/* Right – question */}
         <div style={{ flex: 1, padding: "20px 24px", overflowY: "auto" }}>
-          {dmQ?.format === "YN-5" ? (
-            <YN5Question q={dmQ} answer={userAnswer as number[]} setAnswer={setAnswer} />
-          ) : (
-            <MCQQuestion
-              questionText={(currentQ as any).questionText || ""}
-              options={(currentQ as any).options || []}
-              answer={typeof userAnswer === "number" ? userAnswer : -1}
-              setAnswer={setAnswer}
-            />
-          )}
+          {renderQuestion()}
 
           {/* Navigation */}
-          <div style={{ display: "flex", gap: 10, marginTop: 24, paddingTop: 20, borderTop: "1px solid var(--line)" }}>
+          <div style={{ display: "flex", gap: 10, marginTop: 24, paddingTop: 20, borderTop: "1px solid var(--line)", alignItems: "center" }}>
             <button
               onClick={() => setQIdx(i => Math.max(0, i - 1))}
               disabled={isFirst}
@@ -585,24 +647,24 @@ export default function MockRunner({
               {isLast ? (sectionIdx === 3 ? "Finish →" : "Next Section →") : "Next →"}
             </button>
 
-            {/* Mini progress */}
-            <div style={{ marginLeft: "auto", display: "flex", gap: 3, alignItems: "center", flexWrap: "wrap", maxWidth: 200 }}>
-              {Array.from({ length: Math.min(totalQ, 44) }).map((_, i) => {
-                const answered = sectionIdx === 0 ? vrAnswers[i] !== -1
-                  : sectionIdx === 1 ? (Array.isArray(dmAnswers[i]) ? (dmAnswers[i] as number[]).some(a => a !== -1) : dmAnswers[i] !== -1)
-                  : sectionIdx === 2 ? qrAnswers[i] !== -1
-                  : sjtAnswers[i] !== -1;
-                return (
-                  <div
-                    key={i}
-                    onClick={() => setQIdx(i)}
-                    style={{
-                      width: 8, height: 8, borderRadius: "50%", cursor: "pointer",
-                      background: i === qIdx ? sec.color : answered ? sec.color + "55" : "var(--line)",
-                    }}
-                  />
-                );
-              })}
+            {/* Progress dots */}
+            <div style={{ marginLeft: "auto", display: "flex", gap: 3, flexWrap: "wrap", maxWidth: 200 }}>
+              {Array.from({ length: Math.min(totalQ, 50) }).map((_, i) => (
+                <div
+                  key={i}
+                  onClick={() => setQIdx(i)}
+                  title={`Q${i + 1}`}
+                  style={{
+                    width: 8, height: 8, borderRadius: "50%", cursor: "pointer",
+                    background: i === qIdx ? sec.color : isAnswered(i) ? sec.color + "66" : "var(--line)",
+                    outline: i === qIdx ? `2px solid ${sec.color}` : "none",
+                    outlineOffset: 1,
+                  }}
+                />
+              ))}
+              {totalQ > 50 && (
+                <span style={{ fontSize: 10, color: "var(--ink-soft)", lineHeight: "8px" }}>+{totalQ - 50}</span>
+              )}
             </div>
           </div>
         </div>
@@ -611,22 +673,24 @@ export default function MockRunner({
   );
 }
 
-// ── Sub-components ───────────────────────────────────────────────────────────
+// ── Sub-components ─────────────────────────────────────────────────────────────
 
 function MCQQuestion({
   questionText,
   options,
   answer,
   setAnswer,
+  color = "#1e293b",
 }: {
   questionText: string;
   options: string[];
   answer: number;
   setAnswer: (v: number) => void;
+  color?: string;
 }) {
   return (
     <div>
-      <p style={{ fontSize: 14, lineHeight: 1.6, fontWeight: 500, margin: "0 0 20px" }}>
+      <p style={{ fontSize: 14, lineHeight: 1.65, fontWeight: 500, margin: "0 0 20px" }}>
         {questionText}
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -637,17 +701,18 @@ function MCQQuestion({
               key={i}
               onClick={() => setAnswer(i)}
               style={{
-                display: "flex", alignItems: "flex-start", gap: 12, padding: "12px 14px",
-                border: `1.5px solid ${selected ? "#1e293b" : "var(--line)"}`,
-                borderRadius: 10, background: selected ? "#f8fafc" : "white",
+                display: "flex", alignItems: "flex-start", gap: 12, padding: "11px 14px",
+                border: `1.5px solid ${selected ? color : "var(--line)"}`,
+                borderRadius: 10, background: selected ? color + "0f" : "white",
                 cursor: "pointer", textAlign: "left", width: "100%",
               }}
             >
               <span style={{
-                width: 22, height: 22, borderRadius: "50%", border: `2px solid ${selected ? "#1e293b" : "var(--line)"}`,
-                background: selected ? "#1e293b" : "transparent",
+                width: 22, height: 22, borderRadius: "50%", border: `2px solid ${selected ? color : "var(--line)"}`,
+                background: selected ? color : "transparent",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0, fontSize: 11, fontWeight: 800, color: selected ? "white" : "var(--ink-soft)"
+                flexShrink: 0, fontSize: 11, fontWeight: 800,
+                color: selected ? "white" : "var(--ink-soft)"
               }}>
                 {String.fromCharCode(65 + i)}
               </span>
@@ -680,20 +745,17 @@ function YN5Question({
   return (
     <div>
       <p style={{ fontSize: 13, lineHeight: 1.6, color: "var(--ink-soft)", margin: "0 0 16px" }}>
-        For each conclusion, select <strong>Yes</strong> if it must follow and <strong>No</strong> if it does not.
+        For each conclusion, select <strong>Yes</strong> if it must follow from the information and <strong>No</strong> if it does not.
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {(q.statements || []).map((stmt, i) => {
           const userYes = ans[i] === 0;
           const userNo  = ans[i] === 1;
           return (
-            <div
-              key={i}
-              style={{
-                display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
-                border: "1.5px solid var(--line)", borderRadius: 10, background: "white"
-              }}
-            >
+            <div key={i} style={{
+              display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
+              border: "1.5px solid var(--line)", borderRadius: 10, background: "white"
+            }}>
               <span style={{ flex: 1, fontSize: 13, lineHeight: 1.5, color: "var(--ink)" }}>
                 <span style={{ color: "var(--ink-soft)", fontWeight: 700, marginRight: 8 }}>{i + 1}.</span>
                 {stmt}
@@ -708,9 +770,7 @@ function YN5Question({
                     color: userYes ? "#059669" : "var(--ink-soft)",
                     fontSize: 12, fontWeight: 700, cursor: "pointer"
                   }}
-                >
-                  Yes
-                </button>
+                >Yes</button>
                 <button
                   onClick={() => toggle(i, 1)}
                   style={{
@@ -720,9 +780,7 @@ function YN5Question({
                     color: userNo ? "#dc2626" : "var(--ink-soft)",
                     fontSize: 12, fontWeight: 700, cursor: "pointer"
                   }}
-                >
-                  No
-                </button>
+                >No</button>
               </div>
             </div>
           );
@@ -732,6 +790,84 @@ function YN5Question({
   );
 }
 
+function MostLeastQuestion({
+  q,
+  answer,
+  setAnswer,
+}: {
+  q: FlatSJTQ;
+  answer: MostLeastAnswer;
+  setAnswer: (v: MostLeastAnswer) => void;
+}) {
+  const ml = answer && typeof answer === "object" ? answer : { most: -1, least: -1 };
+
+  function pick(idx: number, role: "most" | "least") {
+    const next = { ...ml };
+    if (next[role] === idx) {
+      next[role] = -1;
+    } else {
+      next[role] = idx;
+      // can't be both most and least
+      if (role === "most" && next.least === idx) next.least = -1;
+      if (role === "least" && next.most === idx) next.most = -1;
+    }
+    setAnswer(next);
+  }
+
+  return (
+    <div>
+      <p style={{ fontSize: 14, lineHeight: 1.65, fontWeight: 500, margin: "0 0 16px" }}>
+        {q.questionText}
+      </p>
+      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+        <span style={{ padding: "4px 10px", borderRadius: 6, background: "#dcfce7", color: "#16a34a", fontSize: 11, fontWeight: 800 }}>MOST</span>
+        <span style={{ padding: "4px 10px", borderRadius: 6, background: "#fee2e2", color: "#dc2626", fontSize: 11, fontWeight: 800 }}>LEAST</span>
+        <span style={{ fontSize: 11, color: "var(--ink-soft)", alignSelf: "center" }}>Click a factor to assign</span>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {(q.factors || []).map((factor, i) => {
+          const isMost = ml.most === i;
+          const isLeast = ml.least === i;
+          return (
+            <div key={i} style={{
+              display: "flex", alignItems: "center", gap: 10, padding: "11px 14px",
+              border: `1.5px solid ${isMost ? "#16a34a" : isLeast ? "#dc2626" : "var(--line)"}`,
+              borderRadius: 10,
+              background: isMost ? "#f0fdf4" : isLeast ? "#fef2f2" : "white",
+            }}>
+              <span style={{ flex: 1, fontSize: 13, lineHeight: 1.5, color: "var(--ink)" }}>{factor}</span>
+              <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                <button
+                  onClick={() => pick(i, "most")}
+                  style={{
+                    padding: "4px 10px", borderRadius: 7, fontSize: 11, fontWeight: 800,
+                    border: "1.5px solid", cursor: "pointer",
+                    borderColor: isMost ? "#16a34a" : "var(--line)",
+                    background: isMost ? "#16a34a" : "white",
+                    color: isMost ? "white" : "var(--ink-soft)",
+                  }}
+                >Most</button>
+                <button
+                  onClick={() => pick(i, "least")}
+                  style={{
+                    padding: "4px 10px", borderRadius: 7, fontSize: 11, fontWeight: 800,
+                    border: "1.5px solid", cursor: "pointer",
+                    borderColor: isLeast ? "#dc2626" : "var(--line)",
+                    background: isLeast ? "#dc2626" : "white",
+                    color: isLeast ? "white" : "var(--ink-soft)",
+                  }}
+                >Least</button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Review cards ───────────────────────────────────────────────────────────────
+
 function ReviewCard({
   num, correct, context, contextTitle, question, options,
   userAnswer, correctAnswer, explanation,
@@ -739,7 +875,7 @@ function ReviewCard({
   num: number; correct: boolean;
   context: string; contextTitle: string;
   question: string; options: string[];
-  userAnswer: number | number[]; correctAnswer: number;
+  userAnswer: number; correctAnswer: number;
   explanation: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -759,16 +895,18 @@ function ReviewCard({
         }}>
           {correct ? "✓" : ua === -1 ? "–" : "✗"}
         </span>
-        <span style={{ fontSize: 13, fontWeight: 600, flex: 1 }}>Q{num}. {question.slice(0, 80)}{question.length > 80 ? "…" : ""}</span>
+        <span style={{ fontSize: 13, fontWeight: 600, flex: 1 }}>
+          Q{num}. {question.slice(0, 90)}{question.length > 90 ? "…" : ""}
+        </span>
         <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{open ? "▲" : "▼"}</span>
       </div>
 
       {open && (
         <div style={{ padding: "0 16px 16px", borderTop: "1px solid var(--line)" }}>
           {context && (
-            <div style={{ background: "#f8fafc", borderRadius: 8, padding: "10px 12px", margin: "12px 0", fontSize: 12, lineHeight: 1.6, color: "var(--ink-soft)" }}>
+            <div style={{ background: "#f8fafc", borderRadius: 8, padding: "10px 12px", margin: "12px 0", fontSize: 12, lineHeight: 1.65, color: "var(--ink-soft)" }}>
               <strong style={{ color: "var(--ink)", display: "block", marginBottom: 4 }}>{contextTitle}</strong>
-              {context.slice(0, 400)}{context.length > 400 ? "…" : ""}
+              {context.slice(0, 500)}{context.length > 500 ? "…" : ""}
             </div>
           )}
           <p style={{ fontSize: 13, fontWeight: 600, margin: "10px 0 8px" }}>{question}</p>
@@ -778,11 +916,11 @@ function ReviewCard({
                 padding: "7px 10px", borderRadius: 7, fontSize: 12,
                 background: i === correctAnswer ? "#dcfce7" : i === ua && !correct ? "#fee2e2" : "transparent",
                 color: i === correctAnswer ? "#16a34a" : i === ua && !correct ? "#dc2626" : "var(--ink-soft)",
-                fontWeight: i === correctAnswer || (i === ua && !correct) ? 700 : 400,
+                fontWeight: (i === correctAnswer || (i === ua && !correct)) ? 700 : 400,
               }}>
                 {String.fromCharCode(65 + i)}. {opt}
                 {i === correctAnswer && " ✓"}
-                {i === ua && !correct && " ✗"}
+                {i === ua && i !== correctAnswer && " ✗"}
               </div>
             ))}
           </div>
@@ -831,17 +969,17 @@ function ReviewCardDM({ num, correct, q, userAnswer }: {
               {q.statements.map((stmt, i) => {
                 const ua = Array.isArray(userAnswer) ? userAnswer[i] : -1;
                 const ca = q.correct5![i];
-                const stmtCorrect = ua === ca;
+                const stmtOk = ua === ca;
                 return (
                   <div key={i} style={{
                     padding: "8px 10px", borderRadius: 7, fontSize: 12, lineHeight: 1.5,
-                    background: stmtCorrect ? "#dcfce7" : "#fee2e2",
-                    color: stmtCorrect ? "#16a34a" : "#dc2626",
+                    background: stmtOk ? "#dcfce7" : "#fee2e2",
+                    color: stmtOk ? "#16a34a" : "#dc2626",
                   }}>
                     <strong>{i + 1}.</strong> {stmt}
-                    <span style={{ marginLeft: 8 }}>
-                      {ua === -1 ? "(unanswered)" : ua === 0 ? "Your answer: Yes" : "Your answer: No"}
-                      {" — "}Correct: {ca === 0 ? "Yes" : "No"}
+                    <span style={{ marginLeft: 8, fontWeight: 600 }}>
+                      {ua === -1 ? "(unanswered)" : ua === 0 ? "Your: Yes" : "Your: No"}
+                      {" · Correct: "}{ca === 0 ? "Yes" : "No"}
                     </span>
                   </div>
                 );
@@ -859,7 +997,7 @@ function ReviewCardDM({ num, correct, q, userAnswer }: {
                       padding: "7px 10px", borderRadius: 7, fontSize: 12,
                       background: i === ca ? "#dcfce7" : i === ua && ua !== ca ? "#fee2e2" : "transparent",
                       color: i === ca ? "#16a34a" : i === ua && ua !== ca ? "#dc2626" : "var(--ink-soft)",
-                      fontWeight: i === ca || (i === ua && ua !== ca) ? 700 : 400,
+                      fontWeight: (i === ca || (i === ua && ua !== ca)) ? 700 : 400,
                     }}>
                       {String.fromCharCode(65 + i)}. {opt}
                       {i === ca && " ✓"}
@@ -870,6 +1008,120 @@ function ReviewCardDM({ num, correct, q, userAnswer }: {
               </div>
             </div>
           )}
+          {q.explanation && (
+            <p style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 10, lineHeight: 1.6, background: "#f8fafc", padding: "8px 10px", borderRadius: 7 }}>
+              {q.explanation}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ReviewCardSJT({ num, correct, q, userAnswer }: {
+  num: number; correct: boolean;
+  q: FlatSJTQ; userAnswer: SJTAnswer;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const isMostLeast = q.fmt === "most/least";
+  const ml = isMostLeast ? (userAnswer as MostLeastAnswer) : null;
+
+  let statusIcon = "✗";
+  let statusBg = "#fee2e2";
+  let statusColor = "#dc2626";
+  if (correct) { statusIcon = "✓"; statusBg = "#dcfce7"; statusColor = "#16a34a"; }
+  else if (!isMostLeast && (userAnswer as number) === -1) { statusIcon = "–"; statusBg = "#f1f5f9"; statusColor = "var(--ink-soft)"; }
+  else if (isMostLeast) {
+    // partial?
+    const bothOk = ml?.most === q.correctMost && ml?.least === q.correctLeast;
+    const oneOk = ml?.most === q.correctMost || ml?.least === q.correctLeast;
+    if (bothOk) { statusIcon = "✓"; statusBg = "#dcfce7"; statusColor = "#16a34a"; }
+    else if (oneOk) { statusIcon = "½"; statusBg = "#fef9c3"; statusColor = "#b45309"; }
+  } else {
+    // partial credit for SJT
+    const ua = userAnswer as number;
+    if (ua !== -1 && q.correct >= 0) {
+      const diff = Math.abs(ua - q.correct);
+      if (diff === 1) { statusIcon = "½"; statusBg = "#fef9c3"; statusColor = "#b45309"; }
+    }
+  }
+
+  return (
+    <div className="content-card" style={{ padding: 0, overflow: "hidden" }}>
+      <div
+        style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}
+        onClick={() => setOpen(o => !o)}
+      >
+        <span style={{
+          width: 24, height: 24, borderRadius: "50%", display: "grid", placeItems: "center",
+          background: statusBg, color: statusColor, fontSize: 12, fontWeight: 800, flexShrink: 0
+        }}>
+          {statusIcon}
+        </span>
+        <span style={{ fontSize: 13, fontWeight: 600, flex: 1 }}>
+          Q{num}. {q.questionText.slice(0, 90)}{q.questionText.length > 90 ? "…" : ""}
+        </span>
+        <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{open ? "▲" : "▼"}</span>
+      </div>
+
+      {open && (
+        <div style={{ padding: "0 16px 16px", borderTop: "1px solid var(--line)" }}>
+          <div style={{ background: "#f8fafc", borderRadius: 8, padding: "10px 12px", margin: "12px 0", fontSize: 12, lineHeight: 1.65, color: "var(--ink-soft)" }}>
+            <strong style={{ color: "var(--ink)", display: "block", marginBottom: 4 }}>{q.scenarioTitle}</strong>
+            {q.scenarioText}
+          </div>
+
+          {isMostLeast && q.factors ? (
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 600, margin: "0 0 8px" }}>{q.questionText}</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                {q.factors.map((f, i) => {
+                  const isCorrMost = i === q.correctMost;
+                  const isCorrLeast = i === q.correctLeast;
+                  const isUserMost = ml?.most === i;
+                  const isUserLeast = ml?.least === i;
+                  return (
+                    <div key={i} style={{
+                      padding: "8px 10px", borderRadius: 7, fontSize: 12, lineHeight: 1.5,
+                      background: (isCorrMost || isCorrLeast) ? "#dcfce7" : (isUserMost || isUserLeast) && !(isCorrMost || isCorrLeast) ? "#fee2e2" : "transparent",
+                      color: (isCorrMost || isCorrLeast) ? "#16a34a" : (isUserMost || isUserLeast) && !(isCorrMost || isCorrLeast) ? "#dc2626" : "var(--ink-soft)",
+                    }}>
+                      {f}
+                      {isCorrMost && <span style={{ marginLeft: 6, fontWeight: 800 }}>[Correct MOST ✓]</span>}
+                      {isCorrLeast && <span style={{ marginLeft: 6, fontWeight: 800 }}>[Correct LEAST ✓]</span>}
+                      {isUserMost && !isCorrMost && <span style={{ marginLeft: 6 }}>[Your MOST ✗]</span>}
+                      {isUserLeast && !isCorrLeast && <span style={{ marginLeft: 6 }}>[Your LEAST ✗]</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 600, margin: "0 0 8px" }}>{q.questionText}</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                {q.options.map((opt, i) => {
+                  const ua = typeof userAnswer === "number" ? userAnswer : -1;
+                  const ca = q.correct;
+                  return (
+                    <div key={i} style={{
+                      padding: "7px 10px", borderRadius: 7, fontSize: 12,
+                      background: i === ca ? "#dcfce7" : i === ua && ua !== ca ? "#fee2e2" : "transparent",
+                      color: i === ca ? "#16a34a" : i === ua && ua !== ca ? "#dc2626" : "var(--ink-soft)",
+                      fontWeight: (i === ca || (i === ua && ua !== ca)) ? 700 : 400,
+                    }}>
+                      {String.fromCharCode(65 + i)}. {opt}
+                      {i === ca && " ✓"}
+                      {i === ua && i !== ca && " ✗"}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {q.explanation && (
             <p style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 10, lineHeight: 1.6, background: "#f8fafc", padding: "8px 10px", borderRadius: 7 }}>
               {q.explanation}
