@@ -3,7 +3,7 @@
 // correct index: import questions: 0=Very important, 1=Important, 2=Of minor importance, 3=Not important at all
 // mostleast questions: correctMost + correctLeast (0-3 index into factors array)
 
-export const SJT_ANSWERS: Record<string, { correct: number; explanation: string }> = {
+export const SJT_ANSWERS: Record<string, { correct: number; correctMost?: number; correctLeast?: number; explanation: string }> = {
   "MOCK1-SJT-001": { correct: 0, explanation: "A possible allergy affecting prescribing is an immediate safety issue; a polite reminder is proportionate and within a student's role." },
   "MOCK1-SJT-002": { correct: 3, explanation: "Hierarchy does not justify silence where relevant safety information may have been missed." },
   "MOCK1-SJT-003": { correct: 0, explanation: "Potential impact on safe prescribing is the central consideration." },
