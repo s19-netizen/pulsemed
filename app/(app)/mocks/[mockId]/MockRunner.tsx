@@ -75,7 +75,7 @@ function fmtTime(sec: number) {
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export default function MockRunner({ mockId }: { mockId: "mock-1" | "mock-2" }) {
-  const data: MockDataModule = mockId === "mock-2" ? mock2 : mock1;
+  const data = (mockId === "mock-2" ? mock2 : mock1) as MockDataModule;
   const patch = mockId === "mock-2" ? mock2Patch : mock1Patch;
   const sjtPatch = patch.SJT_ANSWERS;
   const dmPatch = patch.DM_EXPLANATIONS;
