@@ -11,7 +11,7 @@ export default async function MockPage({ params }: { params: { mockId: string } 
 
   if (params.mockId !== "mock-1" && params.mockId !== "mock-2") notFound();
 
-  const data = params.mockId === "mock-2" ? mock2 : mock1;
+  const data = (params.mockId === "mock-2" ? mock2 : mock1) as typeof mock1;
 
   return <MockRunner data={data} mockId={params.mockId as "mock-1" | "mock-2"} />;
 }
