@@ -483,6 +483,7 @@ export type MockQuestion = {
   correct: number;
   explanation: string;
   fmt?: string;
+  isTFCT?: boolean;
 };
 
 export type VRPassage = {
