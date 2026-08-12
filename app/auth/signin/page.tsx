@@ -12,8 +12,8 @@ export default function SignInPage() {
           </svg>
           Pulsemed
         </Link>
-        <h1>Welcome back</h1>
-        <p>Sign in to continue your UCAT preparation.</p>
+        <h1>Sign in to Pulsemed</h1>
+        <p>Continue your UCAT preparation.</p>
         <button
           className="google-btn"
           onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
