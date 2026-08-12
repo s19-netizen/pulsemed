@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import type * as MockData from "@/lib/mock1Data";
+import * as mock1 from "@/lib/mock1Data";
+import * as mock2 from "@/lib/mock2Data";
 import * as mock1Patch from "@/lib/mock1Patch";
 import * as mock2Patch from "@/lib/mock2Patch";
 
-type MockDataModule = typeof MockData;
+type MockDataModule = typeof mock1;
 
 // ── Section timing ─────────────────────────────────────────────────────────────
 
@@ -73,13 +74,8 @@ function fmtTime(sec: number) {
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
-export default function MockRunner({
-  data,
-  mockId,
-}: {
-  data: MockDataModule;
-  mockId: "mock-1" | "mock-2";
-}) {
+export default function MockRunner({ mockId }: { mockId: "mock-1" | "mock-2" }) {
+  const data: MockDataModule = mockId === "mock-2" ? mock2 : mock1;
   const patch = mockId === "mock-2" ? mock2Patch : mock1Patch;
   const sjtPatch = patch.SJT_ANSWERS;
   const dmPatch = patch.DM_EXPLANATIONS;
