@@ -187,7 +187,7 @@ export default function SJTPractice() {
   }
 
   const cssVars = { "--section": C, "--section-deep": DEEP, "--section-tint": TINT } as React.CSSProperties;
-  const COUNTS = [5, 10, 15, 20];
+  const COUNTS = [5, 10, 20, 35];
 
   // ── LOADING ─────────────────────────────────────────────────────────────────────
   if (stage === "loading") {
@@ -296,6 +296,15 @@ export default function SJTPractice() {
                   <small>questions</small>
                 </button>
               ))}
+              <button
+                className={`count-ucat${count === 69 ? " selected" : ""}`}
+                onClick={() => setCount(69)}
+                type="button"
+              >
+                <strong>69</strong>
+                <small>questions</small>
+                <span className="ucat-badge">UCAT</span>
+              </button>
             </div>
 
             <button className="start-session" onClick={start} type="button">
