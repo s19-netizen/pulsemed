@@ -30,15 +30,15 @@ const SECTION_DATA: Record<string, {
   dm: {
     label: "Decision Making", short: "DM", color: "#8B6BFF", deep: "#6846D9", tint: "#F1ECFF",
     groups: [
-      { id: "reasoning", label: "Reasoning & arguments", items: [
+      { id: "Syllogisms,Interpreting Information,Arguments & Assumptions,Logic Puzzles", label: "Reasoning & arguments", items: [
         { name: "Syllogisms", score: 52, weak: true },
-        { name: "Interpreting information", score: 73 },
-        { name: "Recognising assumptions", score: 68 },
+        { name: "Interpreting Information", score: 73 },
+        { name: "Arguments & Assumptions", score: 68 },
+        { name: "Logic Puzzles", score: 70 },
       ]},
-      { id: "data", label: "Data & probability", items: [
-        { name: "Venn diagrams", score: 61 },
-        { name: "Probability", score: 57, weak: true },
-        { name: "Figures & tables", score: 76 },
+      { id: "Venn Diagrams,Probability & Statistics", label: "Data & probability", items: [
+        { name: "Venn Diagrams", score: 61 },
+        { name: "Probability & Statistics", score: 57, weak: true },
       ]},
     ],
     recommendation: { difficulty: "Silver → Gold" },

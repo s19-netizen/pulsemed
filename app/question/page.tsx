@@ -377,15 +377,16 @@ function QuestionSession() {
 
   const useVRBank = section === "vr" && !isGuest;
   const useQRBank = section === "qr" && !isGuest;
+  const useDMBank = section === "dm" && !isGuest;
 
   const staticQuestions: GuestQuestion[] = (() => {
-    if (useVRBank || useQRBank) return [];
+    if (useVRBank || useQRBank || useDMBank) return [];
     const all = GUEST_QUESTIONS[section] ?? GUEST_QUESTIONS.vr;
     return requestedCount > 0 ? all.slice(0, requestedCount) : all;
   })();
 
   const [bankQuestions, setBankQuestions] = useState<GuestQuestion[]>([]);
-  const [bankLoading, setBankLoading] = useState(useVRBank || useQRBank);
+  const [bankLoading, setBankLoading] = useState(useVRBank || useQRBank || useDMBank);
   const [vrError, setVrError] = useState("");
   const sessionIdRef = useRef<string>("");
 
@@ -396,11 +397,16 @@ function QuestionSession() {
   const allTimesRef = useRef<number[]>([]);
 
   useEffect(() => {
-    if (!useVRBank && !useQRBank) return;
-    const count = requestedCount > 0 ? requestedCount : (useQRBank ? 20 : 12);
-    const endpoint = useQRBank
-      ? `/api/questions/qr?difficulty=${encodeURIComponent(difficulty)}&count=${count}`
-      : `/api/questions/vr?difficulty=${encodeURIComponent(difficulty)}&count=${count}`;
+    if (!useVRBank && !useQRBank && !useDMBank) return;
+    const count = requestedCount > 0 ? requestedCount : (useQRBank ? 20 : 15);
+    let endpoint = "";
+    if (useQRBank) endpoint = `/api/questions/qr?difficulty=${encodeURIComponent(difficulty)}&count=${count}`;
+    else if (useDMBank) {
+      const family = params.get("type") ?? "";
+      endpoint = `/api/questions/dm?difficulty=${encodeURIComponent(difficulty)}&count=${count}${family ? `&family=${encodeURIComponent(family)}` : ""}`;
+    } else {
+      endpoint = `/api/questions/vr?difficulty=${encodeURIComponent(difficulty)}&count=${count}`;
+    }
     fetch(endpoint)
       .then(r => r.json())
       .then(data => {
@@ -412,7 +418,7 @@ function QuestionSession() {
       .catch(() => { setVrError("Failed to load questions. Please try again."); setBankLoading(false); });
   }, []);
 
-  const questions: GuestQuestion[] = (useVRBank || useQRBank) ? bankQuestions : staticQuestions;
+  const questions: GuestQuestion[] = (useVRBank || useQRBank || useDMBank) ? bankQuestions : staticQuestions;
   const slots = useMemo(() => buildSlots(questions), [questions]);
 
   // Slot navigation
