@@ -19,6 +19,70 @@ const SJT_BAND_LABELS: Record<number, string> = {
   4: "Band 4 — Needs focus",
 };
 
+// ── Structured insights types ─────────────────────────────────────────────────
+
+type StructuredInsights = {
+  verdict: string;
+  trend: "improving" | "declining" | "steady" | "first";
+  strong: { topic: string; score: string }[];
+  weak: { topic: string; score: string; tip: string }[];
+};
+
+const TREND_META: Record<string, { label: string; color: string; bg: string }> = {
+  improving: { label: "↑ Improving",  color: "#3dbe6c", bg: "#edfbf3" },
+  declining:  { label: "↓ Declining",  color: "#ff6b5c", bg: "#ffedea" },
+  steady:     { label: "→ Steady",     color: "#f59e0b", bg: "#fffbeb" },
+  first:      { label: "First session",color: "#2d7ff9", bg: "#eaf2ff" },
+};
+
+function StructuredInsightsBlock({ data, color }: { data: StructuredInsights; color: string }) {
+  const trend = TREND_META[data.trend] ?? TREND_META.first;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "flex-start", flexWrap: "wrap" }}>
+        <p style={{ fontSize: 13, lineHeight: 1.7, color: "var(--ink)", margin: 0, flex: 1, minWidth: 200 }}>{data.verdict}</p>
+        <span style={{ fontSize: 11, fontWeight: 700, color: trend.color, background: trend.bg, borderRadius: 6, padding: "3px 9px", flexShrink: 0, alignSelf: "flex-start" }}>
+          {trend.label}
+        </span>
+      </div>
+
+      {(data.strong?.length > 0 || data.weak?.length > 0) && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          {data.strong?.length > 0 && (
+            <div style={{ background: "#edfbf3", borderRadius: 10, padding: "12px 14px", borderLeft: "3px solid #3dbe6c" }}>
+              <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.07em", color: "#3dbe6c", margin: "0 0 8px", textTransform: "uppercase" }}>What went well</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+                {data.strong.map((s, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: 12, color: "var(--ink)", fontWeight: 600 }}>{s.topic}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#3dbe6c", background: "white", borderRadius: 4, padding: "1px 7px", flexShrink: 0, marginLeft: 6 }}>{s.score}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {data.weak?.length > 0 && (
+            <div style={{ background: "#ffedea", borderRadius: 10, padding: "12px 14px", borderLeft: "3px solid #ff6b5c" }}>
+              <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.07em", color: "#ff6b5c", margin: "0 0 8px", textTransform: "uppercase" }}>Focus areas</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {data.weak.map((w, i) => (
+                  <div key={i}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
+                      <span style={{ fontSize: 12, color: "var(--ink)", fontWeight: 600 }}>{w.topic}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: "#ff6b5c", background: "white", borderRadius: 4, padding: "1px 7px", flexShrink: 0, marginLeft: 6 }}>{w.score}</span>
+                    </div>
+                    {w.tip && <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: 0, lineHeight: 1.5 }}>{w.tip}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Insight renderer ──────────────────────────────────────────────────────────
 
 function parseInline(text: string): React.ReactNode {
@@ -99,10 +163,11 @@ function ResultsContent() {
   const onPace  = avgSec !== null && avgSec <= target * 1.15;
   const tooSlow = avgSec !== null && avgSec > target * 1.6;
 
-  const [loading, setLoading]           = useState(!isGuest);
-  const [predictedScore, setPredicted]  = useState<number | null>(null);
-  const [sjtBand, setSjtBand]           = useState<number | null>(null);
-  const [insights, setInsights]         = useState<string>("");
+  const [loading, setLoading]              = useState(!isGuest);
+  const [predictedScore, setPredicted]     = useState<number | null>(null);
+  const [sjtBand, setSjtBand]              = useState<number | null>(null);
+  const [insights, setInsights]            = useState<string>("");
+  const [structuredInsights, setStructured] = useState<StructuredInsights | null>(null);
 
   useEffect(() => {
     if (isGuest || total === 0) { setLoading(false); return; }
@@ -115,7 +180,13 @@ function ResultsContent() {
       .then(d => {
         if (d.predictedScore != null) setPredicted(d.predictedScore);
         if (d.sjtBand != null) setSjtBand(d.sjtBand);
-        if (d.insights) setInsights(d.insights);
+        if (d.insights) {
+          try {
+            const parsed = JSON.parse(d.insights);
+            if (parsed?.verdict) { setStructured(parsed); return; }
+          } catch {}
+          setInsights(d.insights);
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -191,8 +262,8 @@ function ResultsContent() {
         ))}
       </div>
 
-      {/* ── AI insights ── */}
-      {(insights || loading) && (
+      {/* ── Session insights ── */}
+      {(structuredInsights || insights || loading) && (
         <div className="content-card" style={{ padding: "20px 22px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
             <span style={{ width: 24, height: 24, background: meta.tint, borderRadius: 6, display: "grid", placeItems: "center", flexShrink: 0 }}>
@@ -205,6 +276,8 @@ function ResultsContent() {
 
           {loading ? (
             <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: 0 }}>Generating your personalised feedback…</p>
+          ) : structuredInsights ? (
+            <StructuredInsightsBlock data={structuredInsights} color={meta.color} />
           ) : (
             <InsightsBlock text={insights} color={meta.color} />
           )}

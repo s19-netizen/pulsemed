@@ -15,6 +15,11 @@ type Report = {
   created_at: string;
 };
 
+type AiSubtypeItem = { subtype: string; score: string; missedMarks?: number };
+type AiSection = { verdict: string; strong?: AiSubtypeItem[]; weak?: AiSubtypeItem[]; band?: number };
+type StructuredAnalysis = { sections: Record<string, AiSection>; overallVerdict?: string };
+type WeekTask = { title: string; focus: string; tasks: string[] };
+
 const CLASSIFICATIONS = [
   { min: 2400, label: "Exceptional",                color: "#3DBE6C" },
   { min: 2250, label: "Very strong",                color: "#3DBE6C" },
@@ -101,20 +106,23 @@ export default function DiagnosticResults({ report }: { report: Report }) {
   const ringPct = (report.total_score - 900) / 1800;
   const dashOffset = circ * (1 - Math.max(0, Math.min(1, ringPct)));
 
-  // Parse study plan into week blocks
-  const planBlocks: { title: string; body: string }[] = [];
-  if (report.groq_study_plan) {
-    const chunks = report.groq_study_plan.split(/\*\*(?=Week)/i);
-    for (const chunk of chunks) {
-      const m = chunk.match(/^([^*]+)\*\*([\s\S]*)$/);
-      if (m) planBlocks.push({ title: m[1].trim(), body: m[2].trim() });
-      else if (chunk.trim()) planBlocks.push({ title: "", body: chunk.trim() });
-    }
-  }
+  // Parse structured JSON from Groq
+  let structuredAnalysis: StructuredAnalysis | null = null;
+  let structuredWeeks: WeekTask[] | null = null;
 
-  // Parse analysis into sentences for structured colour-coded display
+  try {
+    const parsed = JSON.parse(report.groq_analysis);
+    if (parsed?.sections) structuredAnalysis = parsed;
+  } catch {}
+
+  try {
+    const parsed = JSON.parse(report.groq_study_plan);
+    if (Array.isArray(parsed) && parsed.length > 0) structuredWeeks = parsed;
+  } catch {}
+
+  // Fallback: parse prose analysis into colour-coded sentences
   const isFallback = report.groq_analysis?.startsWith("Your diagnostic is complete. VR:");
-  const rawAnalysis = !isFallback ? (report.groq_analysis ?? "") : "";
+  const rawAnalysis = !structuredAnalysis && !isFallback ? (report.groq_analysis ?? "") : "";
   const insightItems = rawAnalysis
     ? rawAnalysis
         .replace(/\n+/g, " ")
@@ -131,6 +139,17 @@ export default function DiagnosticResults({ report }: { report: Report }) {
     if (/\bQR\b/.test(u) || u.includes("QUANTITATIVE")) return "qr";
     if (/\bSJT\b/.test(u) || u.includes("SITUATIONAL")) return "sjt";
     return null;
+  }
+
+  // Fallback: parse prose study plan into week blocks
+  const planBlocks: { title: string; body: string }[] = [];
+  if (!structuredWeeks && report.groq_study_plan) {
+    const chunks = report.groq_study_plan.split(/\*\*(?=Week)/i);
+    for (const chunk of chunks) {
+      const m = chunk.match(/^([^*]+)\*\*([\s\S]*)$/);
+      if (m) planBlocks.push({ title: m[1].trim(), body: m[2].trim() });
+      else if (chunk.trim()) planBlocks.push({ title: "", body: chunk.trim() });
+    }
   }
 
   // SJT raw totals
@@ -177,8 +196,62 @@ export default function DiagnosticResults({ report }: { report: Report }) {
         </div>
       </div>
 
-      {/* ── Performance insights ── */}
-      {insightItems.length > 0 && (
+      {/* ── Performance insights (structured JSON) ── */}
+      {structuredAnalysis && (
+        <div className="content-card" style={{ padding: "18px 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+            <span style={{ width: 24, height: 24, background: "#f4f7fb", borderRadius: 6, display: "grid", placeItems: "center", flexShrink: 0 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6B7A8C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+            </span>
+            <h3 style={{ fontSize: 13, fontWeight: 800, margin: 0 }}>Performance insights</h3>
+          </div>
+
+          {structuredAnalysis.overallVerdict && (
+            <p style={{ fontSize: 13, lineHeight: 1.7, color: "var(--ink)", margin: "0 0 16px", padding: "10px 14px", background: "#F8F9FB", borderRadius: 10, borderLeft: "3px solid #94A3B8" }}>
+              {structuredAnalysis.overallVerdict}
+            </p>
+          )}
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {(["vr", "dm", "qr", "sjt"] as const).map(sec => {
+              const s = structuredAnalysis!.sections[sec];
+              if (!s) return null;
+              const color = COLORS[sec];
+              const tint = TINTS[sec];
+              return (
+                <div key={sec} style={{ background: tint, borderRadius: 12, padding: "14px 16px", borderLeft: `3px solid ${color}` }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.08em", color, background: color + "28", borderRadius: 4, padding: "2px 7px" }}>
+                      {sec.toUpperCase()}
+                    </span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "var(--ink-soft)" }}>{FULL[sec]}</span>
+                  </div>
+                  <p style={{ fontSize: 13, lineHeight: 1.65, color: "var(--ink)", margin: "0 0 10px" }}>{s.verdict}</p>
+                  {((s.strong?.length ?? 0) > 0 || (s.weak?.length ?? 0) > 0) && (
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                      {s.strong?.map((item, i) => (
+                        <span key={`s${i}`} style={{ fontSize: 11, fontWeight: 700, color: "#3DBE6C", background: "#EDFBF3", border: "1px solid #3DBE6C28", borderRadius: 6, padding: "3px 9px" }}>
+                          ✓ {item.subtype} {item.score}
+                        </span>
+                      ))}
+                      {s.weak?.map((item, i) => (
+                        <span key={`w${i}`} style={{ fontSize: 11, fontWeight: 700, color: "#FF6B5C", background: "#FFEDEA", border: "1px solid #FF6B5C28", borderRadius: 6, padding: "3px 9px" }}>
+                          ↑ {item.subtype} {item.score}{item.missedMarks != null ? ` (missed ${item.missedMarks})` : ""}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Performance insights (prose fallback) ── */}
+      {!structuredAnalysis && insightItems.length > 0 && (
         <div className="content-card" style={{ padding: "18px 20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
             <span style={{ width: 24, height: 24, background: "#f4f7fb", borderRadius: 6, display: "grid", placeItems: "center", flexShrink: 0 }}>
@@ -288,8 +361,40 @@ export default function DiagnosticResults({ report }: { report: Report }) {
         </div>
       </div>
 
-      {/* ── Study plan ── */}
-      {planBlocks.length > 0 && (
+      {/* ── Study plan (structured JSON) ── */}
+      {structuredWeeks && structuredWeeks.length > 0 && (
+        <div className="content-card" style={{ padding: "18px 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+            <span style={{ width: 24, height: 24, background: "#eaf2ff", borderRadius: 6, display: "grid", placeItems: "center", flexShrink: 0 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2D7FF9" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </span>
+            <h3 style={{ fontSize: 13, fontWeight: 800, margin: 0 }}>Your 4-week study plan</h3>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+            {structuredWeeks.map((week, i) => (
+              <div key={i} style={{ background: "#f8f9fb", borderRadius: 12, padding: "16px 18px", borderLeft: "3px solid #2D7FF9" }}>
+                <p style={{ fontSize: 12, fontWeight: 900, color: "#2D7FF9", margin: "0 0 3px" }}>{week.title}</p>
+                {week.focus && (
+                  <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "0 0 10px", lineHeight: 1.5 }}>{week.focus}</p>
+                )}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {week.tasks.map((task, j) => (
+                    <div key={j} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                      <span style={{ width: 16, height: 16, borderRadius: 4, border: "1.5px solid #2D7FF928", background: "white", flexShrink: 0, marginTop: 1 }} />
+                      <p style={{ fontSize: 12, lineHeight: 1.55, color: "var(--ink)", margin: 0 }}>{task}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Study plan (prose fallback) ── */}
+      {!structuredWeeks && planBlocks.length > 0 && (
         <div className="content-card" style={{ padding: "18px 20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
             <span style={{ width: 24, height: 24, background: "#eaf2ff", borderRadius: 6, display: "grid", placeItems: "center", flexShrink: 0 }}>

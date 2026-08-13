@@ -155,33 +155,38 @@ export async function POST(req: NextRequest) {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${groqApiKey}` },
         body: JSON.stringify({
           model: "llama-3.3-70b-versatile",
+          response_format: { type: "json_object" },
           messages: [
             {
               role: "system",
-              content: "You are a UCAT preparation expert writing personalised feedback for a medical school applicant. Be warm, honest, and specific. Always reference exact mark counts — tell students not just what they got right but what marks they missed and in which subtypes. Use \"you\" language throughout. Never use generic advice.",
+              content: `You are a UCAT preparation expert. Respond with ONLY valid JSON using this exact structure:
+{"sections":{"vr":{"verdict":"string","strong":[{"subtype":"string","score":"X/Y"}],"weak":[{"subtype":"string","score":"X/Y","missedMarks":N}]},"dm":{"verdict":"string","strong":[...],"weak":[...]},"qr":{"verdict":"string","strong":[...],"weak":[...]},"sjt":{"verdict":"string","band":N}},"overallVerdict":"string","weeks":[{"title":"string","focus":"string","tasks":["string","string","string"]}]}
+Rules: verdict = 1–2 warm honest sentences referencing exact marks. strong = subtypes scoring 70%+. weak = subtypes below 50%, missedMarks must be an integer. weeks = exactly 4. tasks = exactly 3 strings per week. Always use the student's actual subtype names and mark counts from the data.`,
             },
             {
               role: "user",
-              content: `A student just completed the PulseMed UCAT diagnostic. Here are their full results:\n\n${scoreContext}\n\nWrite TWO sections separated by the exact delimiter "---PLAN---":\n\nSection 1 — PERSONALISED ANALYSIS (5–6 sentences, no bullet points):\nStart by naming their cognitive total and overall classification honestly but warmly. Then go subtype by subtype for their two biggest weak areas: name the subtype, say exactly how many marks they got and how many they missed (e.g. "you picked up 2 out of 6 marks in DM Logical Reasoning, which means you missed 4"), and explain in plain English what that subtype tests and why students often find it hard. If they have a genuinely strong area (80%+ on a subtype), call it out specifically with the mark count. End with one honest sentence about where they stand overall and what the most important next step is.\n\nSection 2 — 4-WEEK STUDY PLAN (formatted with bold week headings):\nFormat as exactly 4 bold week titles (e.g. **Week 1: ...**), each followed by 2–3 specific daily focus points tied to their actual weak subtypes. Reference exact subtype names from their results. Keep each week to 3–4 lines. End with one short motivating sentence.`,
+              content: `A student just completed their UCAT diagnostic. Here are their full results:\n\n${scoreContext}\n\nGenerate personalised section verdicts with strong/weak subtypes, an overall verdict, and a 4-week study plan targeting their weakest areas.`,
             },
           ],
-          temperature: 0.65,
-          max_tokens: 900,
+          temperature: 0.6,
+          max_tokens: 1400,
         }),
       });
 
       if (!groqRes.ok) {
-        const errText = await groqRes.text();
-        console.error("Groq API error:", groqRes.status, errText);
+        console.error("Groq API error:", groqRes.status, await groqRes.text());
       } else {
         const groqData = await groqRes.json();
-        const fullText: string = groqData.choices?.[0]?.message?.content ?? "";
-        const delimIdx = fullText.indexOf("---PLAN---");
-        if (delimIdx !== -1) {
-          groqAnalysis = fullText.slice(0, delimIdx).trim();
-          groqStudyPlan = fullText.slice(delimIdx + 10).trim();
-        } else {
-          groqAnalysis = fullText.trim();
+        const rawContent: string = groqData.choices?.[0]?.message?.content ?? "";
+        try {
+          const parsed = JSON.parse(rawContent);
+          if (parsed.sections && Array.isArray(parsed.weeks)) {
+            groqAnalysis = JSON.stringify({ sections: parsed.sections, overallVerdict: parsed.overallVerdict ?? "" });
+            groqStudyPlan = JSON.stringify(parsed.weeks);
+          }
+        } catch {
+          console.error("Groq returned non-JSON:", rawContent.slice(0, 300));
+          groqAnalysis = rawContent;
         }
       }
     } catch (err) {

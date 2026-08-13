@@ -59,6 +59,38 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ── Fetch baseline and recent history for context ─────────────────────────
+  let baselineContext = "";
+  let trendContext = "";
+  if (userId) {
+    const [{ data: diagReport }, { data: recentSessions }] = await Promise.all([
+      supabase.from("diagnostic_reports")
+        .select("vr_score,dm_score,qr_score,sjt_band,total_score")
+        .eq("user_id", userId)
+        .single(),
+      supabase.from("practice_sessions")
+        .select("correct,total,predicted_score,sjt_band,created_at")
+        .eq("user_id", userId)
+        .eq("section", section)
+        .order("created_at", { ascending: false })
+        .limit(5),
+    ]);
+
+    if (diagReport) {
+      baselineContext = section === "sjt"
+        ? `Diagnostic baseline: SJT Band ${diagReport.sjt_band}`
+        : `Diagnostic baseline: ${section.toUpperCase()} ${diagReport[`${section}_score` as "vr_score" | "dm_score" | "qr_score"]}/900 (total cognitive ${diagReport.total_score}/2700)`;
+    }
+
+    if (recentSessions?.length) {
+      const history = [...recentSessions].reverse().map(s => {
+        const p = s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0;
+        return `${p}%`;
+      }).join(" → ");
+      trendContext = `Recent ${section.toUpperCase()} sessions (oldest→newest): ${history} → this session: ${Math.round(accuracy * 100)}%`;
+    }
+  }
+
   // ── Groq insights ─────────────────────────────────────────────────────────
   let insights = "";
   const groqApiKey = process.env.GROQ_API_KEY;
@@ -70,14 +102,16 @@ export async function POST(req: NextRequest) {
     const targetTime: Record<string, number> = { vr: 32, dm: 61, qr: 39, sjt: 23 };
     const avgSec = avgMs > 0 ? Math.round(avgMs / 1000) : null;
     const paceNote = avgSec
-      ? `Average time per question: ${avgSec}s (target: ${targetTime[section] ?? 40}s)`
+      ? `Avg time per question: ${avgSec}s (target: ${targetTime[section] ?? 40}s)`
       : "";
 
     const context = [
       `Section: ${sectionLabel}`,
-      `Result: ${correct}/${total} correct (${pct}%)`,
+      `This session: ${correct}/${total} correct (${pct}%)`,
       `Predicted score: ${scoreStr}`,
       paceNote,
+      baselineContext,
+      trendContext,
       tagBreakdown ? `Topic breakdown:\n${tagBreakdown}` : "",
     ].filter(Boolean).join("\n");
 
@@ -87,24 +121,33 @@ export async function POST(req: NextRequest) {
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${groqApiKey}` },
         body: JSON.stringify({
           model: "llama-3.3-70b-versatile",
+          response_format: { type: "json_object" },
           messages: [
             {
               role: "system",
-              content: "You are a UCAT preparation coach writing a post-practice session report. Be specific, honest, and encouraging. Reference exact mark counts and topic names. Never be generic. Keep it tight — under 140 words.",
+              content: `You are a UCAT preparation coach. Respond with ONLY valid JSON using this exact structure:
+{"verdict":"string","trend":"improving|declining|steady|first","strong":[{"topic":"string","score":"X/Y"}],"weak":[{"topic":"string","score":"X/Y","tip":"string"}]}
+Rules: verdict = 1 honest sentence about this session score and what it means. trend = compare to recent sessions ("first" if no history, "improving"/"declining"/"steady" otherwise). strong = max 2, topics above 65%. weak = max 2, topics below 60%, tip = 1 sentence specific action. Reference exact mark counts and topic names.`,
             },
             {
               role: "user",
-              content: `Practice session data:\n${context}\n\nWrite a report using EXACTLY this format:\n\n**[One honest sentence naming their score and what it means]**\n\nWhat went well:\n• [specific positive — name the topic if available, or "Clean start — every session builds the baseline" if 0%]\n\nWhere to focus:\n• [most important weak area — name topic and explain briefly]\n• [second weak area if different topic, else omit]\n\n**Next step:** [one concrete action]`,
+              content: `Practice session data:\n${context}`,
             },
           ],
           temperature: 0.6,
-          max_tokens: 280,
+          max_tokens: 400,
         }),
       });
 
       if (res.ok) {
         const d = await res.json();
-        insights = d.choices?.[0]?.message?.content?.trim() ?? "";
+        const rawContent = d.choices?.[0]?.message?.content?.trim() ?? "";
+        try {
+          const parsed = JSON.parse(rawContent);
+          if (parsed?.verdict) insights = rawContent;
+        } catch {
+          insights = rawContent;
+        }
       } else {
         console.error("Groq practice error:", res.status, await res.text());
       }
