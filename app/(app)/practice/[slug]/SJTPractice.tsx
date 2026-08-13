@@ -541,13 +541,14 @@ export default function SJTPractice() {
       <div style={{ height: 4, background: "var(--line)", borderRadius: 2, marginBottom: 16 }}>
         <div style={{ height: 4, background: C, borderRadius: 2, width: `${progress}%`, transition: "width .3s" }} />
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
         <p className="eyebrow" style={{ margin: 0 }}>
           Practice · SJT · {item.kind === "ml" ? "Most & Least" : FMT_LABEL[item.fmt]}
         </p>
-        <small style={{ fontSize: 12, color: "var(--ink-soft)", fontWeight: 600 }}>
-          {idx + 1} / {items.length}
-        </small>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <small style={{ fontSize: 12, color: "var(--ink-soft)", fontWeight: 600 }}>{idx + 1} / {items.length}</small>
+          <button type="button" onClick={() => router.push("/practice/sjt")} style={{ background: "white", border: "1.5px solid var(--line)", borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", color: "var(--ink-soft)" }}>✕ Exit</button>
+        </div>
       </div>
     </>
   );
@@ -697,10 +698,7 @@ export default function SJTPractice() {
         )}
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button type="button" onClick={goBack} disabled={idx === 0} style={{ background: "white", border: "1.5px solid var(--line)", borderRadius: 10, padding: "0 12px", minHeight: 38, fontSize: 12, fontWeight: 700, cursor: idx === 0 ? "not-allowed" : "pointer", color: "var(--ink)", opacity: idx === 0 ? 0.4 : 1 }}>← Back</button>
-            <button type="button" onClick={() => router.push("/practice/sjt")} style={{ background: "white", border: "1.5px solid var(--line)", borderRadius: 10, padding: "0 12px", minHeight: 38, fontSize: 12, fontWeight: 700, cursor: "pointer", color: "var(--ink-soft)" }}>✕ Exit</button>
-          </div>
+          <button type="button" onClick={goBack} disabled={idx === 0} style={{ background: "white", border: "1.5px solid var(--line)", borderRadius: 10, padding: "0 12px", minHeight: 38, fontSize: 12, fontWeight: 700, cursor: idx === 0 ? "not-allowed" : "pointer", color: "var(--ink)", opacity: idx === 0 ? 0.4 : 1 }}>← Back</button>
           {!mlDone ? (
             <button
               type="button"
@@ -790,10 +788,7 @@ export default function SJTPractice() {
           )}
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16, gap: 10 }}>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button type="button" onClick={goBack} disabled={idx === 0} style={{ background: "white", border: "1.5px solid var(--line)", borderRadius: 10, padding: "0 12px", minHeight: 38, fontSize: 12, fontWeight: 700, cursor: idx === 0 ? "not-allowed" : "pointer", color: "var(--ink)", opacity: idx === 0 ? 0.4 : 1 }}>← Back</button>
-              <button type="button" onClick={() => router.push("/practice/sjt")} style={{ background: "white", border: "1.5px solid var(--line)", borderRadius: 10, padding: "0 12px", minHeight: 38, fontSize: 12, fontWeight: 700, cursor: "pointer", color: "var(--ink-soft)" }}>✕ Exit</button>
-            </div>
+            <button type="button" onClick={goBack} disabled={idx === 0} style={{ background: "white", border: "1.5px solid var(--line)", borderRadius: 10, padding: "0 12px", minHeight: 38, fontSize: 12, fontWeight: 700, cursor: idx === 0 ? "not-allowed" : "pointer", color: "var(--ink)", opacity: idx === 0 ? 0.4 : 1 }}>← Back</button>
             {!confirmed ? (
               <button
                 type="button"
