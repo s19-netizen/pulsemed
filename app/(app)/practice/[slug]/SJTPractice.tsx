@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type Fmt = "ar" | "ir" | "ml";
 
@@ -170,6 +170,7 @@ function shuffle<T>(arr: T[]): T[] {
 
 export default function SJTPractice() {
   const router = useRouter();
+  const params = useSearchParams();
 
   const [fmts, setFmts] = useState<Set<Fmt>>(new Set(["ar", "ir", "ml"]));
   const [theme, setTheme] = useState<Theme>("any");
@@ -205,11 +206,20 @@ export default function SJTPractice() {
     });
   }
 
-  async function start() {
+  useEffect(() => {
+    if (params.get("autostart") === "1") {
+      const c = parseInt(params.get("count") ?? "") || count;
+      start(c);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function start(countOverride?: number) {
+    const effectiveCount = countOverride ?? count;
     setStage("loading");
     setLoadErr("");
     const diff = DIFFICULTY_BY_THEME[theme];
-    const perFmt = Math.max(3, Math.ceil(count / fmts.size));
+    const perFmt = Math.max(3, Math.ceil(effectiveCount / fmts.size));
 
     try {
       const fetches = Array.from(fmts).map(f =>
@@ -232,7 +242,7 @@ export default function SJTPractice() {
         }
       }
 
-      const picked = shuffle(all).slice(0, count);
+      const picked = shuffle(all).slice(0, effectiveCount);
       if (!picked.length) {
         setLoadErr("No questions found for that combination — try a different theme or format.");
         setStage("pick");

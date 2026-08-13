@@ -66,6 +66,17 @@ const NAV = [
     href: (key: string) => `/practice/${key}`,
   },
   {
+    id: "study-plan",
+    label: "Study Plan",
+    icon: (
+      <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      </svg>
+    ),
+    sections: [],
+    href: () => "/study-plan",
+  },
+  {
     id: "mocks",
     label: "Mocks",
     icon: (
@@ -119,6 +130,7 @@ export default function AppShell({ children, user, testDate }: { children: React
 
   const isCurrentNav = (id: string) => {
     if (id === "mocks") return pathname === "/mocks";
+    if (id === "study-plan") return pathname === "/study-plan";
     if (id === "learn") return pathname.startsWith("/section") || pathname.startsWith("/guide");
     if (id === "practice") return pathname.startsWith("/practice");
     return false;
