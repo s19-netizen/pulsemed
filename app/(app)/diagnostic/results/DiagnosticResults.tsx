@@ -112,11 +112,26 @@ export default function DiagnosticResults({ report }: { report: Report }) {
     }
   }
 
-  // Parse Groq analysis into paragraphs, skip fallback message
+  // Parse analysis into sentences for structured colour-coded display
   const isFallback = report.groq_analysis?.startsWith("Your diagnostic is complete. VR:");
-  const analysisParas = !isFallback && report.groq_analysis
-    ? report.groq_analysis.split(/\n+/).map(s => s.trim()).filter(Boolean)
+  const rawAnalysis = !isFallback ? (report.groq_analysis ?? "") : "";
+  const insightItems = rawAnalysis
+    ? rawAnalysis
+        .replace(/\n+/g, " ")
+        .split(/\.\s+(?=[A-Z"'])/)
+        .map(s => s.trim())
+        .filter(s => s.length > 15)
+        .map(s => (s.endsWith(".") || s.endsWith("!") || s.endsWith("?")) ? s : s + ".")
     : [];
+
+  function detectSection(text: string): "vr" | "dm" | "qr" | "sjt" | null {
+    const u = text.toUpperCase();
+    if (/\bVR\b/.test(u) || u.includes("VERBAL")) return "vr";
+    if (/\bDM\b/.test(u) || u.includes("DECISION")) return "dm";
+    if (/\bQR\b/.test(u) || u.includes("QUANTITATIVE")) return "qr";
+    if (/\bSJT\b/.test(u) || u.includes("SITUATIONAL")) return "sjt";
+    return null;
+  }
 
   // SJT raw totals
   const sjtRaw = bySection.sjt.reduce((s, [, v]) => s + v.rawPts, 0);
@@ -161,6 +176,44 @@ export default function DiagnosticResults({ report }: { report: Report }) {
           </div>
         </div>
       </div>
+
+      {/* ── Performance insights ── */}
+      {insightItems.length > 0 && (
+        <div className="content-card" style={{ padding: "18px 20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <span style={{ width: 24, height: 24, background: "#f4f7fb", borderRadius: 6, display: "grid", placeItems: "center", flexShrink: 0 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6B7A8C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+            </span>
+            <h3 style={{ fontSize: 13, fontWeight: 800, margin: 0 }}>Performance insights</h3>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+            {insightItems.map((sentence, i) => {
+              const sec = detectSection(sentence);
+              const color = sec ? COLORS[sec] : "#94A3B8";
+              const tint = sec ? TINTS[sec] : "#F8F9FB";
+              return (
+                <div key={i} style={{
+                  display: "flex", gap: 10, alignItems: "flex-start",
+                  background: tint, borderRadius: 10, padding: "10px 14px",
+                  borderLeft: `3px solid ${color}`,
+                }}>
+                  {sec && (
+                    <span style={{
+                      fontSize: 9, fontWeight: 900, letterSpacing: "0.08em",
+                      color, background: color + "28",
+                      borderRadius: 4, padding: "2px 6px",
+                      flexShrink: 0, marginTop: 2,
+                    }}>{sec.toUpperCase()}</span>
+                  )}
+                  <p style={{ fontSize: 13, lineHeight: 1.7, color: "var(--ink)", margin: 0 }}>{sentence}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ── Section cards ── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
@@ -234,25 +287,6 @@ export default function DiagnosticResults({ report }: { report: Report }) {
           </div>
         </div>
       </div>
-
-      {/* ── AI insights ── */}
-      {analysisParas.length > 0 && (
-        <div className="content-card" style={{ padding: "18px 20px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-            <span style={{ width: 24, height: 24, background: "#f1ecff", borderRadius: 6, display: "grid", placeItems: "center", flexShrink: 0 }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8B6BFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-              </svg>
-            </span>
-            <h3 style={{ fontSize: 13, fontWeight: 800, margin: 0 }}>AI insights</h3>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {analysisParas.map((para, i) => (
-              <p key={i} style={{ fontSize: 13, lineHeight: 1.75, color: "var(--ink)", margin: 0 }}>{para}</p>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* ── Study plan ── */}
       {planBlocks.length > 0 && (
