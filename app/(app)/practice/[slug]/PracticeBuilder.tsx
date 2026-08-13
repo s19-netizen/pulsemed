@@ -82,10 +82,10 @@ const SECTION_DATA: Record<string, {
 
 const DIFFICULTIES = ["Bronze", "Silver", "Gold", "Diamond"];
 const COUNTS: Record<string, number[]> = {
-  vr:  [4, 8, 12, 20],
-  dm:  [5, 10, 15, 20],
-  qr:  [4, 8, 16, 20],
-  sjt: [5, 10, 20, 35],
+  vr:  [8, 16, 24, 44],
+  dm:  [10, 15, 20, 29],
+  qr:  [8, 16, 24, 36],
+  sjt: [10, 23, 46, 69],
 };
 
 // Real UCAT section amounts
@@ -123,11 +123,9 @@ export default function PracticeBuilder({ slug }: { slug: string }) {
   const planReason = params.get("reason") ?? "";
   const [planDismissed, setPlanDismissed] = useState(false);
 
-  const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([config.groups[0].id]);
+  const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>(config.groups.map(g => g.id));
   const [selectedSubtypes, setSelectedSubtypes] = useState<Set<string>>(new Set());
-  const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>(
-    slug === "vr" ? ["Silver", "Gold"] : ["Gold"]
-  );
+  const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>(["Bronze", "Silver", "Gold", "Diamond"]);
   const counts = COUNTS[slug] ?? COUNTS.dm;
   const [count, setCount] = useState(counts[1] ?? counts[0]);
 

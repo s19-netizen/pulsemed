@@ -633,7 +633,11 @@ export default function MockRunner({ mockId }: { mockId: "mock-1" | "mock-2" }) 
           {/* Left — context (passage / stimulus / scenario) */}
           <div className="question-context">
             <p>{contextLabel}</p>
-            <div style={{ whiteSpace: "pre-wrap" }}>{contextText}</div>
+            <div>
+              {contextText.split(/\n{2,}/).map((para, i) => (
+                <p key={i} style={{ margin: "0 0 12px", lineHeight: 1.7 }}>{para.replace(/\n/g, " ").trim()}</p>
+              ))}
+            </div>
           </div>
 
           {/* Right — question + options */}
