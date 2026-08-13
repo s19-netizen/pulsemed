@@ -25,6 +25,106 @@ const DEEP  = "#D84A3E";
 const TINT  = "#FFEDEA";
 const OPT_LABELS = ["A", "B", "C"];
 
+// ─── SJT walkthrough parser ───────────────────────────────────────────────────
+
+type SJTOptPart = { letter: string; label: string; isCorrect: boolean; reason: string };
+
+function parseSJTWalkthrough(text: string): { overall: string; options: SJTOptPart[] } {
+  const splitMatch = text.match(/OPTION[- ]BY[- ]OPTION ANALYSIS/i);
+  let overall = "";
+  let analysisPart = text;
+
+  if (splitMatch && splitMatch.index !== undefined) {
+    const beforeAnalysis = text.slice(0, splitMatch.index).trim();
+    overall = beforeAnalysis.replace(/^OVERALL JUDGEMENT\s*/i, "").trim();
+    analysisPart = text.slice(splitMatch.index + splitMatch[0].length).trim();
+  }
+
+  const optionStarts: Array<{ index: number; letter: string }> = [];
+  const optStartRe = /Option ([A-D])\s*[—–\-]+\s*/g;
+  let m: RegExpExecArray | null;
+  while ((m = optStartRe.exec(analysisPart)) !== null) {
+    optionStarts.push({ index: m.index, letter: m[1] });
+  }
+
+  const options: SJTOptPart[] = [];
+  for (let i = 0; i < optionStarts.length; i++) {
+    const end = optionStarts[i + 1]?.index ?? analysisPart.length;
+    const block = analysisPart.slice(optionStarts[i].index, end).trim();
+    const bm = block.match(/Option [A-D]\s*[—–\-]+\s*(.+?)\s*[—–\-]+\s*(CORRECT|INCORRECT)[.\s]+([\s\S]*)/i);
+    if (bm) {
+      options.push({
+        letter: optionStarts[i].letter,
+        label: bm[1].trim(),
+        isCorrect: bm[2].toUpperCase() === "CORRECT",
+        reason: bm[3].trim().replace(/^This is (?:the correct rating |incorrect )?because\s*/i, ""),
+      });
+    }
+  }
+
+  return { overall, options };
+}
+
+function SJTWalkthrough({ text, selectedIdx, isCorrectFn }: {
+  text: string;
+  selectedIdx?: number;
+  isCorrectFn?: (letter: string) => boolean;
+}) {
+  const { overall, options } = parseSJTWalkthrough(text);
+
+  if (!overall && !options.length) {
+    return (
+      <div style={{ padding: "12px 16px", background: "#F8F9FB", borderRadius: 10, borderLeft: "3px solid #d97706", marginTop: 14 }}>
+        <p style={{ margin: 0, fontSize: 12, lineHeight: 1.65, color: "var(--ink)", whiteSpace: "pre-line" }}>{text}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="exp-panel" style={{ marginTop: 14 }}>
+      {overall && (
+        <div style={{ padding: "12px 16px", background: "#fffbeb", borderBottom: "1px solid #fde68a" }}>
+          <p style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".07em", color: "#92400e", margin: "0 0 6px" }}>
+            Overall Judgement
+          </p>
+          <p style={{ margin: 0, fontSize: 12, lineHeight: 1.65, color: "var(--ink)" }}>{overall}</p>
+        </div>
+      )}
+      {options.length > 0 && (
+        <div className="exp-options">
+          {options.map(opt => {
+            const optIdx = "ABCD".indexOf(opt.letter);
+            const isCorrect = isCorrectFn ? isCorrectFn(opt.letter) : opt.isCorrect;
+            const isSelected = optIdx === selectedIdx;
+            return (
+              <div
+                key={opt.letter}
+                className={`exp-row ${isCorrect ? "exp-row--correct" : "exp-row--wrong"} ${isSelected && !isCorrect ? "exp-row--selected" : ""}`}
+              >
+                <div className="exp-letter-badge"><span>{opt.letter}</span></div>
+                <div className="exp-row-body">
+                  <div className="exp-row-head">
+                    <span className="exp-opt-text">{opt.label}</span>
+                    {isCorrect
+                      ? <span className="exp-tag exp-tag--correct">Correct</span>
+                      : <span className="exp-tag exp-tag--wrong">Incorrect</span>}
+                  </div>
+                  {opt.reason && (
+                    <p className="exp-reason">
+                      <span className="exp-because">{isCorrect ? "Why correct — " : "Why not — "}</span>
+                      {opt.reason}
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const FMT_LABEL: Record<Fmt, string> = { ar: "Appropriateness", ir: "Importance", ml: "Most & Least" };
 const FMT_DESC: Record<Fmt, string> = {
   ar: "Rate each action on a 4-point scale",
@@ -539,13 +639,14 @@ export default function SJTPractice() {
         </div>
 
         {mlDone && (
-          <div style={{ padding: "14px 18px", background: "#F8F9FB", borderRadius: 12, borderLeft: `3px solid ${C}`, marginBottom: 24 }}>
-            <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".04em", color: "var(--ink-soft)", margin: "0 0 6px" }}>
-              Explanation
-            </p>
-            <p style={{ margin: 0, fontSize: 12, lineHeight: 1.65, color: "var(--ink)" }}>
-              {mlQ.walkthrough}
-            </p>
+          <div style={{ marginBottom: 24 }}>
+            <SJTWalkthrough
+              text={mlQ.walkthrough}
+              isCorrectFn={letter => {
+                const idx = "ABC".indexOf(letter);
+                return idx === mlQ.mostCor || idx === mlQ.leastCor;
+              }}
+            />
           </div>
         )}
 
@@ -631,15 +732,11 @@ export default function SJTPractice() {
           </div>
 
           {confirmed && (
-            <div style={{
-              marginTop: 14, padding: "12px 16px",
-              background: "#F8F9FB", borderRadius: 10,
-              borderLeft: `3px solid ${picked === regItem.q.correct ? "#3DBE6C" : C}`,
-            }}>
-              <p style={{ margin: 0, fontSize: 12, lineHeight: 1.65, color: "var(--ink)", whiteSpace: "pre-line" }}>
-                {regItem.q.walkthrough}
-              </p>
-            </div>
+            <SJTWalkthrough
+              text={regItem.q.walkthrough}
+              selectedIdx={picked ?? undefined}
+              isCorrectFn={letter => "ABCD".indexOf(letter) === regItem.q.correct}
+            />
           )}
 
           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16, gap: 10 }}>
