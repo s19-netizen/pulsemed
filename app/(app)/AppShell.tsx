@@ -205,7 +205,7 @@ export default function AppShell({ children, user, testDate }: { children: React
         {children}
       </main>
 
-<div ref={dropdownRef} style={{ position: "fixed", top: 24, right: 32, zIndex: 40 }}>
+<div ref={dropdownRef} className="profile-pill-container" style={{ position: "fixed", top: 24, right: 32, zIndex: 40 }}>
         {user ? (
           <>
             <button

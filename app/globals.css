@@ -70,7 +70,7 @@ button:focus-visible { outline: 3px solid rgba(45, 127, 249, .28); outline-offse
 .section-copy small { font-size: 9.5px; color: var(--ink-soft); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
 .settings-link { margin-top: auto; border-top: 1px solid var(--line); border-radius: 0; padding-top: 18px; }
 
-.main-content { margin-left: 258px; min-height: 100vh; padding: 32px clamp(24px, 3vw, 54px) 60px; max-width: 1700px; transition: margin-left .25s cubic-bezier(.4,0,.2,1); }
+.main-content { margin-left: 258px; min-height: 100vh; padding: 32px 260px 60px clamp(24px, 3vw, 54px); max-width: 1700px; transition: margin-left .25s cubic-bezier(.4,0,.2,1); }
 .mobile-header { display: none; }
 .page-header { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
 .eyebrow { margin: 0 0 7px; color: var(--ink-soft); font-size: 13px; font-weight: 650; }.eyebrow span { margin: 0 5px; color: #bcc6d3; }
@@ -458,6 +458,7 @@ a { text-decoration: none; color: inherit; }
 .screen-question .app-shell { grid-template-columns: 1fr; }
 .screen-question .sidebar { display: none; }
 .screen-question .main-content { padding: 0; }
+.screen-question .profile-pill-container { display: none; }
 
 #pulsemed-vr-guide-root {
   --vr-blue: #2d7ff9;

@@ -429,6 +429,11 @@ function QuestionSession() {
   const [flagged, setFlagged] = useState(false);
   const [answers, setAnswers] = useState<{ correct: boolean }[]>([]);
 
+  // Back navigation
+  type QSnap = { selected: number | null; setSelections: (number | null)[]; revealed: boolean; flagged: boolean };
+  const [snapshots, setSnapshots] = useState<Record<number, QSnap>>({});
+  const [answeredSlots, setAnsweredSlots] = useState<Set<number>>(new Set());
+
   const slot = slots[slotIdx];
   const isLast = slotIdx === slots.length - 1;
 
@@ -489,6 +494,23 @@ function QuestionSession() {
     ? selected !== null
     : slot.questions.every((_, i) => setSelections[i] !== undefined && setSelections[i] !== null);
 
+  function saveSlotSnap(i: number) {
+    setSnapshots(prev => ({ ...prev, [i]: { selected, setSelections, revealed, flagged } }));
+  }
+
+  function handleBack() {
+    if (slotIdx === 0) return;
+    const prevSnap = snapshots[slotIdx - 1];
+    saveSlotSnap(slotIdx);
+    setSlotIdx(s => s - 1);
+    if (prevSnap) {
+      setSelected(prevSnap.selected); setSetSelections(prevSnap.setSelections);
+      setRevealed(prevSnap.revealed); setFlagged(prevSnap.flagged);
+    } else {
+      setSelected(null); setSetSelections([]); setRevealed(false); setFlagged(false);
+    }
+  }
+
   const handleSelect = (i: number) => { if (!revealed) setSelected(i); };
 
   const handleSetSelect = (qIdx: number, ansIdx: number) => {
@@ -508,41 +530,42 @@ function QuestionSession() {
     allTimesRef.current = [...allTimesRef.current, takenMs];
     setRevealed(true);
 
-    if (slot.kind === "single") {
-      const isCorrect = selected === slot.q.correct;
-      setAnswers(prev => [...prev, { correct: isCorrect }]);
-      if (!isGuest) {
-        fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ session_id: sessionIdRef.current, session_type: "practice",
-            question_index: slotIdx, question_tag: slot.q.tag, is_correct: isCorrect,
-            time_taken_ms: takenMs, selected_answer: String(selected), correct_answer: String(slot.q.correct) }),
-        }).catch(() => {});
-      }
-    } else {
-      const results = slot.questions.map((q, i) => ({ correct: setSelections[i] === q.correct }));
-      setAnswers(prev => [...prev, ...results]);
-      if (!isGuest) {
-        slot.questions.forEach((q, i) => {
-          const isCorrect = setSelections[i] === q.correct;
+    if (!answeredSlots.has(slotIdx)) {
+      setAnsweredSlots(prev => new Set([...prev, slotIdx]));
+      if (slot.kind === "single") {
+        const isCorrect = selected === slot.q.correct;
+        setAnswers(prev => [...prev, { correct: isCorrect }]);
+        if (!isGuest) {
           fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ session_id: sessionIdRef.current, session_type: "practice",
-              question_index: slotIdx * 10 + i, question_tag: q.tag, is_correct: isCorrect,
-              time_taken_ms: Math.round(takenMs / slot.questions.length),
-              selected_answer: String(setSelections[i]), correct_answer: String(q.correct) }),
+              question_index: slotIdx, question_tag: slot.q.tag, is_correct: isCorrect,
+              time_taken_ms: takenMs, selected_answer: String(selected), correct_answer: String(slot.q.correct) }),
           }).catch(() => {});
-        });
+        }
+      } else {
+        const results = slot.questions.map((q, i) => ({ correct: setSelections[i] === q.correct }));
+        setAnswers(prev => [...prev, ...results]);
+        if (!isGuest) {
+          slot.questions.forEach((q, i) => {
+            const isCorrect = setSelections[i] === q.correct;
+            fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ session_id: sessionIdRef.current, session_type: "practice",
+                question_index: slotIdx * 10 + i, question_tag: q.tag, is_correct: isCorrect,
+                time_taken_ms: Math.round(takenMs / slot.questions.length),
+                selected_answer: String(setSelections[i]), correct_answer: String(q.correct) }),
+            }).catch(() => {});
+          });
+        }
       }
     }
   };
 
   const handleNext = () => {
-    const slotCorrect = slot.kind === "single"
-      ? (selected === slot.q.correct ? 1 : 0)
-      : slot.questions.filter((q, i) => setSelections[i] === q.correct).length;
-    const slotTotal = slot.kind === "single" ? 1 : slot.questions.length;
+    const nextSnap = snapshots[slotIdx + 1];
+    saveSlotSnap(slotIdx);
 
     if (isLast) {
-      const totalCorrect = answers.filter(a => a.correct).length + slotCorrect;
+      const totalCorrect = answers.filter(a => a.correct).length;
       const totalQs = slots.reduce((acc, s) => acc + (s.kind === "yn-set" ? s.questions.length : 1), 0);
       const times = allTimesRef.current;
       const avgMs = times.length > 0 ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : 0;
@@ -553,10 +576,12 @@ function QuestionSession() {
       return;
     }
     setSlotIdx(s => s + 1);
-    setSelected(null);
-    setSetSelections([]);
-    setRevealed(false);
-    setFlagged(false);
+    if (nextSnap) {
+      setSelected(nextSnap.selected); setSetSelections(nextSnap.setSelections);
+      setRevealed(nextSnap.revealed); setFlagged(nextSnap.flagged);
+    } else {
+      setSelected(null); setSetSelections([]); setRevealed(false); setFlagged(false);
+    }
   };
 
   // Progress
@@ -722,9 +747,10 @@ function QuestionSession() {
           </div>
 
           <div className="question-actions">
-            <Link href={`/practice/${section}`}>
-              <button className="ghost">← Back to {colors.short}</button>
-            </Link>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="ghost" onClick={handleBack} disabled={slotIdx === 0} style={{ opacity: slotIdx === 0 ? 0.4 : 1 }}>← Back</button>
+              <Link href={`/practice/${section}`}><button className="ghost">✕ Exit</button></Link>
+            </div>
             {!revealed ? (
               <button className="question-primary" disabled={!canConfirm} onClick={handleConfirm}>
                 Confirm {slot.kind === "yn-set" ? "all answers" : "answer"}

@@ -3,6 +3,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Fmt = "ar" | "ir" | "ml";
+
+type Snap = {
+  picked: number | null;
+  confirmed: boolean;
+  mostPick: number | null;
+  leastPick: number | null;
+  mlDone: boolean;
+};
 type Theme = "any" | "patient-safety" | "honesty" | "confidentiality" | "teamwork";
 
 // API response shapes
@@ -185,6 +193,10 @@ export default function SJTPractice() {
   const [clickSel, setClickSel] = useState<number | null>(null);
   const [mlDone, setMlDone] = useState(false);
 
+  // Back navigation
+  const [snapshots, setSnapshots] = useState<Record<number, Snap>>({});
+  const [answeredSet, setAnsweredSet] = useState<Set<number>>(new Set());
+
   function toggleFmt(f: Fmt) {
     setFmts(prev => {
       const n = new Set(prev);
@@ -229,6 +241,8 @@ export default function SJTPractice() {
       setItems(picked);
       setIdx(0);
       setResults([]);
+      setSnapshots({});
+      setAnsweredSet(new Set());
       resetQ();
       setStage("go");
     } catch {
@@ -244,21 +258,53 @@ export default function SJTPractice() {
     setClickSel(null); setMlDone(false);
   }
 
+  function saveSnap(i: number) {
+    setSnapshots(prev => ({
+      ...prev,
+      [i]: { picked, confirmed, mostPick, leastPick, mlDone },
+    }));
+  }
+
+  function restoreSnap(s: Snap) {
+    setPicked(s.picked); setConfirmed(s.confirmed);
+    setMostPick(s.mostPick); setLeastPick(s.leastPick); setMlDone(s.mlDone);
+    setDragging(null); setHoverZone(null); setClickSel(null);
+  }
+
+  function goBack() {
+    if (idx === 0) return;
+    const prevSnap = snapshots[idx - 1];
+    saveSnap(idx);
+    setIdx(i => i - 1);
+    if (prevSnap) restoreSnap(prevSnap); else resetQ();
+  }
+
   function confirmRegular() {
     const it = items[idx] as RegItem;
-    setResults(r => [...r, picked === it.q.correct]);
+    if (!answeredSet.has(idx)) {
+      setResults(r => [...r, picked === it.q.correct]);
+      setAnsweredSet(prev => new Set([...prev, idx]));
+    }
     setConfirmed(true);
   }
 
   function confirmML() {
     const it = items[idx] as MLItem;
-    setResults(r => [...r, mostPick === it.q.mostCor && leastPick === it.q.leastCor]);
+    if (!answeredSet.has(idx)) {
+      setResults(r => [...r, mostPick === it.q.mostCor && leastPick === it.q.leastCor]);
+      setAnsweredSet(prev => new Set([...prev, idx]));
+    }
     setMlDone(true);
   }
 
   function next() {
+    const nextSnap = snapshots[idx + 1];
+    saveSnap(idx);
     if (idx + 1 >= items.length) setStage("done");
-    else { setIdx(i => i + 1); resetQ(); }
+    else {
+      setIdx(i => i + 1);
+      if (nextSnap) restoreSnap(nextSnap); else resetQ();
+    }
   }
 
   // Drag handlers
@@ -650,7 +696,11 @@ export default function SJTPractice() {
           </div>
         )}
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" onClick={goBack} disabled={idx === 0} style={{ background: "white", border: "1.5px solid var(--line)", borderRadius: 10, padding: "0 12px", minHeight: 38, fontSize: 12, fontWeight: 700, cursor: idx === 0 ? "not-allowed" : "pointer", color: "var(--ink)", opacity: idx === 0 ? 0.4 : 1 }}>← Back</button>
+            <button type="button" onClick={() => router.push("/practice/sjt")} style={{ background: "white", border: "1.5px solid var(--line)", borderRadius: 10, padding: "0 12px", minHeight: 38, fontSize: 12, fontWeight: 700, cursor: "pointer", color: "var(--ink-soft)" }}>✕ Exit</button>
+          </div>
           {!mlDone ? (
             <button
               type="button"
@@ -739,7 +789,11 @@ export default function SJTPractice() {
             />
           )}
 
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16, gap: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16, gap: 10 }}>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="button" onClick={goBack} disabled={idx === 0} style={{ background: "white", border: "1.5px solid var(--line)", borderRadius: 10, padding: "0 12px", minHeight: 38, fontSize: 12, fontWeight: 700, cursor: idx === 0 ? "not-allowed" : "pointer", color: "var(--ink)", opacity: idx === 0 ? 0.4 : 1 }}>← Back</button>
+              <button type="button" onClick={() => router.push("/practice/sjt")} style={{ background: "white", border: "1.5px solid var(--line)", borderRadius: 10, padding: "0 12px", minHeight: 38, fontSize: 12, fontWeight: 700, cursor: "pointer", color: "var(--ink-soft)" }}>✕ Exit</button>
+            </div>
             {!confirmed ? (
               <button
                 type="button"
