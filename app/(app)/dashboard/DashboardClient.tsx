@@ -202,7 +202,7 @@ export default function DashboardClient({ user, userRow, responses, testDate, di
             <h2>Your progress</h2>
           </div>
         </div>
-        <div className="home-section-grid" style={{ gridTemplateColumns: "repeat(4, minmax(0,1fr))" }}>
+        <div className="home-section-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0,1fr))" }}>
           {sectionStats.map(s => (
             <div
               key={s.key}
