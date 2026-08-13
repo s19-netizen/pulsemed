@@ -480,7 +480,7 @@ export default function SJTPractice() {
               </button>
             </div>
 
-            <button className="start-session" onClick={start} type="button">
+            <button className="start-session" onClick={() => start()} type="button">
               Start {count}-question session →
             </button>
           </section>
