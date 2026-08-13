@@ -42,8 +42,6 @@ export default function DashboardClient({ user, userRow, responses, testDate, di
     ? examDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
     : null;
 
-  const recentActivity = responses.slice(0, 5);
-
   const sectionStats = SECTIONS.map(s => {
     const sResponses = responses.filter(r => r.question_tag?.startsWith(s.key + "-"));
     const correct = sResponses.filter(r => r.is_correct).length;
@@ -196,196 +194,61 @@ export default function DashboardClient({ user, userRow, responses, testDate, di
         </div>
       </div>
 
-      {/* Main grid */}
-      <div className="home-lower-grid">
-        {/* Left: Sections + Recent activity */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {/* Section cards */}
-          <div className="content-card">
-            <div className="section-heading">
-              <div>
-                <p className="section-kicker">SECTIONS</p>
-                <h2>Your progress</h2>
-              </div>
-            </div>
-            <div className="home-section-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0,1fr))" }}>
-              {sectionStats.map(s => (
-                <div
-                  key={s.key}
-                  className="home-subject-card"
-                  style={{ "--card-color": s.cardColor, "--card-tint": s.cardTint } as any}
-                >
-                  <div className="subject-card-head">
-                    <span><span style={{ fontWeight: 900, fontSize: 11, color: s.color }}>{s.short}</span></span>
-                    <div>
-                      <small>{s.short}</small>
-                      <h3>{s.label.split(" ")[0]}</h3>
-                    </div>
-                  </div>
-                  <div className="subject-score">
-                    <div><span>Accuracy</span><strong>{s.accuracy}%</strong></div>
-                    <div>
-                      {s.key === "sjt" && s.lastBand != null ? (
-                        <>
-                          <span>Predicted band</span>
-                          <strong style={{ color: s.color }}>Band {s.lastBand}</strong>
-                        </>
-                      ) : s.avgPredicted != null ? (
-                        <>
-                          <span>Avg predicted</span>
-                          <strong style={{ color: s.color }}>{s.avgPredicted}</strong>
-                        </>
-                      ) : (
-                        <>
-                          <span>Target time</span>
-                          <strong>{s.targetTime}s</strong>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <div style={{ marginTop: 6, marginBottom: 8 }}>
-                    <span style={{ color: "var(--ink-soft)", fontSize: 8, fontWeight: 750 }}>
-                      {s.total} questions · {s.sessionCount} session{s.sessionCount !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-                  <div className="subject-progress"><span style={{ width: `${s.accuracy}%` }} /></div>
-                  <div className="subject-actions">
-                    <Link href={`/section/${s.key}`}><button>Learn</button></Link>
-                    <Link href={`/practice/${s.key}`}><button>Practice</button></Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Recent activity */}
-          <div className="content-card week-card">
-            <div className="week-head">
-              <div className="week-icon">
-                <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-              </div>
-              <div>
-                <h2>Recent activity</h2>
-                <p>Your latest practice sessions</p>
-              </div>
-            </div>
-            <div style={{ marginTop: 16 }}>
-              {recentActivity.length === 0 ? (
-                <p style={{ color: "var(--ink-soft)", fontSize: 12, padding: "16px 0" }}>No activity yet — start practising!</p>
-              ) : recentActivity.map((r, i) => (
-                <div key={i} className="activity-row">
-                  <div className="activity-icon">
-                    <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/></svg>
-                  </div>
-                  <p>
-                    <strong>{r.question_tag?.split("-").slice(0, 2).join(" ").toUpperCase() ?? "Question"}</strong>
-                    <small>{r.is_correct ? "Correct ✓" : "Incorrect ✗"}</small>
-                  </p>
-                  <time>{new Date(r.created_at).toLocaleDateString()}</time>
-                </div>
-              ))}
-            </div>
+      {/* Your progress — full width */}
+      <div className="content-card">
+        <div className="section-heading">
+          <div>
+            <p className="section-kicker">SECTIONS</p>
+            <h2>Your progress</h2>
           </div>
         </div>
-
-        {/* Right: Today's focus */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {plan && (
-            <div className="recommend-card">
-              <div className="recommend-head">
-                <span>
-                  <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                </span>
+        <div className="home-section-grid" style={{ gridTemplateColumns: "repeat(4, minmax(0,1fr))" }}>
+          {sectionStats.map(s => (
+            <div
+              key={s.key}
+              className="home-subject-card"
+              style={{ "--card-color": s.cardColor, "--card-tint": s.cardTint } as any}
+            >
+              <div className="subject-card-head">
+                <span><span style={{ fontWeight: 900, fontSize: 11, color: s.color }}>{s.short}</span></span>
                 <div>
-                  <p>AI Study Plan</p>
-                  <h2>Today's focus</h2>
+                  <small>{s.short}</small>
+                  <h3>{s.label.split(" ")[0]}</h3>
                 </div>
               </div>
-
-              {/* Weekly plan */}
-              <div style={{ background: "#F4F7FB", borderRadius: 10, padding: "10px 14px", marginBottom: 16 }}>
-                <p style={{ fontSize: 13, color: "#1A2A3A", lineHeight: 1.5, margin: 0 }}>{plan.weeklyPlan}</p>
+              <div className="subject-score">
+                <div><span>Accuracy</span><strong>{s.accuracy}%</strong></div>
+                <div>
+                  {s.key === "sjt" && s.lastBand != null ? (
+                    <>
+                      <span>Predicted band</span>
+                      <strong style={{ color: s.color }}>Band {s.lastBand}</strong>
+                    </>
+                  ) : s.avgPredicted != null ? (
+                    <>
+                      <span>Avg predicted</span>
+                      <strong style={{ color: s.color }}>{s.avgPredicted}</strong>
+                    </>
+                  ) : (
+                    <>
+                      <span>Target time</span>
+                      <strong>{s.targetTime}s</strong>
+                    </>
+                  )}
+                </div>
               </div>
-
-              {/* Timing note */}
-              {plan.timingNote && (
-                <div style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 14, padding: "8px 12px", background: "#FFF8ED", border: "1px solid #F6D884", borderRadius: 10 }}>
-                  <span style={{ fontSize: 14 }}>⏱</span>
-                  <p style={{ fontSize: 12, color: "#7A5800", margin: 0, lineHeight: 1.5 }}>{plan.timingNote}</p>
-                </div>
-              )}
-
-              {/* Priority list */}
-              {plan.priority?.length > 0 && (
-                <div style={{ marginBottom: 14 }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Focus order</p>
-                  {plan.priority.slice(0, 3).map((p: any, i: number) => (
-                    <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 8 }}>
-                      <span style={{
-                        width: 22, height: 22, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 11, fontWeight: 800,
-                        background: i === 0 ? "#FFEAEA" : i === 1 ? "#FFF4E0" : "#EAF2FF",
-                        color: i === 0 ? "#D94B3E" : i === 1 ? "#B06A00" : "#2D7FF9",
-                      }}>{i + 1}</span>
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 13, fontWeight: 700, color: "#1A2A3A", margin: "0 0 1px" }}>{p.label}</p>
-                        <p style={{ fontSize: 11, color: "#6B7A8C", margin: 0 }}>{p.reason}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Strengths */}
-              {plan.strengths?.length > 0 && (
-                <div style={{ marginBottom: 14 }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Strengths</p>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                    {plan.strengths.map((s: any, i: number) => (
-                      <div key={i} title={s.detail} style={{
-                        background: "#EDFBF3", border: "1px solid #A8E8C0", borderRadius: 20,
-                        padding: "4px 10px", fontSize: 12, fontWeight: 600, color: "#1B7A42",
-                      }}>✓ {s.label}</div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Weaknesses */}
-              {plan.weaknesses?.length > 0 && (
-                <div style={{ marginBottom: 16 }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 6 }}>Needs work</p>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {plan.weaknesses.map((w: any, i: number) => (
-                      <div key={i} style={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        background: "#FFF2F2", border: "1px solid #F5C0BC", borderRadius: 10,
-                        padding: "7px 12px",
-                      }}>
-                        <div>
-                          <p style={{ fontSize: 12, fontWeight: 700, color: "#C0392B", margin: "0 0 1px" }}>{w.label}</p>
-                          <p style={{ fontSize: 11, color: "#7A3A35", margin: 0 }}>{w.detail}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {plan.priority?.[0] && (
-                <Link href={(() => {
-                  const p = plan.priority[0];
-                  const href = p.href ?? "";
-                  let base = "/practice/dm";
-                  if (href.includes("verbal_reasoning") || href.includes("/vr")) base = "/practice/vr";
-                  else if (href.includes("quantitative") || href.includes("/qr")) base = "/practice/qr";
-                  else if (href.includes("situational") || href.includes("/sjt")) base = "/practice/sjt";
-                  return `${base}?from=plan&focus=${encodeURIComponent(p.label ?? "")}&reason=${encodeURIComponent(p.reason ?? "")}`;
-                })()}>
-                  <button className="plan-button">Start today's session →</button>
-                </Link>
-              )}
+              <div style={{ marginTop: 6, marginBottom: 8 }}>
+                <span style={{ color: "var(--ink-soft)", fontSize: 8, fontWeight: 750 }}>
+                  {s.total} questions · {s.sessionCount} session{s.sessionCount !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <div className="subject-progress"><span style={{ width: `${s.accuracy}%` }} /></div>
+              <div className="subject-actions">
+                <Link href={`/section/${s.key}`}><button>Learn</button></Link>
+                <Link href={`/practice/${s.key}`}><button>Practice</button></Link>
+              </div>
             </div>
-          )}
+          ))}
         </div>
       </div>
     </div>

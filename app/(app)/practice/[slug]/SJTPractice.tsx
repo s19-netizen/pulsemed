@@ -261,6 +261,23 @@ export default function SJTPractice() {
     }
   }
 
+  async function handleExit() {
+    if (results.length > 0) {
+      await fetch("/api/practice/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          section: "sjt",
+          correct: results.filter(Boolean).length,
+          total: results.length,
+          avgMs: 0,
+          sessionId: `sjt-${Date.now()}`,
+        }),
+      }).catch(() => {});
+    }
+    router.push("/practice/sjt");
+  }
+
   function resetQ() {
     setPicked(null); setConfirmed(false);
     setMostPick(null); setLeastPick(null);
@@ -557,7 +574,7 @@ export default function SJTPractice() {
         </p>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <small style={{ fontSize: 12, color: "var(--ink-soft)", fontWeight: 600 }}>{idx + 1} / {items.length}</small>
-          <button type="button" onClick={() => router.push("/practice/sjt")} style={{ background: "white", border: "1.5px solid var(--line)", borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", color: "var(--ink-soft)" }}>✕ Exit</button>
+          <button type="button" onClick={handleExit} style={{ background: "white", border: "1.5px solid var(--line)", borderRadius: 8, padding: "4px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", color: "var(--ink-soft)" }}>✕ Exit</button>
         </div>
       </div>
     </>

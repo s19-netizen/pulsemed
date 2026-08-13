@@ -499,6 +499,25 @@ function QuestionSession() {
     setSnapshots(prev => ({ ...prev, [i]: { selected, setSelections, revealed, flagged } }));
   }
 
+  async function handleExit() {
+    if (answers.length > 0) {
+      const times = allTimesRef.current;
+      const avgMs = times.length > 0 ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : 0;
+      await fetch("/api/practice/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          section,
+          correct: answers.filter(a => a.correct).length,
+          total: answers.length,
+          avgMs,
+          sessionId: sessionIdRef.current,
+        }),
+      }).catch(() => {});
+    }
+    router.push(`/practice/${section}`);
+  }
+
   function handleBack() {
     if (slotIdx === 0) return;
     const prevSnap = snapshots[slotIdx - 1];
@@ -630,9 +649,7 @@ function QuestionSession() {
             <button className={flagged ? "flagged" : ""} onClick={() => setFlagged(f => !f)}>
               {flagged ? "★ Flagged" : "☆ Flag"}
             </button>
-            <Link href={`/practice/${section}`}>
-              <button>✕ End session</button>
-            </Link>
+            <button onClick={handleExit}>✕ End session</button>
           </div>
         </div>
 
@@ -750,7 +767,7 @@ function QuestionSession() {
           <div className="question-actions">
             <div style={{ display: "flex", gap: 8 }}>
               <button className="ghost" onClick={handleBack} disabled={slotIdx === 0} style={{ opacity: slotIdx === 0 ? 0.4 : 1 }}>← Back</button>
-              <Link href={`/practice/${section}`}><button className="ghost">✕ Exit</button></Link>
+              <button className="ghost" onClick={handleExit}>✕ Exit</button>
             </div>
             {!revealed ? (
               <button className="question-primary" disabled={!canConfirm} onClick={handleConfirm}>
