@@ -10,11 +10,6 @@ const SECTIONS = [
 ];
 
 const TASK_COUNTS: Record<string, number> = { vr: 16, dm: 15, qr: 16, sjt: 23 };
-const TASK_TYPES: Record<string, string> = {
-  vr:  "tfct,mcq",
-  dm:  "Syllogisms,Interpreting Information,Arguments & Assumptions,Logic Puzzles,Venn Diagrams,Probability & Statistics",
-  qr:  "arithmetic,applied",
-};
 
 function inferSection(label: string): "vr" | "dm" | "qr" | "sjt" {
   const u = label.toUpperCase();
@@ -24,11 +19,39 @@ function inferSection(label: string): "vr" | "dm" | "qr" | "sjt" {
   return "vr";
 }
 
-function buildHref(sec: string): string {
+function extractVRSubtype(href: string): string {
+  const parts = href.split("/").filter(Boolean);
+  const last = parts[parts.length - 1] ?? "";
+  // Only return if it looks like a subtype key (not "vr", "learn", etc.)
+  return ["vr", "verbal_reasoning", "learn", "practice"].includes(last) ? "" : last;
+}
+
+function extractDMFamily(label: string): string {
+  const u = label.toLowerCase();
+  if (u.includes("syllogism")) return "Syllogisms";
+  if (u.includes("venn")) return "Venn Diagrams";
+  if (u.includes("probability") || u.includes("statistic")) return "Probability & Statistics";
+  if (u.includes("logic") || u.includes("puzzle")) return "Logic Puzzles";
+  if (u.includes("argument") || u.includes("assumption")) return "Arguments & Assumptions";
+  if (u.includes("interpret") || u.includes("information")) return "Interpreting Information";
+  return "";
+}
+
+function buildHref(sec: string, label: string, aiHref: string): string {
   const count = TASK_COUNTS[sec];
   if (sec === "sjt") return `/practice/sjt?autostart=1&count=${count}`;
-  const types = TASK_TYPES[sec] ?? "all";
-  return `/question?section=${sec}&type=${encodeURIComponent(types)}&subtypes=all&difficulty=Bronze,Silver,Gold&count=${count}`;
+
+  if (sec === "vr") {
+    const subtype = extractVRSubtype(aiHref);
+    return `/question?section=vr&difficulty=Bronze,Silver,Gold&count=${count}${subtype ? `&subtype=${encodeURIComponent(subtype)}` : ""}`;
+  }
+
+  if (sec === "dm") {
+    const family = extractDMFamily(label);
+    return `/question?section=dm&difficulty=Bronze,Silver,Gold&count=${count}${family ? `&type=${encodeURIComponent(family)}` : ""}`;
+  }
+
+  return `/question?section=${sec}&difficulty=Bronze,Silver,Gold&count=${count}`;
 }
 
 type Props = { responses: any[] };
@@ -63,7 +86,7 @@ export default function StudyPlanClient({ responses }: Props) {
   const tasks: Array<{ sec: string; label: string; reason: string; href: string; count: number }> =
     (plan?.priority ?? []).map((p: any) => {
       const sec = inferSection(p.label ?? "");
-      return { sec, label: p.label, reason: p.reason, href: buildHref(sec), count: TASK_COUNTS[sec] };
+      return { sec, label: p.label, reason: p.reason, href: buildHref(sec, p.label ?? "", p.href ?? ""), count: TASK_COUNTS[sec] };
     });
 
   return (

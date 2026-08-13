@@ -29,11 +29,19 @@ export async function GET(req: NextRequest) {
   const totalCount = Math.max(4, Number(sp.get("count")) || 12);
   const setCount = Math.round(totalCount / 4); // one set = 4 questions
 
+  const rawSubtype = sp.get("subtype") ?? "";
+
   // Fetch all questions at requested difficulties
-  const { data: matchingQ, error: mqErr } = await supabase
+  let qQuery = supabase
     .from("vr_questions")
     .select("id, passage_code, format, difficulty")
     .in("difficulty", difficulties);
+
+  if (rawSubtype) {
+    qQuery = qQuery.ilike("primary_subtype", `%${rawSubtype.replace(/-/g, " ")}%`);
+  }
+
+  const { data: matchingQ, error: mqErr } = await qQuery;
 
   if (mqErr) return NextResponse.json({ error: mqErr.message }, { status: 500 });
 

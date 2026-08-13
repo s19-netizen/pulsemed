@@ -405,7 +405,8 @@ function QuestionSession() {
       const family = params.get("type") ?? "";
       endpoint = `/api/questions/dm?difficulty=${encodeURIComponent(difficulty)}&count=${count}${family ? `&family=${encodeURIComponent(family)}` : ""}`;
     } else {
-      endpoint = `/api/questions/vr?difficulty=${encodeURIComponent(difficulty)}&count=${count}`;
+      const subtypeParam = params.get("subtype") ?? "";
+      endpoint = `/api/questions/vr?difficulty=${encodeURIComponent(difficulty)}&count=${count}${subtypeParam ? `&subtype=${encodeURIComponent(subtypeParam)}` : ""}`;
     }
     fetch(endpoint)
       .then(r => r.json())
