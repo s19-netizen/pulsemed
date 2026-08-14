@@ -114,7 +114,7 @@ export default async function Home() {
               }}>See how it works</Link>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 24 }}>
-              {["No card needed", "AI report instant", "Always free"].map(t => (
+              {["No card needed", "Report instant", "Always free"].map(t => (
                 <div key={t} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: "#6B7A8C", fontWeight: 600 }}>
                   <span style={{ color: "#3DBE6C" }}>✓</span> {t}
                 </div>
@@ -272,7 +272,7 @@ export default async function Home() {
             Ready to find out where you actually stand?
           </h2>
           <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 16, marginBottom: 28 }}>
-            Take the diagnostic. Get your full AI breakdown at the end.
+            Take the diagnostic. Get your full breakdown at the end.
           </p>
           <Link href="/auth/signin" style={{
             display: "inline-block", padding: "14px 30px", borderRadius: 14,

@@ -233,7 +233,8 @@ Rules: verdict = 1–2 warm honest sentences referencing exact marks. strong = s
   });
 
   if (responseRows.length > 0) {
-    await supabase.from("question_responses").insert(responseRows);
+    const { error: responsesError } = await supabase.from("question_responses").insert(responseRows);
+    if (responsesError) console.error("Failed to save question responses:", responsesError.message);
   }
 
   // ── Save diagnostic report ─────────────────────────────────────────────────

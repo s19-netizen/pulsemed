@@ -1,7 +1,13 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import { createClient } from "@supabase/supabase-js";
 
 const isProd = process.env.NODE_ENV === "production";
+
+const serviceSupabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -26,6 +32,16 @@ export const authOptions: NextAuthOptions = {
     },
   } : {}),
   callbacks: {
+    async signIn({ user }) {
+      if (user?.email) {
+        await serviceSupabase.from("users").upsert({
+          id: user.email,
+          name: user.name ?? null,
+          email: user.email,
+        }, { onConflict: "id", ignoreDuplicates: true });
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user?.email) {
         (token as any).userId = user.email;

@@ -7,17 +7,17 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://pulsemed.app";
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: "Pulsemed — Free AI UCAT Prep, Completely Free",
+    default: "Pulsemed — Free UCAT Prep, Completely Free",
     template: "%s | Pulsemed — Free UCAT Prep",
   },
   description:
-    "Pulsemed is 100% free UCAT preparation — no card, no paywall, no premium tier. Take an AI-powered diagnostic, get a personalised study plan, and practise VR, DM, QR and SJT with full explanations. Built for 2026 UCAT applicants.",
+    "Pulsemed is 100% free UCAT preparation — no card, no paywall, no premium tier. Take a diagnostic, get a personalised study plan, and practise VR, DM, QR and SJT with full explanations. Built for 2026 UCAT applicants.",
   keywords: [
     "free UCAT prep",
     "free UCAT practice questions",
     "UCAT practice free",
     "UCAT diagnostic test free",
-    "AI UCAT preparation",
+    "UCAT preparation",
     "UCAT 2026",
     "UCAT verbal reasoning practice",
     "UCAT decision making practice",
@@ -43,23 +43,23 @@ export const metadata: Metadata = {
     locale: "en_GB",
     url: BASE_URL,
     siteName: "Pulsemed",
-    title: "Pulsemed — Free AI UCAT Prep, Completely Free",
+    title: "Pulsemed — Free UCAT Prep, Completely Free",
     description:
-      "100% free UCAT preparation with AI diagnostics, personalised study plans, and full question banks for VR, DM, QR and SJT. No card required.",
+      "100% free UCAT preparation with diagnostics, personalised study plans, and full question banks for VR, DM, QR and SJT. No card required.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Pulsemed — Free AI UCAT Prep",
+        alt: "Pulsemed — Free UCAT Prep",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Pulsemed — Free AI UCAT Prep, Completely Free",
+    title: "Pulsemed — Free UCAT Prep, Completely Free",
     description:
-      "100% free UCAT preparation. AI diagnostic, personalised study plans, full VR/DM/QR/SJT question banks. No paywall, ever.",
+      "100% free UCAT preparation. Diagnostic, personalised study plans, full VR/DM/QR/SJT question banks. No paywall, ever.",
     images: ["/og-image.png"],
   },
   alternates: { canonical: BASE_URL },
@@ -74,7 +74,7 @@ const jsonLd = {
       "@id": `${BASE_URL}/#website`,
       url: BASE_URL,
       name: "Pulsemed",
-      description: "100% free AI-powered UCAT preparation platform",
+      description: "100% free UCAT preparation platform",
       potentialAction: {
         "@type": "SearchAction",
         target: { "@type": "EntryPoint", urlTemplate: `${BASE_URL}/study-guide/vr?q={search_term_string}` },
@@ -87,7 +87,7 @@ const jsonLd = {
       name: "Pulsemed",
       url: BASE_URL,
       logo: { "@type": "ImageObject", url: `${BASE_URL}/og-image.png` },
-      description: "Free AI-powered UCAT preparation for UK medical school applicants",
+      description: "Free UCAT preparation for UK medical school applicants",
       sameAs: [],
     },
     {
@@ -98,7 +98,7 @@ const jsonLd = {
       applicationCategory: "EducationalApplication",
       operatingSystem: "Web",
       description:
-        "AI-powered UCAT preparation platform covering Verbal Reasoning, Decision Making, Quantitative Reasoning and Situational Judgement. 100% free — no credit card, no premium tier.",
+        "UCAT preparation platform covering Verbal Reasoning, Decision Making, Quantitative Reasoning and Situational Judgement. 100% free — no credit card, no premium tier.",
       offers: {
         "@type": "Offer",
         price: "0",
@@ -107,7 +107,7 @@ const jsonLd = {
         description: "Completely free — no card required, no premium tier",
       },
       featureList: [
-        "AI-powered diagnostic test",
+        "Diagnostic test",
         "Personalised study plan",
         "Full VR question bank with explanations",
         "Full DM question bank with explanations",
@@ -132,7 +132,7 @@ const jsonLd = {
           name: "Is Pulsemed completely free?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Yes. Pulsemed is 100% free. There is no credit card required, no premium tier, and no paywall. Every feature — the AI diagnostic, full question banks, study plans, and explanations — is free for all users.",
+            text: "Yes. Pulsemed is 100% free. There is no credit card required, no premium tier, and no paywall. Every feature — the diagnostic, full question banks, study plans, and explanations — is free for all users.",
           },
         },
         {
@@ -145,10 +145,10 @@ const jsonLd = {
         },
         {
           "@type": "Question",
-          name: "How does the AI diagnostic work?",
+          name: "How does the diagnostic work?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "The diagnostic test covers all four UCAT sections and takes around 25 minutes. Once complete, AI analyses your answers to identify your weakest sub-skills — such as VR inference questions or DM syllogisms — and generates a personalised study plan showing exactly what to practise next.",
+            text: "The diagnostic test covers all four UCAT sections and takes around 25 minutes. Once complete, it identifies your weakest sub-skills — such as VR inference questions or DM syllogisms — and generates a personalised study plan showing exactly what to practise next.",
           },
         },
         {

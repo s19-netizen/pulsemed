@@ -1,5 +1,7 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const COLORS: Record<string, string> = { vr: "#2D7FF9", dm: "#8B6BFF", qr: "#3DBE6C", sjt: "#FF6B5C" };
 const TINTS: Record<string, string>  = { vr: "#EAF2FF", dm: "#F1ECFF", qr: "#EDFBF3", sjt: "#FFEDEA" };
@@ -80,6 +82,15 @@ function SectionCard({ sec, score, subtypes }: { sec: string; score: number; sub
 }
 
 export default function DiagnosticResults({ report }: { report: Report }) {
+  const router = useRouter();
+  const [resetting, setResetting] = useState(false);
+
+  async function handleRetake() {
+    setResetting(true);
+    await fetch("/api/diagnostic/reset", { method: "DELETE" });
+    router.push("/diagnostic");
+  }
+
   const bandColours = ["", "#3DBE6C", "#2D7FF9", "#f59e0b", "#FF6B5C"];
   const bandLabels  = ["", "Band 1", "Band 2", "Band 3", "Band 4"];
   const sjtColor = bandColours[report.sjt_band];
@@ -193,6 +204,13 @@ export default function DiagnosticResults({ report }: { report: Report }) {
               SJT {sjtLabel} <span style={{ opacity: 0.7 }}>({sjtRaw}/{sjtMax} pts)</span>
             </span>
           </div>
+          <button
+            onClick={handleRetake}
+            disabled={resetting}
+            style={{ marginTop: 14, fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "5px 12px", cursor: "pointer", opacity: resetting ? 0.5 : 1 }}
+          >
+            {resetting ? "Resetting…" : "↺ Retake diagnostic"}
+          </button>
         </div>
       </div>
 
