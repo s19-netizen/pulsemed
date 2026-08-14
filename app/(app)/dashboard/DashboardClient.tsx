@@ -185,58 +185,73 @@ export default function DashboardClient({ user, userRow, responses, testDate, di
         </div>
       </div>
 
-      {/* Your progress — full width */}
-      <div className="content-card">
-        <div className="section-heading">
-          <div>
-            <p className="section-kicker">SECTIONS</p>
-            <h2>Your progress</h2>
-          </div>
-        </div>
-        <div className="home-section-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0,1fr))" }}>
-          {sectionStats.map(s => (
-            <div
-              key={s.key}
-              className="home-subject-card"
-              style={{ "--card-color": s.cardColor, "--card-tint": s.cardTint } as any}
-            >
-              <div className="subject-card-head">
-                <span><span style={{ fontWeight: 900, fontSize: 11, color: s.color }}>{s.short}</span></span>
-                <div>
-                  <small>{s.short}</small>
-                  <h3>{s.label.split(" ")[0]}</h3>
-                </div>
-              </div>
-              <div className="subject-score">
-                <div><span>Accuracy</span><strong>{s.accuracy}%</strong></div>
-                <div>
-                  {s.key === "sjt" && s.lastBand != null ? (
-                    <>
-                      <span>Predicted band</span>
-                      <strong style={{ color: s.color }}>Band {s.lastBand}</strong>
-                    </>
-                  ) : s.avgPredicted != null ? (
-                    <>
-                      <span>Avg predicted</span>
-                      <strong style={{ color: s.color }}>{s.avgPredicted}</strong>
-                    </>
-                  ) : (
-                    <>
-                      <span>Target time</span>
-                      <strong>{s.targetTime}s</strong>
-                    </>
-                  )}
-                </div>
-              </div>
-              <div style={{ marginTop: 6, marginBottom: 8 }}>
-                <span style={{ color: "var(--ink-soft)", fontSize: 8, fontWeight: 750 }}>
-                  {s.total} questions · {s.sessionCount} session{s.sessionCount !== 1 ? "s" : ""}
+      {/* Your progress */}
+      <div className="content-card" style={{ padding: "20px 24px" }}>
+        <p className="section-kicker" style={{ marginBottom: 16 }}>YOUR PROGRESS</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+          {sectionStats.map((s, i) => (
+            <div key={s.key} style={{
+              display: "grid",
+              gridTemplateColumns: "80px 1fr 120px 160px",
+              alignItems: "center",
+              gap: 16,
+              padding: "14px 0",
+              borderTop: i === 0 ? "none" : "1px solid var(--line)",
+            }}>
+              {/* Badge */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  width: 36, height: 36, borderRadius: 10,
+                  background: s.tint, color: s.color,
+                  fontSize: 10, fontWeight: 900, letterSpacing: "0.04em", flexShrink: 0,
+                }}>
+                  {s.short}
+                </span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)", lineHeight: 1.2 }}>
+                  {s.label.split(" ")[0]}<br />
+                  <span style={{ fontWeight: 500, color: "var(--ink-soft)", fontSize: 11 }}>{s.label.split(" ").slice(1).join(" ")}</span>
                 </span>
               </div>
-              <div className="subject-progress"><span style={{ width: `${s.accuracy}%` }} /></div>
-              <div className="subject-actions">
-                <Link href={`/section/${s.key}`}><button>Learn</button></Link>
-                <Link href={`/practice/${s.key}`}><button>Practice</button></Link>
+
+              {/* Progress bar + question count */}
+              <div>
+                <div style={{ height: 6, background: "var(--line)", borderRadius: 4, overflow: "hidden", marginBottom: 5 }}>
+                  <div style={{ height: "100%", width: `${s.accuracy}%`, background: s.color, borderRadius: 4, transition: "width .4s ease" }} />
+                </div>
+                <span style={{ fontSize: 11, color: "var(--ink-soft)", fontWeight: 500 }}>
+                  {s.total > 0 ? `${s.total} questions · ${s.sessionCount} session${s.sessionCount !== 1 ? "s" : ""}` : "No questions yet"}
+                </span>
+              </div>
+
+              {/* Stats */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <span style={{ fontSize: 18, fontWeight: 800, color: s.total > 0 ? s.color : "var(--ink-soft)", lineHeight: 1 }}>
+                  {s.total > 0 ? `${s.accuracy}%` : "—"}
+                </span>
+                <span style={{ fontSize: 10, color: "var(--ink-soft)", fontWeight: 500 }}>
+                  {s.key === "sjt" && s.lastBand != null
+                    ? `Band ${s.lastBand} predicted`
+                    : s.avgPredicted != null
+                    ? `${s.avgPredicted} predicted`
+                    : "accuracy"}
+                </span>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: "flex", gap: 6 }}>
+                <Link href={`/section/${s.key}`}>
+                  <button style={{
+                    height: 32, padding: "0 12px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer",
+                    background: "white", color: s.color, border: `1.5px solid ${s.color}33`,
+                  }}>Learn</button>
+                </Link>
+                <Link href={`/practice/${s.key}`}>
+                  <button style={{
+                    height: 32, padding: "0 12px", borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer",
+                    background: s.color, color: "white", border: "none",
+                  }}>Practice</button>
+                </Link>
               </div>
             </div>
           ))}
