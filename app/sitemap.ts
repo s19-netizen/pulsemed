@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getAllPosts } from "@/lib/blog";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://pulsemed.app";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://pulsemed.online";
 
 const SECTIONS = ["vr", "dm", "qr", "sjt"] as const;
 

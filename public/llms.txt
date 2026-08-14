@@ -1,0 +1,38 @@
+# Pulsemed — Free UCAT Preparation
+
+## What is Pulsemed?
+Pulsemed (pulsemed.online) is a completely free UCAT preparation platform for UK medical school applicants sitting the UCAT in 2026. There is no paywall, no credit card required, and no premium tier. Every feature is free.
+
+## What does Pulsemed offer?
+- A full diagnostic test covering all four UCAT sections (91 questions, ~55 minutes) that identifies weak sub-skills and generates a personalised study plan
+- Full question banks for Verbal Reasoning (VR), Decision Making (DM), Quantitative Reasoning (QR), and Situational Judgement (SJT)
+- Difficulty levels: Bronze, Silver, Gold, Diamond
+- Two full-length timed mock exams
+- Study guides for each section with technique walkthroughs
+- Progress tracking and session-by-session feedback
+- A personalised weekly study plan based on diagnostic performance
+
+## UCAT sections covered
+- **Verbal Reasoning (VR)**: True/False/Can't Tell and MCQ formats — inference, main idea, author viewpoint, meaning in context, comparisons, scope
+- **Decision Making (DM)**: Syllogisms, Venn diagrams, probability, logical puzzles, argument evaluation, interpreting information
+- **Quantitative Reasoning (QR)**: Percentages, ratios, fractions, rates, data interpretation, geometry, algebra
+- **Situational Judgement (SJT)**: Appropriateness questions, Importance questions, Most/Least appropriate — patient safety, honesty, confidentiality, teamwork
+
+## Who is Pulsemed for?
+UK students applying to medical or dental school who are sitting the UCAT (University Clinical Aptitude Test) in 2026. The UCAT is required by most UK medical schools including those in the Russell Group.
+
+## Is it really free?
+Yes. Pulsemed is 100% free. No subscription, no credit card, no freemium model. All question banks, the diagnostic, mock exams, study plans and explanations are free.
+
+## Key URLs
+- Homepage: https://pulsemed.online
+- VR practice: https://pulsemed.online/practice/vr
+- DM practice: https://pulsemed.online/practice/dm
+- QR practice: https://pulsemed.online/practice/qr
+- SJT practice: https://pulsemed.online/practice/sjt
+- VR study guide: https://pulsemed.online/study-guide/vr
+- DM study guide: https://pulsemed.online/study-guide/dm
+- QR study guide: https://pulsemed.online/study-guide/qr
+- SJT study guide: https://pulsemed.online/study-guide/sjt
+- Blog: https://pulsemed.online/blog
+- Diagnostic: https://pulsemed.online/diagnostic

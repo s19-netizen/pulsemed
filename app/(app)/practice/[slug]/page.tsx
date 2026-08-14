@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
@@ -7,6 +8,86 @@ import GuestDoneCard from "./GuestDoneCard";
 import Link from "next/link";
 
 const VALID_SLUGS = ["vr", "dm", "qr", "sjt"];
+
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://pulsemed.online";
+
+const PRACTICE_META: Record<string, { title: string; description: string; keywords: string[] }> = {
+  vr: {
+    title: "Free UCAT Verbal Reasoning Practice Questions 2026 | Pulsemed",
+    description: "Practice UCAT Verbal Reasoning for free — True/False/Can't Tell and MCQ questions with full explanations. Difficulty levels Bronze to Diamond. No account needed to start.",
+    keywords: ["UCAT verbal reasoning practice", "free UCAT VR questions", "UCAT true false cant tell practice", "UCAT verbal reasoning 2026", "UCAT VR free"],
+  },
+  dm: {
+    title: "Free UCAT Decision Making Practice Questions 2026 | Pulsemed",
+    description: "Practice UCAT Decision Making for free — syllogisms, Venn diagrams, probability and argument questions with worked explanations. Start instantly, no account needed.",
+    keywords: ["UCAT decision making practice", "free UCAT DM questions", "UCAT syllogisms practice", "UCAT decision making 2026", "UCAT DM free"],
+  },
+  qr: {
+    title: "Free UCAT Quantitative Reasoning Practice Questions 2026 | Pulsemed",
+    description: "Practice UCAT Quantitative Reasoning for free — percentages, ratios, data interpretation and graph questions with full worked solutions. 540+ questions across all difficulty levels.",
+    keywords: ["UCAT quantitative reasoning practice", "free UCAT QR questions", "UCAT maths practice", "UCAT quantitative reasoning 2026", "UCAT QR free"],
+  },
+  sjt: {
+    title: "Free UCAT Situational Judgement Practice Questions 2026 | Pulsemed",
+    description: "Practice UCAT Situational Judgement for free — Appropriateness, Importance and Most/Least questions with full explanations and band scoring. 400+ SJT questions.",
+    keywords: ["UCAT situational judgement practice", "free UCAT SJT questions", "UCAT SJT 2026", "UCAT appropriateness questions", "UCAT SJT free"],
+  },
+};
+
+const SECTION_FULL: Record<string, string> = {
+  vr: "Verbal Reasoning", dm: "Decision Making", qr: "Quantitative Reasoning", sjt: "Situational Judgement",
+};
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const meta = PRACTICE_META[params.slug];
+  if (!meta) return {};
+  const canonical = `${BASE_URL}/practice/${params.slug}`;
+  return {
+    title: meta.title,
+    description: meta.description,
+    keywords: meta.keywords,
+    alternates: { canonical },
+    openGraph: { title: meta.title, description: meta.description, url: canonical },
+    twitter: { card: "summary", title: meta.title, description: meta.description },
+  };
+}
+
+function PracticeJsonLd({ slug }: { slug: string }) {
+  const meta = PRACTICE_META[slug];
+  const full = SECTION_FULL[slug];
+  if (!meta) return null;
+  const url = `${BASE_URL}/practice/${slug}`;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Pulsemed", item: BASE_URL },
+          { "@type": "ListItem", position: 2, name: "Practice", item: `${BASE_URL}/practice` },
+          { "@type": "ListItem", position: 3, name: full, item: url },
+        ],
+      },
+      {
+        "@type": "Course",
+        name: `UCAT ${full} Practice`,
+        description: meta.description,
+        url,
+        provider: { "@type": "Organization", name: "Pulsemed", url: BASE_URL },
+        educationalLevel: "Secondary",
+        audience: { "@type": "EducationalAudience", educationalRole: "student", audienceType: "UK medical school applicants" },
+        offers: { "@type": "Offer", price: "0", priceCurrency: "GBP", availability: "https://schema.org/InStock" },
+        keywords: meta.keywords.join(", "),
+      },
+    ],
+  };
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
 
 const SECTION_CONFIG: Record<string, { label: string; short: string; color: string; tint: string; sets: string; hasGuest: boolean }> = {
   vr:  { label: "Verbal Reasoning",       short: "VR",  color: "#2D7FF9", tint: "#EAF2FF", sets: "3 passages",   hasGuest: true  },
@@ -19,7 +100,12 @@ export default async function PracticePage({ params }: { params: { slug: string 
   if (!VALID_SLUGS.includes(params.slug)) notFound();
 
   const session = await getServerSession(authOptions);
-  if (session?.user) return <PracticeBuilder slug={params.slug} />;
+  if (session?.user) return (
+    <>
+      <PracticeJsonLd slug={params.slug} />
+      <PracticeBuilder slug={params.slug} />
+    </>
+  );
 
   const cookieStore = cookies();
   const doneCookie = cookieStore.get(`pm_done_${params.slug}`);
@@ -33,6 +119,8 @@ export default async function PracticePage({ params }: { params: { slug: string 
   // Guest, no cookie yet — show teaser
   const cfg = SECTION_CONFIG[params.slug];
   return (
+    <>
+    <PracticeJsonLd slug={params.slug} />
     <div style={{ "--section": cfg.color, "--section-tint": cfg.tint } as any}>
       <div className="page-header">
         <div>
@@ -90,5 +178,6 @@ export default async function PracticePage({ params }: { params: { slug: string 
         </div>
       </div>
     </div>
+    </>
   );
 }
