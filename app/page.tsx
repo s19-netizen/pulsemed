@@ -55,6 +55,10 @@ export default async function Home() {
           Pulsemed
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
+          <Link href="/section/vr" style={{ fontSize: 14, fontWeight: 600, color: "#6B7A8C", textDecoration: "none" }}>VR</Link>
+          <Link href="/section/dm" style={{ fontSize: 14, fontWeight: 600, color: "#6B7A8C", textDecoration: "none" }}>DM</Link>
+          <Link href="/section/qr" style={{ fontSize: 14, fontWeight: 600, color: "#6B7A8C", textDecoration: "none" }}>QR</Link>
+          <Link href="/section/sjt" style={{ fontSize: 14, fontWeight: 600, color: "#6B7A8C", textDecoration: "none" }}>SJT</Link>
           <Link href="/blog" style={{ fontSize: 14, fontWeight: 600, color: "#6B7A8C", textDecoration: "none" }}>Blog</Link>
           <Link href="/auth/signin" style={{
             padding: "9px 18px", borderRadius: 10, border: "2px solid #EAEEF4",
