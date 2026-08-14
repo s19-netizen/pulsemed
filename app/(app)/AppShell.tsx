@@ -134,8 +134,6 @@ export default function AppShell({ children, user, testDate }: { children: React
     pathname.startsWith("/question") ||
     pathname.startsWith("/results");
 
-  const hideProfilePill = isFullscreenPage;
-
   useEffect(() => {
     setSidebarCollapsed(isFullscreenPage);
   }, [pathname]);
@@ -210,6 +208,50 @@ export default function AppShell({ children, user, testDate }: { children: React
           ))}
         </nav>
 
+        {/* Profile at bottom of sidebar */}
+        <div ref={dropdownRef} style={{ marginTop: "auto", position: "relative" }}>
+          {user ? (
+            <>
+              {dropdownOpen && (
+                <div className="profile-dropdown" style={{ bottom: "calc(100% + 8px)", top: "auto", left: 8, right: 8 }}>
+                  <button onClick={() => { setDropdownOpen(false); router.push("/settings"); }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    Settings
+                  </button>
+                  <hr />
+                  <button className="danger" onClick={() => signOut({ callbackUrl: "/" })}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Sign out
+                  </button>
+                </div>
+              )}
+              <button
+                className="profile-pill"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                aria-expanded={dropdownOpen}
+                style={{ width: "100%", marginBottom: 8 }}
+              >
+                <span className="profile-avatar">{initials}</span>
+                <span className="profile-pill-text">
+                  <strong>{user.name ?? user.email}</strong>
+                  <small style={{ color: "var(--blue)", fontWeight: 700 }}>
+                    {testDate
+                      ? new Date(testDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+                      : "UCAT student"}
+                  </small>
+                </span>
+                <span className="profile-chevron">▾</span>
+              </button>
+            </>
+          ) : (
+            <Link href="/auth/signin" style={{ display: "block", padding: "0 8px 8px" }}>
+              <button className="guest-signin-btn" style={{ width: "100%" }}>
+                Sign in →
+              </button>
+            </Link>
+          )}
+        </div>
+
         <button
           className="sidebar-toggle"
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -228,49 +270,6 @@ export default function AppShell({ children, user, testDate }: { children: React
       <main className="main-content">
         {children}
       </main>
-
-{!hideProfilePill && <div ref={dropdownRef} className="profile-pill-container" style={{ position: "fixed", top: 24, right: 32, zIndex: 40 }}>
-        {user ? (
-          <>
-            <button
-              className="profile-pill"
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              aria-expanded={dropdownOpen}
-            >
-              <span className="profile-avatar">{initials}</span>
-              <span className="profile-pill-text">
-                <strong>{user.name ?? user.email}</strong>
-                <small style={{ color: "var(--blue)", fontWeight: 700 }}>
-                  {testDate
-                    ? new Date(testDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
-                    : "UCAT student"}
-                </small>
-              </span>
-              <span className="profile-chevron">▾</span>
-            </button>
-
-            {dropdownOpen && (
-              <div className="profile-dropdown">
-                <button onClick={() => { setDropdownOpen(false); router.push("/settings"); }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                  Settings
-                </button>
-                <hr />
-                <button className="danger" onClick={() => signOut({ callbackUrl: "/" })}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                  Sign out
-                </button>
-              </div>
-            )}
-          </>
-        ) : (
-          <Link href="/auth/signin">
-            <button className="guest-signin-btn">
-              Sign in / Sign up →
-            </button>
-          </Link>
-        )}
-      </div>}
     </div>
   );
 }
