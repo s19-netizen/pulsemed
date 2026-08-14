@@ -128,6 +128,12 @@ export default function AppShell({ children, user, testDate }: { children: React
     else if (pathname.startsWith("/section") || pathname.startsWith("/guide")) setOpen("learn");
   }, [pathname]);
 
+  const hideProfilePill = pathname.startsWith("/practice/") ||
+    pathname.startsWith("/diagnostic") ||
+    pathname.startsWith("/mocks/") ||
+    pathname.startsWith("/question") ||
+    pathname.startsWith("/results");
+
   const isCurrentNav = (id: string) => {
     if (id === "mocks") return pathname === "/mocks";
     if (id === "study-plan") return pathname === "/study-plan";
@@ -217,7 +223,7 @@ export default function AppShell({ children, user, testDate }: { children: React
         {children}
       </main>
 
-<div ref={dropdownRef} className="profile-pill-container" style={{ position: "fixed", top: 24, right: 32, zIndex: 40 }}>
+{!hideProfilePill && <div ref={dropdownRef} className="profile-pill-container" style={{ position: "fixed", top: 24, right: 32, zIndex: 40 }}>
         {user ? (
           <>
             <button
@@ -258,7 +264,7 @@ export default function AppShell({ children, user, testDate }: { children: React
             </button>
           </Link>
         )}
-      </div>
+      </div>}
     </div>
   );
 }
