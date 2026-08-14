@@ -96,16 +96,7 @@ export default function DashboardClient({ user, userRow, responses, testDate, di
             </div>
           )}
           <div className="hero-actions">
-            <Link href={(() => {
-              const p = plan?.priority?.[0];
-              const href = p?.href ?? "";
-              let base = "/practice/dm";
-              if (href.includes("verbal_reasoning") || href.includes("/vr")) base = "/practice/vr";
-              else if (href.includes("quantitative") || href.includes("/qr")) base = "/practice/qr";
-              else if (href.includes("situational") || href.includes("/sjt")) base = "/practice/sjt";
-              if (!p) return base;
-              return `${base}?from=plan&focus=${encodeURIComponent(p.label ?? "")}&reason=${encodeURIComponent(p.reason ?? "")}`;
-            })()}>
+            <Link href="/study-plan">
               <button>Start today's plan →</button>
             </Link>
           </div>
