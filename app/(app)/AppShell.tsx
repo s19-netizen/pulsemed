@@ -128,11 +128,17 @@ export default function AppShell({ children, user, testDate }: { children: React
     else if (pathname.startsWith("/section") || pathname.startsWith("/guide")) setOpen("learn");
   }, [pathname]);
 
-  const hideProfilePill = pathname.startsWith("/practice/") ||
+  const isFullscreenPage = pathname.startsWith("/practice/") ||
     pathname.startsWith("/diagnostic") ||
     pathname.startsWith("/mocks/") ||
     pathname.startsWith("/question") ||
     pathname.startsWith("/results");
+
+  const hideProfilePill = isFullscreenPage;
+
+  useEffect(() => {
+    setSidebarCollapsed(isFullscreenPage);
+  }, [pathname]);
 
   const isCurrentNav = (id: string) => {
     if (id === "mocks") return pathname === "/mocks";
