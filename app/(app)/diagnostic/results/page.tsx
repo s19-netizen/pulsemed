@@ -11,11 +11,20 @@ export default async function DiagnosticResultsPage() {
 
   const userId = (session.user as any).id;
 
-  const { data: report } = await supabase
-    .from("diagnostic_reports")
-    .select("*")
-    .eq("user_id", userId)
-    .single();
+  const [{ data: report }, { data: responses }] = await Promise.all([
+    supabase
+      .from("diagnostic_reports")
+      .select("*")
+      .eq("user_id", userId)
+      .single(),
+    supabase
+      .from("question_responses")
+      .select("question_index, selected_answer, correct_answer, is_correct, session_type")
+      .eq("user_id", userId)
+      .eq("session_type", "diagnostic")
+      .order("question_index", { ascending: true })
+      .limit(91),
+  ]);
 
   if (!report) {
     return (
@@ -48,7 +57,7 @@ export default async function DiagnosticResultsPage() {
           <h1>Your results</h1>
         </div>
       </div>
-      <DiagnosticResults report={report} />
+      <DiagnosticResults report={report} responses={responses ?? []} />
     </div>
   );
 }

@@ -266,5 +266,8 @@ Rules: verdict = 1–2 warm honest sentences referencing exact marks. strong = s
     });
   }
 
+  // Invalidate study plan cache so it regenerates with diagnostic data
+  await supabase.from("ai_study_plan").delete().eq("user_id", userId);
+
   return NextResponse.json({ ok: true, reportId: report.id });
 }

@@ -563,8 +563,11 @@ function QuestionSession() {
           }).catch(() => {});
         }
       } else {
-        const results = slot.questions.map((q, i) => ({ correct: setSelections[i] === q.correct }));
-        setAnswers(prev => [...prev, ...results]);
+        // Score as 1 question worth 2 marks: 5/5 = 2, 4/5 = 1, ≤3/5 = 0
+        const numCorrect = slot.questions.filter((q, i) => setSelections[i] === q.correct).length;
+        const total = slot.questions.length;
+        const marks = numCorrect === total ? 2 : numCorrect === total - 1 ? 1 : 0;
+        setAnswers(prev => [...prev, { correct: marks >= 1 }, { correct: marks >= 2 }]);
         if (!isGuest) {
           slot.questions.forEach((q, i) => {
             const isCorrect = setSelections[i] === q.correct;
@@ -586,7 +589,7 @@ function QuestionSession() {
 
     if (isLast) {
       const totalCorrect = answers.filter(a => a.correct).length;
-      const totalQs = slots.reduce((acc, s) => acc + (s.kind === "yn-set" ? s.questions.length : 1), 0);
+      const totalQs = slots.reduce((acc, s) => acc + (s.kind === "yn-set" ? 2 : 1), 0);
       const times = allTimesRef.current;
       const avgMs = times.length > 0 ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : 0;
       if (isGuest) {

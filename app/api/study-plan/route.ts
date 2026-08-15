@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 
 const VR_SUBTYPE_KEYS = ["direct-retrieval","inference","main-idea","author-viewpoint","meaning-in-context","comparisons","scope"];
-const DM_SUBTYPE_KEYS = ["syllogism","logical-puzzle","strongest-arg","inference","venn","probability"];
+const DM_SUBTYPE_KEYS = ["syllogism","logical-puzzle","strongest-arg","venn","probability"];
 
 const VR_SUBTYPE_LABELS: Record<string,string> = {
   "direct-retrieval": "VR Direct Retrieval",
@@ -14,6 +14,13 @@ const VR_SUBTYPE_LABELS: Record<string,string> = {
   "meaning-in-context": "VR Meaning in Context",
   "comparisons": "VR Comparisons",
   "scope": "VR Scope & Evidence",
+};
+const DM_SUBTYPE_LABELS: Record<string,string> = {
+  "syllogism": "DM Syllogisms",
+  "logical-puzzle": "DM Logic Puzzles",
+  "strongest-arg": "DM Strongest Arguments",
+  "venn": "DM Venn Diagrams",
+  "probability": "DM Probability & Stats",
 };
 const VR_SUBTYPE_HREF: Record<string,string> = {
   "direct-retrieval": "/learn/verbal_reasoning/tf/direct-retrieval",
@@ -28,17 +35,22 @@ const DM_SUBTYPE_HREF: Record<string,string> = {
   "syllogism": "/practice/dm",
   "logical-puzzle": "/practice/dm",
   "strongest-arg": "/practice/dm",
-  "inference": "/practice/dm",
   "venn": "/practice/dm",
   "probability": "/practice/dm",
 };
 
 function parseTag(tag: string) {
-  if (tag.startsWith("vr-mixed-")) return { section: "VR", subtype: null };
-  if (tag.startsWith("vr-tf-") || tag.startsWith("vr-mcq-")) {
-    const fmt = tag.startsWith("vr-tf-") ? "tf" : "mcq";
-    const rest = tag.slice(`vr-${fmt}-`.length);
-    const sub = VR_SUBTYPE_KEYS.find(k => rest.startsWith(k)) ?? null;
+  if (tag.startsWith("vr-")) {
+    let sub: string | null = null;
+    if (tag.startsWith("vr-tf-") || tag.startsWith("vr-mcq-")) {
+      // practice format: vr-tf-inference, vr-mcq-main-idea
+      const fmt = tag.startsWith("vr-tf-") ? "tf" : "mcq";
+      const rest = tag.slice(`vr-${fmt}-`.length);
+      sub = VR_SUBTYPE_KEYS.find(k => rest.startsWith(k)) ?? null;
+    } else {
+      // diagnostic format: vr-main-idea, vr-inference, etc.
+      sub = VR_SUBTYPE_KEYS.find(k => tag === `vr-${k}` || tag.startsWith(`vr-${k}-`)) ?? null;
+    }
     return { section: "VR", subtype: sub };
   }
   if (tag.startsWith("dm-")) {
@@ -106,24 +118,26 @@ export async function GET() {
     return `${sec}: ${acc}% accuracy (${s.total} qs), avg ${avg}s per question (target ${target}s, ${avg > target ? `${avg - target}s OVER` : "on pace"})`;
   }).join("\n");
 
-  const subtypeLines = Object.entries(subtypes).map(([sub, s]) => {
-    const acc = Math.round((s.correct / s.total) * 100);
-    const label = VR_SUBTYPE_LABELS[sub] ?? sub;
-    const href = VR_SUBTYPE_HREF[sub] ?? DM_SUBTYPE_HREF[sub] ?? "";
-    return `${label} (${acc}%, ${s.total} qs) href:${href}`;
-  }).join("\n");
+  const subtypeLines = Object.entries(subtypes)
+    .filter(([, s]) => s.total >= 3)
+    .map(([sub, s]) => {
+      const acc = Math.round((s.correct / s.total) * 100);
+      const label = VR_SUBTYPE_LABELS[sub] ?? DM_SUBTYPE_LABELS[sub] ?? sub;
+      const href = VR_SUBTYPE_HREF[sub] ?? DM_SUBTYPE_HREF[sub] ?? "";
+      return `${label} (${acc}%, ${s.total} qs) href:${href}`;
+    }).join("\n");
 
-  const prompt = `You are a UCAT tutor. Give honest, specific, student-friendly analysis.
+  const prompt = `You are a UCAT tutor. Give honest, specific, student-friendly analysis based on ALL the student's historical data — not just their most recent session.
 
-STUDENT PERFORMANCE:
+STUDENT PERFORMANCE (all-time averages):
 ${sectionLines}
 
-SUBTYPE BREAKDOWN:
+SUBTYPE BREAKDOWN (subtypes with 3+ attempts only):
 ${subtypeLines || "No subtype data yet"}
 
 Return ONLY this JSON (no other text):
 {
-  "summary": "2-3 sentences: honest overall picture, name their strongest and weakest areas specifically",
+  "summary": "2-3 sentences: honest overall picture across ALL sections, name their strongest and weakest areas specifically",
   "timingNote": "one sentence about their timing vs targets, or null if timing looks fine",
   "strengths": [{"label": "e.g. VR Direct Retrieval", "detail": "e.g. 88% — consistently strong"}],
   "weaknesses": [{"label": "e.g. VR Inference", "href": "/learn/verbal_reasoning/tf/inference", "detail": "e.g. 54% — main drag on your VR score"}],
@@ -132,11 +146,13 @@ Return ONLY this JSON (no other text):
 }
 
 Rules:
+- Base everything on ALL-TIME averages, not just recent sessions
 - Be specific, name actual numbers and subtypes
-- strengths: only include subtypes with 70%+ accuracy and at least 10 questions
-- weaknesses: subtypes under 65% or sections where timing is 10s+ over target, max 3
-- priority: rank all attempted subtypes from most to least urgent, include hrefs
-- weeklyPlan: actionable, not generic`;
+- strengths: subtypes with 70%+ accuracy and at least 5 questions
+- weaknesses: subtypes under 65% with at least 5 questions; spread across different sections if possible, max 3
+- priority: rank attempted subtypes from most to least urgent, include hrefs
+- weeklyPlan: balanced across sections — do not recommend only one section unless it is clearly the only weak area
+- If a section has very few questions, note it as "not yet attempted" rather than calling it weak`;
 
   try {
     const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
