@@ -121,6 +121,28 @@ export default function DashboardClient({ user, responses, testDate, diagnosticD
         </div>
       </div>
 
+      {/* ── Diagnostic (shown prominently before section grid) ─── */}
+      {!diagnosticDone ? (
+        <div className="d2-diag-banner">
+          <div className="d2-diag-banner-deco" aria-hidden="true" />
+          <div className="d2-diag-banner-body">
+            <div className="d2-diag-banner-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+            </div>
+            <div>
+              <p className="d2-diag-banner-kicker">RECOMMENDED FIRST STEP</p>
+              <h3 className="d2-diag-banner-title">Take your diagnostic test</h3>
+              <p className="d2-diag-banner-desc">91 questions across all four UCAT sections — about 55 minutes. Find your baseline score, spot your weak areas, and unlock a personalised 4-week study plan.</p>
+            </div>
+          </div>
+          <Link href="/diagnostic">
+            <button className="d2-diag-banner-btn">Start diagnostic →</button>
+          </Link>
+        </div>
+      ) : null}
+
       {/* ── Section cards 2×2 ─────────────────────────────────── */}
       <div className="d2-section-grid">
         {sectionStats.map(s => {
@@ -164,23 +186,8 @@ export default function DashboardClient({ user, responses, testDate, diagnosticD
       {/* ── Bottom row ────────────────────────────────────────── */}
       <div className="d2-bottom">
 
-        {/* Diagnostic */}
-        {!diagnosticDone ? (
-          <div className="d2-diag-cta">
-            <div className="d2-diag-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2D7FF9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-              </svg>
-            </div>
-            <div>
-              <strong>Take your diagnostic test</strong>
-              <p>91 questions across all four UCAT sections — find your baseline and get a personalised study plan.</p>
-            </div>
-            <Link href="/diagnostic" style={{ flexShrink: 0 }}>
-              <button className="d2-diag-btn">Start →</button>
-            </Link>
-          </div>
-        ) : (
+        {/* Diagnostic results (if done) or a motivational placeholder */}
+        {diagnosticDone ? (
           <div className="d2-diag-done">
             <p className="d2-eyebrow" style={{ marginBottom: 10 }}>DIAGNOSTIC RESULTS</p>
             <div className="d2-diag-scores">
@@ -196,6 +203,13 @@ export default function DashboardClient({ user, responses, testDate, diagnosticD
             <Link href="/diagnostic/results">
               <button className="d2-diag-done-btn">View full report →</button>
             </Link>
+          </div>
+        ) : (
+          <div className="d2-stats-card">
+            <p className="d2-eyebrow" style={{ marginBottom: 14 }}>QUICK TIPS</p>
+            <div className="d2-stats-list">
+              <div className="d2-stat-row"><span>Complete the diagnostic to get your baseline score and personalised plan.</span></div>
+            </div>
           </div>
         )}
 
