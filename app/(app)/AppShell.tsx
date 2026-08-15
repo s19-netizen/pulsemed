@@ -32,6 +32,13 @@ const SECTION_ICONS: Record<string, React.ReactNode> = {
   ),
 };
 
+const SECTIONS = [
+  { key: "vr", label: "Verbal Reasoning", color: "blue" },
+  { key: "dm", label: "Decision Making", color: "purple" },
+  { key: "qr", label: "Quantitative Reasoning", color: "green" },
+  { key: "sjt", label: "Situational Judgement", color: "coral" },
+];
+
 const NAV = [
   {
     id: "learn",
@@ -41,12 +48,7 @@ const NAV = [
         <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
       </svg>
     ),
-    sections: [
-      { key: "vr", label: "Verbal Reasoning", color: "blue" },
-      { key: "dm", label: "Decision Making", color: "purple" },
-      { key: "qr", label: "Quantitative Reasoning", color: "green" },
-      { key: "sjt", label: "Situational Judgement", color: "coral" },
-    ],
+    sections: SECTIONS,
     href: (key: string) => `/section/${key}`,
   },
   {
@@ -57,12 +59,7 @@ const NAV = [
         <polygon points="5 3 19 12 5 21 5 3"/>
       </svg>
     ),
-    sections: [
-      { key: "vr", label: "Verbal Reasoning", color: "blue" },
-      { key: "dm", label: "Decision Making", color: "purple" },
-      { key: "qr", label: "Quantitative Reasoning", color: "green" },
-      { key: "sjt", label: "Situational Judgement", color: "coral" },
-    ],
+    sections: SECTIONS,
     href: (key: string) => `/practice/${key}`,
   },
   {
@@ -87,17 +84,15 @@ const NAV = [
     sections: [],
     href: () => "/mocks",
   },
-  {
-    id: "blog",
-    label: "Blog",
-    icon: (
-      <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-      </svg>
-    ),
-    sections: [],
-    href: () => "/blog",
-  },
+];
+
+const SEARCH_ITEMS = [
+  { label: "Dashboard", href: "/dashboard", tag: "Home" },
+  ...SECTIONS.map(s => ({ label: `Learn · ${s.label}`, href: `/section/${s.key}`, tag: "Learn" })),
+  ...SECTIONS.map(s => ({ label: `Practice · ${s.label}`, href: `/practice/${s.key}`, tag: "Practice" })),
+  { label: "Study Plan", href: "/study-plan", tag: "Plan" },
+  { label: "Mocks", href: "/mocks", tag: "Mocks" },
+  { label: "Settings", href: "/settings", tag: "Account" },
 ];
 
 export default function AppShell({ children, user, testDate }: { children: React.ReactNode; user: User | null; testDate?: string | null }) {
@@ -106,8 +101,11 @@ export default function AppShell({ children, user, testDate }: { children: React
   const [open, setOpen] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   const initials = user
     ? (user.name ?? user.email ?? "U").split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()
@@ -117,6 +115,10 @@ export default function AppShell({ children, user, testDate }: { children: React
     function handleClick(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
+      }
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchFocused(false);
+        setSearchQuery("");
       }
     }
     document.addEventListener("mousedown", handleClick);
@@ -146,6 +148,26 @@ export default function AppShell({ children, user, testDate }: { children: React
     return false;
   };
 
+  function handleNavWithSections(navId: string) {
+    if (sidebarCollapsed) {
+      setSidebarCollapsed(false);
+      setOpen(navId);
+    } else {
+      setOpen(open === navId ? null : navId);
+    }
+  }
+
+  function handleDirectNavClick() {
+    if (sidebarCollapsed) setSidebarCollapsed(false);
+  }
+
+  const searchResults = searchQuery.trim().length > 0
+    ? SEARCH_ITEMS.filter(item =>
+        item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.tag.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
+
   return (
     <div className={`app-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
       <aside className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
@@ -160,6 +182,7 @@ export default function AppShell({ children, user, testDate }: { children: React
           <Link
             href={user ? "/dashboard" : "/"}
             className={`nav-main ${pathname === "/dashboard" || pathname === "/" ? "current" : ""}`}
+            onClick={handleDirectNavClick}
           >
             <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
@@ -172,7 +195,7 @@ export default function AppShell({ children, user, testDate }: { children: React
                 <>
                   <button
                     className={`nav-main ${open === nav.id ? "is-open" : ""} ${isCurrentNav(nav.id) ? "current" : ""}`}
-                    onClick={() => !sidebarCollapsed && setOpen(open === nav.id ? null : nav.id)}
+                    onClick={() => handleNavWithSections(nav.id)}
                   >
                     {nav.icon}
                     <span className="nav-label">{nav.label}</span>
@@ -183,7 +206,7 @@ export default function AppShell({ children, user, testDate }: { children: React
                       <Link
                         key={sec.key}
                         href={nav.href(sec.key)}
-                        className={`section-link ${pathname === nav.href(sec.key) ? "selected" : ""}`}
+                        className={`section-link ${pathname.startsWith(nav.href(sec.key)) ? "selected" : ""}`}
                       >
                         <span className={`section-mark ${sec.color}`}>
                           {SECTION_ICONS[sec.key]}
@@ -199,6 +222,7 @@ export default function AppShell({ children, user, testDate }: { children: React
                 <Link
                   href={nav.href("")}
                   className={`nav-main ${pathname === nav.href("") ? "current" : ""}`}
+                  onClick={handleDirectNavClick}
                 >
                   {nav.icon}
                   <span className="nav-label">{nav.label}</span>
@@ -208,23 +232,50 @@ export default function AppShell({ children, user, testDate }: { children: React
           ))}
         </nav>
 
+        {/* Search */}
+        <div ref={searchRef} className="sidebar-search-wrap" style={{ marginTop: "auto" }}>
+          <div className="sidebar-search">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              type="text"
+              placeholder="Search…"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onFocus={() => setSearchFocused(true)}
+            />
+          </div>
+          {searchFocused && searchResults.length > 0 && (
+            <div className="sidebar-search-results">
+              {searchResults.map(item => (
+                <button
+                  key={item.href}
+                  onClick={() => { router.push(item.href); setSearchQuery(""); setSearchFocused(false); }}
+                >
+                  <span className="search-result-tag">{item.tag}</span>
+                  {item.label.includes("·") ? item.label.split("·")[1].trim() : item.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Profile at bottom of sidebar */}
-        <div ref={dropdownRef} style={{ marginTop: "auto", position: "relative" }}>
+        <div ref={dropdownRef}>
           {user ? (
             <>
-              {dropdownOpen && (
-                <div className="profile-dropdown" style={{ bottom: "calc(100% + 8px)", top: "auto", left: 8, right: 8 }}>
-                  <button onClick={() => { setDropdownOpen(false); router.push("/settings"); }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                    Settings
-                  </button>
-                  <hr />
-                  <button className="danger" onClick={() => signOut({ callbackUrl: "/" })}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                    Sign out
-                  </button>
-                </div>
-              )}
+              <div className={`profile-inline-menu ${dropdownOpen ? "expanded" : ""}`}>
+                <button onClick={() => { setDropdownOpen(false); router.push("/settings"); }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                  Settings
+                </button>
+                <hr />
+                <button className="danger" onClick={() => signOut({ callbackUrl: "/" })}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                  Sign out
+                </button>
+              </div>
               <button
                 className="profile-pill"
                 onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -240,7 +291,7 @@ export default function AppShell({ children, user, testDate }: { children: React
                       : "UCAT student"}
                   </small>
                 </span>
-                <span className="profile-chevron">▾</span>
+                <span className={`profile-chevron ${dropdownOpen ? "open" : ""}`}>▾</span>
               </button>
             </>
           ) : (
