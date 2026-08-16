@@ -168,7 +168,7 @@ function LineChart({ fig }: { fig: Extract<ChartFigure, { type: "line" }> }) {
 
   return (
     <div style={{ margin: "10px 0" }}>
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: W, display: "block" }} aria-label={title ?? "Line chart"}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", display: "block" }} aria-label={title ?? "Line chart"}>
         {title && <text x={W/2} y={14} textAnchor="middle" style={{ fontSize: 10, fontWeight: 700, fill: "#6747d8", fontFamily: "inherit" }}>{title}</text>}
         {gridVals.map(v => (
           <g key={v}>
@@ -214,7 +214,7 @@ function BarChart({ fig }: { fig: Extract<ChartFigure, { type: "bar" }> }) {
 
   return (
     <div style={{ margin: "10px 0" }}>
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: W, display: "block" }} aria-label={title ?? "Bar chart"}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", display: "block" }} aria-label={title ?? "Bar chart"}>
         {title && <text x={W/2} y={14} textAnchor="middle" style={{ fontSize: 10, fontWeight: 700, fill: "#6747d8", fontFamily: "inherit" }}>{title}</text>}
         {gridVals.map(v => (
           <g key={v}>
@@ -289,7 +289,7 @@ function PieChart({ fig }: { fig: Extract<ChartFigure, { type: "pie" }> }) {
   });
   return (
     <div style={{ margin: "10px 0" }}>
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: W, display: "block" }} aria-label={title ?? "Pie chart"}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", display: "block" }} aria-label={title ?? "Pie chart"}>
         {title && <text x={W / 2} y={13} textAnchor="middle" style={{ fontSize: 10, fontWeight: 700, fill: "#6747d8", fontFamily: "inherit" }}>{title}</text>}
         {slices.map((s, i) => (
           <g key={i}>
@@ -325,7 +325,7 @@ function MultiLineChart({ fig }: { fig: Extract<ChartFigure, { type: "multiline"
   for (let v = yMin; v <= yMax + vStep * 0.01; v += vStep) gridVals.push(Math.round(v * 100) / 100);
   return (
     <div style={{ margin: "10px 0" }}>
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: W, display: "block" }} aria-label={title ?? "Line chart"}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", display: "block" }} aria-label={title ?? "Line chart"}>
         {title && <text x={W / 2} y={14} textAnchor="middle" style={{ fontSize: 10, fontWeight: 700, fill: "#6747d8", fontFamily: "inherit" }}>{title}</text>}
         {gridVals.map(v => (
           <g key={v}>
@@ -939,22 +939,29 @@ function QuestionSession() {
             </small>
           </div>
 
+          {(() => {
+            const hasChart = !!(q0 as any).chartFigure || !!(q0 as any).vennFigure;
+            const useWide  = section === "vr" || hasChart;
+            return (
           <div
             className="question-columns"
-            style={section === "vr" ? { gridTemplateColumns: "1.75fr 1fr" } : undefined}
+            style={useWide ? { gridTemplateColumns: "1.75fr 1fr" } : undefined}
           >
-            {/* LEFT — Passage / context */}
+            {/* LEFT — Passage / context / chart */}
             <div
-              className={section === "vr" ? undefined : "question-context"}
-              style={section === "vr" ? { padding: "8px 20px 8px 4px", overflowY: "auto", maxHeight: "calc(100vh - 220px)" } : undefined}
+              className={useWide ? undefined : "question-context"}
+              style={useWide ? { padding: "8px 20px 8px 4px", overflowY: "auto", maxHeight: "calc(100vh - 220px)" } : undefined}
             >
-              <p style={section === "vr" ? { margin: "0 0 12px", color: "var(--section)", letterSpacing: ".1em", fontSize: 10, fontWeight: 800, textTransform: "uppercase" } : undefined}>{q0.contextLabel}</p>
-              <div
-                className={`passage-text ${revealed && effectiveEvidence ? "passage-text--revealed" : ""}`}
-                style={{ whiteSpace: "pre-line", fontFamily: "Georgia, serif", fontSize: 15, lineHeight: 1.85, color: "#334354" }}
-              >
-                <HighlightedPassage text={q0.context} evidence={effectiveEvidence} revealed={revealed} />
-              </div>
+              <p style={{ margin: "0 0 8px", color: "var(--section)", letterSpacing: ".1em", fontSize: 10, fontWeight: 800, textTransform: "uppercase" as const }}>{q0.contextLabel}</p>
+              {/* Only show raw text when there's no chart replacing it */}
+              {!(q0 as any).chartFigure && (
+                <div
+                  className={`passage-text ${revealed && effectiveEvidence ? "passage-text--revealed" : ""}`}
+                  style={{ whiteSpace: "pre-line", fontFamily: "Georgia, serif", fontSize: 15, lineHeight: 1.85, color: "#334354" }}
+                >
+                  <HighlightedPassage text={q0.context} evidence={effectiveEvidence} revealed={revealed} />
+                </div>
+              )}
               {(q0 as any).vennFigure && (
                 <VennDiagram fig={(q0 as any).vennFigure as VennFigure} />
               )}
@@ -1033,6 +1040,8 @@ function QuestionSession() {
               )}
             </div>
           </div>
+          );
+          })()}
 
           <div className="question-actions">
             <div style={{ display: "flex", gap: 8 }}>
