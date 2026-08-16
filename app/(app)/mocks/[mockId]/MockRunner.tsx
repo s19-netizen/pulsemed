@@ -12,10 +12,10 @@ type MockDataModule = typeof mock1;
 // ── Section timing ─────────────────────────────────────────────────────────────
 
 const SECTIONS = [
-  { key: "VR",  label: "Verbal Reasoning",      time: 22 * 60, color: "#2563eb", deep: "#1d4ed8", tint: "#eff6ff" },
-  { key: "DM",  label: "Decision Making",        time: 37 * 60, color: "#7c3aed", deep: "#6d28d9", tint: "#f5f3ff" },
-  { key: "QR",  label: "Quantitative Reasoning", time: 26 * 60, color: "#059669", deep: "#047857", tint: "#ecfdf5" },
-  { key: "SJT", label: "Situational Judgement",  time: 26 * 60, color: "#d97706", deep: "#b45309", tint: "#fffbeb" },
+  { key: "VR",  label: "Verbal Reasoning",      time: 22 * 60, color: "#2d7ff9", deep: "#1a5fd0", tint: "#eaf2ff" },
+  { key: "DM",  label: "Decision Making",        time: 37 * 60, color: "#8b6bff", deep: "#6747d8", tint: "#f1ecff" },
+  { key: "QR",  label: "Quantitative Reasoning", time: 26 * 60, color: "#3dbe6c", deep: "#259650", tint: "#edfbf3" },
+  { key: "SJT", label: "Situational Judgement",  time: 26 * 60, color: "#ff6b5c", deep: "#d94b3e", tint: "#ffedea" },
 ] as const;
 
 type SectionKey = "VR" | "DM" | "QR" | "SJT";
