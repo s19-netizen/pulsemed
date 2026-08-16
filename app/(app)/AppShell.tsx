@@ -286,9 +286,11 @@ export default function AppShell({ children, user, testDate }: { children: React
                 <span className="profile-pill-text">
                   <strong>{user.name ?? user.email}</strong>
                   <small style={{ color: "var(--blue)", fontWeight: 700 }}>
-                    {testDate
-                      ? new Date(testDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
-                      : "UCAT student"}
+                    {user.email === "sawdaj19@gmail.com"
+                      ? "Admin"
+                      : testDate
+                        ? new Date(testDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+                        : "UCAT student"}
                   </small>
                 </span>
                 <span className={`profile-chevron ${dropdownOpen ? "open" : ""}`}>▾</span>

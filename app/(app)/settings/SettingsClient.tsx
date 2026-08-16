@@ -74,6 +74,22 @@ export default function SettingsClient({ user, userRow, practiceSessions }: { us
           </button>
         </div>
 
+        {/* Admin link */}
+        {user.email === "sawdaj19@gmail.com" && (
+          <a href="/admin" style={{ textDecoration: "none" }}>
+            <div className="content-card settings-card" style={{ cursor: "pointer", border: "1.5px solid #EBD56A", background: "#FFFDF0" }}>
+              <div className="settings-heading">
+                <div className="settings-symbol" style={{ background: "#FFF8DF", color: "#9B7000" }}>⚙</div>
+                <div>
+                  <h2 style={{ color: "#9B7000" }}>Admin dashboard</h2>
+                  <p>Edit questions, mocks and content</p>
+                </div>
+                <span style={{ marginLeft: "auto", fontSize: 18, color: "#EBD56A" }}>→</span>
+              </div>
+            </div>
+          </a>
+        )}
+
         {/* Study preferences */}
         <div className="content-card settings-card">
           <div className="settings-heading">
