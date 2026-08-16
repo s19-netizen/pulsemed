@@ -161,7 +161,7 @@ export async function POST(req: NextRequest) {
               role: "system",
               content: `You are a UCAT preparation expert. Respond with ONLY valid JSON using this exact structure:
 {"sections":{"vr":{"verdict":"string","strong":[{"subtype":"string","score":"X/Y"}],"weak":[{"subtype":"string","score":"X/Y","missedMarks":N}]},"dm":{"verdict":"string","strong":[...],"weak":[...]},"qr":{"verdict":"string","strong":[...],"weak":[...]},"sjt":{"verdict":"string","band":N}},"overallVerdict":"string","weeks":[{"title":"string","focus":"string","tasks":["string","string","string"]}]}
-Rules: verdict = 1–2 warm honest sentences referencing exact marks. strong = subtypes scoring 70%+. weak = subtypes below 50%, missedMarks must be an integer. weeks = exactly 4. tasks = exactly 3 strings per week. Always use the student's actual subtype names and mark counts from the data.`,
+Rules: verdict = 1–2 warm honest sentences referencing exact marks. strong = subtypes scoring 70%+. weak = subtypes below 50%, missedMarks must be an integer. weeks = exactly 4. tasks = exactly 3 strings per week. CRITICAL: every week must cover all 4 sections (VR, DM, QR, SJT) — spread the 3 tasks across different sections each week. No week should focus on just one section. The weakest section gets the most time overall but every section appears every single week. Always use the student's actual subtype names and mark counts from the data.`,
             },
             {
               role: "user",

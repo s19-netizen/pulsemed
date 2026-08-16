@@ -127,7 +127,7 @@ export async function GET() {
       return `${label} (${acc}%, ${s.total} qs) href:${href}`;
     }).join("\n");
 
-  const prompt = `You are a UCAT tutor. Give honest, specific, student-friendly analysis based on ALL the student's historical data — not just their most recent session.
+  const prompt = `You are a UCAT tutor. Give honest, specific, student-friendly analysis based on ALL the student's historical data.
 
 STUDENT PERFORMANCE (all-time averages):
 ${sectionLines}
@@ -137,22 +137,23 @@ ${subtypeLines || "No subtype data yet"}
 
 Return ONLY this JSON (no other text):
 {
-  "summary": "2-3 sentences: honest overall picture across ALL sections, name their strongest and weakest areas specifically",
-  "timingNote": "one sentence about their timing vs targets, or null if timing looks fine",
+  "summary": "2-3 sentences: honest overall picture across ALL 4 sections (VR, DM, QR, SJT), name strongest and weakest specifically",
+  "timingNote": "one sentence about timing vs targets, or null if fine",
   "strengths": [{"label": "e.g. VR Direct Retrieval", "detail": "e.g. 88% — consistently strong"}],
   "weaknesses": [{"label": "e.g. VR Inference", "href": "/learn/verbal_reasoning/tf/inference", "detail": "e.g. 54% — main drag on your VR score"}],
   "priority": [{"label": "e.g. VR Inference", "href": "/learn/verbal_reasoning/tf/inference", "reason": "e.g. Weakest skill at 54%"}],
-  "weeklyPlan": "specific, actionable 1-2 sentence plan for this week naming exact skills to practise"
+  "weeklyPlan": "specific, actionable 1-2 sentence plan for this week"
 }
 
-Rules:
-- Base everything on ALL-TIME averages, not just recent sessions
-- Be specific, name actual numbers and subtypes
-- strengths: subtypes with 70%+ accuracy and at least 5 questions
-- weaknesses: subtypes under 65% with at least 5 questions; spread across different sections if possible, max 3
-- priority: rank attempted subtypes from most to least urgent, include hrefs
-- weeklyPlan: balanced across sections — do not recommend only one section unless it is clearly the only weak area
-- If a section has very few questions, note it as "not yet attempted" rather than calling it weak`;
+CRITICAL RULES — you must follow all of these:
+- priority MUST contain at least one task from EACH of the 4 sections (VR, DM, QR, SJT). Never return fewer than 4 items. The weakest section should rank highest, but every section must appear.
+- Even if a student scores 800/900 in QR, still include a QR task — frame it as "maintain your strength" if it's already good.
+- weeklyPlan must explicitly mention all 4 sections by name.
+- summary must comment on all 4 sections, not just the weakest.
+- Base everything on ALL-TIME averages, not just recent sessions.
+- strengths: subtypes with 70%+ accuracy and at least 5 questions.
+- weaknesses: subtypes under 65% with at least 5 questions; spread across sections where possible, max 3.
+- If a section has very few questions, note it as "not yet attempted" in the reason and still include it in priority.`;
 
   try {
     const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -162,7 +163,7 @@ Rules:
         model: "llama-3.1-8b-instant",
         messages: [{ role: "user", content: prompt }],
         temperature: 0.3,
-        max_tokens: 800,
+        max_tokens: 1200,
       }),
     });
 
