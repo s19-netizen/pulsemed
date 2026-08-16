@@ -404,7 +404,7 @@ function MockSection({
           {openSection === "dm" && mock.dm.map(q => (
             <QuestionCard
               key={q.id} q={q} section="dm" saved={savedIds.has(q.id)}
-              onClick={() => onEdit({ mockId: mock.id, section: "dm", questionId: q.id, question: q, context: q.context, contextLabel: q.contextLabel ?? "CONTEXT" })}
+              onClick={() => onEdit({ mockId: mock.id, section: "dm", questionId: q.id, question: q, context: q.context, contextLabel: (q as any).contextLabel ?? "CONTEXT" })}
             />
           ))}
           {openSection === "qr" && mock.qr.map(ds =>
