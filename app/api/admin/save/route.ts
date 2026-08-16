@@ -19,9 +19,17 @@ export async function POST(req: Request) {
   const body = await req.json();
 
   if (body.type === "new_mock") {
-    const { error } = await db.from("admin_mocks").insert({
-      title: body.title,
-      sections: {},
+    const { error } = await db.from("admin_mocks").insert({ title: body.title, sections: {} });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (body.type === "new_question") {
+    const { section, subtype, difficulty, context, question, options, correct, explanation, presentation } = body;
+    const { error } = await db.from("admin_content").insert({
+      section, subtype, difficulty, context,
+      question_text: question, options, correct_index: correct,
+      explanation, presentation,
     });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true });
