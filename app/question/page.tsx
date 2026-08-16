@@ -953,8 +953,8 @@ function QuestionSession() {
               style={useWide ? { padding: "8px 20px 8px 4px", overflowY: "auto", maxHeight: "calc(100vh - 220px)" } : undefined}
             >
               <p style={{ margin: "0 0 8px", color: "var(--section)", letterSpacing: ".1em", fontSize: 10, fontWeight: 800, textTransform: "uppercase" as const }}>{q0.contextLabel}</p>
-              {/* Only show raw text when there's no chart replacing it */}
-              {!(q0 as any).chartFigure && (
+              {/* Show text if: no chart, OR section is DM/SJT where rules + chart coexist */}
+              {(!(q0 as any).chartFigure || (section !== "qr")) && q0.context && (
                 <div
                   className={`passage-text ${revealed && effectiveEvidence ? "passage-text--revealed" : ""}`}
                   style={{ whiteSpace: "pre-line", fontFamily: "Georgia, serif", fontSize: 15, lineHeight: 1.85, color: "#334354" }}
