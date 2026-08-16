@@ -124,22 +124,25 @@ export default function PracticeBuilder({ slug }: { slug: string }) {
   const [planDismissed, setPlanDismissed] = useState(false);
 
   const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>(config.groups.map(g => g.id));
-  const [selectedSubtypes, setSelectedSubtypes] = useState<Set<string>>(new Set());
+  const [selectedSubtypes, setSelectedSubtypes] = useState<Set<string>>(
+    () => new Set(config.groups.flatMap(g => g.items.map(i => i.name)))
+  );
   const [selectedDifficulties, setSelectedDifficulties] = useState<string[]>(["Bronze", "Silver", "Gold", "Diamond"]);
   const counts = COUNTS[slug] ?? COUNTS.dm;
   const [count, setCount] = useState(counts[1] ?? counts[0]);
 
   function toggleGroup(id: string) {
-    setSelectedGroupIds(prev =>
-      prev.includes(id)
-        ? prev.length > 1 ? prev.filter(g => g !== id) : prev
-        : [...prev, id]
-    );
-    setSelectedSubtypes(new Set());
+    const newIds = selectedGroupIds.includes(id)
+      ? selectedGroupIds.length > 1 ? selectedGroupIds.filter(g => g !== id) : selectedGroupIds
+      : [...selectedGroupIds, id];
+    setSelectedGroupIds(newIds);
+    // Reset to all subtypes in the new group selection
+    setSelectedSubtypes(new Set(config.groups.filter(g => newIds.includes(g.id)).flatMap(g => g.items.map(i => i.name))));
   }
 
   function toggleSubtype(name: string) {
     setSelectedSubtypes(prev => {
+      if (prev.has(name) && prev.size <= 1) return prev; // keep at least one
       const next = new Set(prev);
       next.has(name) ? next.delete(name) : next.add(name);
       return next;
@@ -160,10 +163,11 @@ export default function PracticeBuilder({ slug }: { slug: string }) {
   );
 
   function handleStart() {
+    const allSelected = availableSubtypes.every(i => selectedSubtypes.has(i.name));
     const qs = new URLSearchParams({
       section: slug,
       type: selectedGroupIds.join(","),
-      subtypes: selectedSubtypes.size > 0 ? Array.from(selectedSubtypes).join(",") : "all",
+      subtypes: allSelected ? "all" : Array.from(selectedSubtypes).join(","),
       difficulty: selectedDifficulties.join(","),
       count: String(count),
     });
@@ -303,11 +307,15 @@ export default function PracticeBuilder({ slug }: { slug: string }) {
               </button>
             ))}
           </div>
-          {selectedSubtypes.size > 0 && (
+          {availableSubtypes.some(i => !selectedSubtypes.has(i.name)) && (
             <p className="subtype-hint">
-              {selectedSubtypes.size} selected ·{" "}
-              <button type="button" className="subtype-clear" onClick={() => setSelectedSubtypes(new Set())}>
-                clear
+              {availableSubtypes.filter(i => !selectedSubtypes.has(i.name)).length} topic{availableSubtypes.filter(i => !selectedSubtypes.has(i.name)).length !== 1 ? "s" : ""} excluded ·{" "}
+              <button
+                type="button"
+                className="subtype-clear"
+                onClick={() => setSelectedSubtypes(new Set(availableSubtypes.map(i => i.name)))}
+              >
+                reset all
               </button>
             </p>
           )}
@@ -384,7 +392,7 @@ export default function PracticeBuilder({ slug }: { slug: string }) {
             </div>
             <div className="summary-row">
               <span>Subtypes</span>
-              <strong>{selectedSubtypes.size === 0 ? "All" : `${selectedSubtypes.size} selected`}</strong>
+              <strong>{availableSubtypes.every(i => selectedSubtypes.has(i.name)) ? "All" : `${selectedSubtypes.size} of ${availableSubtypes.length}`}</strong>
             </div>
             <div className="summary-row">
               <span>Difficulty</span>
