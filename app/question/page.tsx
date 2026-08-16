@@ -316,13 +316,15 @@ function buildSlots(questions: GuestQuestion[]): QuestionSlot[] {
   while (i < questions.length) {
     const q = questions[i];
     const isYN = q.options.length === 2 && q.options[0] === "Yes" && q.options[1] === "No";
-    if (isYN) {
+    const setId = (q as any).setId as string | undefined;
+    if (isYN && setId) {
+      // Group by setId — reliable even if stimulus text varies slightly
       const setQs: GuestQuestion[] = [q];
       let j = i + 1;
       while (j < questions.length) {
         const nq = questions[j];
         const nIsYN = nq.options.length === 2 && nq.options[0] === "Yes" && nq.options[1] === "No";
-        if (nIsYN && nq.context === q.context) { setQs.push(nq); j++; } else break;
+        if (nIsYN && (nq as any).setId === setId) { setQs.push(nq); j++; } else break;
       }
       slots.push({ kind: "yn-set", questions: setQs });
       i = j;

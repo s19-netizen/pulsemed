@@ -51,11 +51,9 @@ export async function GET(req: NextRequest) {
   for (const [, setQs] of setMap) {
     if (remaining <= 0) break;
     const sorted = setQs.sort((a, b) => a.id.localeCompare(b.id));
-    for (const q of sorted) {
-      if (remaining <= 0) break;
-      questions.push(formatQuestion(q));
-      remaining--;
-    }
+    // Always include the full set — never cut mid-way
+    for (const q of sorted) questions.push(formatQuestion(q));
+    remaining--;
   }
 
   for (const q of mcqPool) {
@@ -94,5 +92,6 @@ function formatQuestion(q: Record<string, string | number>) {
     difficulty: q.difficulty,
     questionType: q.family,
     suggestedTimeSec: Number(q.time_sec) || 55,
+    setId: isYN ? q.set_id : undefined,
   };
 }
