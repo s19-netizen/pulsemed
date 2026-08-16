@@ -24,10 +24,11 @@ function parseDM(raw: any[]): ParseResult {
     if (!item.type) { errors.push(`Item ${i + 1}: missing "type" (yn5 or mcq)`); return; }
     if (item.type === "yn5") {
       if (!item.stimulus) errors.push(`Item ${i + 1}: missing "stimulus"`);
-      if (!Array.isArray(item.statements) || item.statements.length !== 5) errors.push(`Item ${i + 1}: "statements" must be an array of exactly 5`);
+      if (!Array.isArray(item.statements) || item.statements.length !== 5) errors.push(`Item ${i + 1}: "statements" must be an array of exactly 5 strings`);
+      if (!item.correct_answer || !/^[YN](,[YN]){4}$/.test(String(item.correct_answer).trim())) errors.push(`Item ${i + 1}: "correct_answer" must be comma-separated Y/N e.g. "Y,N,Y,N,Y"`);
       count++;
     } else {
-      if (!item.context) errors.push(`Item ${i + 1}: missing "context"`);
+      if (!item.stimulus && !item.context) errors.push(`Item ${i + 1}: missing "stimulus"`);
       if (!item.question) errors.push(`Item ${i + 1}: missing "question"`);
       count++;
     }
@@ -126,12 +127,20 @@ function SectionImport({ section }: { section: string }) {
   async function handleSave() {
     if (!parsed) return;
     setSaving(true); setSaveError("");
-    for (const item of parsed) {
-      const payload = toPassagePayload(section, item);
-      const res = await fetch("/api/admin/passage", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+
+    if (section === "dm") {
+      const res = await fetch("/api/admin/dm-import", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(parsed) });
       const data = await res.json();
-      if (data.error) { setSaveError(data.error); setSaving(false); return; }
+      if (!data.ok || data.errors?.length) { setSaveError(data.errors?.[0] ?? data.error ?? "Import failed"); setSaving(false); return; }
+    } else {
+      for (const item of parsed) {
+        const payload = toPassagePayload(section, item);
+        const res = await fetch("/api/admin/passage", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+        const data = await res.json();
+        if (data.error) { setSaveError(data.error); setSaving(false); return; }
+      }
     }
+
     setDone(true); setSaving(false);
     setText(""); setResult(null); setParsed(null);
   }
