@@ -19,8 +19,8 @@ export async function GET(req: NextRequest) {
   const difficulties = rawDifficulties.split(",").map(d => d.trim()).filter(Boolean);
   const totalCount = Math.max(4, Number(sp.get("count")) || 20);
 
-  // How many datasets to pull (each has 4 questions)
-  const datasetCount = Math.ceil(totalCount / 4);
+  // Each dataset has 1 question, so pull exactly totalCount datasets
+  const datasetCount = totalCount;
 
   // Fetch dataset IDs that have questions at the requested difficulties
   const { data: matching, error: mErr } = await supabase
@@ -40,12 +40,12 @@ export async function GET(req: NextRequest) {
   // Fetch dataset text + chart data
   const { data: dsRows } = await supabase
     .from("qr_datasets")
-    .select("id, title, figure_brief, scenario, chart")
+    .select("id, title, figure_brief, scenario")
     .in("id", chosenDatasets);
 
   const dsMap: Record<string, { title: string; figure_brief: string; scenario: string; chart: object | null }> = {};
   for (const ds of dsRows ?? []) {
-    dsMap[ds.id] = { title: ds.title, figure_brief: ds.figure_brief, scenario: ds.scenario, chart: ds.chart ?? null };
+    dsMap[ds.id] = { title: ds.title, figure_brief: ds.figure_brief, scenario: ds.scenario, chart: null };
   }
 
   // Fetch questions for chosen datasets, filtered to requested difficulties
