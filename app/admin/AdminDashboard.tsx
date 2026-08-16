@@ -220,10 +220,38 @@ const BULK_PARSERS: Record<string, (raw: any[]) => { count: number; errors: stri
 };
 
 function toPayload(section: string, item: any): object {
-  if (section === "vr") return { section: "vr", content: item.passage, questions: (item.questions ?? []).map((q: any, i: number) => ({ q_type: q.type ?? "tf", subtype: q.subtype ?? "Direct Retrieval", difficulty: q.difficulty ?? "Silver", question_text: q.question, options: q.type === "mcq" ? (q.options ?? []) : ["True","False","Can't Tell"], correct: q.correct ?? "True", explanations: q.explanations ?? {}, sort_order: i })) };
+  if (section === "vr") return {
+    section: "vr",
+    passage_code: item.passage_code ?? null,
+    title: item.title ?? "",
+    content: item.passage,
+    questions: (item.questions ?? []).map((q: any, i: number) => {
+      const fmt = (q.format ?? q.type ?? "tf").toUpperCase();
+      const isTFCT = fmt === "TFCT" || fmt === "TF";
+      return {
+        vr_id: q.id ?? null,
+        format: isTFCT ? "TFCT" : "MCQ",
+        q_type: isTFCT ? "tf" : "mcq",
+        primary_subtype: q.primary_subtype ?? q.subtype ?? "Direct Retrieval",
+        subtype: q.primary_subtype ?? q.subtype ?? "Direct Retrieval",
+        skill_focus: q.skill_focus ?? "",
+        difficulty: q.difficulty ?? "Silver",
+        question_text: q.question,
+        option_a: isTFCT ? "True"       : (q.option_a ?? q.options?.[0] ?? ""),
+        option_b: isTFCT ? "False"      : (q.option_b ?? q.options?.[1] ?? ""),
+        option_c: isTFCT ? "Can't Tell" : (q.option_c ?? q.options?.[2] ?? null),
+        option_d: isTFCT ? null         : (q.option_d ?? q.options?.[3] ?? null),
+        options: isTFCT ? ["True", "False", "Can't Tell"] : (q.options ?? [q.option_a, q.option_b, q.option_c, q.option_d].filter(Boolean)),
+        correct: q.correct_answer ?? q.correct ?? "True",
+        correct_answer: q.correct_answer ?? q.correct ?? "True",
+        explanations: q.explanations ?? {},
+        sort_order: i,
+      };
+    }),
+  };
   if (section === "dm") {
-    if (item.type === "yn5") return { section: "dm", content: item.stimulus, questions: [{ q_type: "yn5", subtype: item.subtype ?? "Interpreting Information", difficulty: item.difficulty ?? "Silver", question_text: "Yes/No block", options: ["Yes","No"], correct: "set", explanations: {}, venn: item.venn ?? null, statements: (item.statements ?? []).map((s: any, i: number) => ({ text: s.statement, correct: s.correct ?? "Yes", explanation: s.explanation ?? "", sort_order: i })) }] };
-    return { section: "dm", content: item.context, questions: [{ q_type: "mcq", subtype: item.subtype ?? "Syllogisms", difficulty: item.difficulty ?? "Silver", question_text: item.question, options: item.options ?? [], correct: item.correct ?? "A", explanations: item.explanations ?? {}, venn: item.venn ?? null, sort_order: 0 }] };
+    if (item.type === "yn5") return { section: "dm", content: item.stimulus, chart: item.chart ?? null, questions: [{ q_type: "yn5", subtype: item.subtype ?? "Interpreting Information", difficulty: item.difficulty ?? "Silver", question_text: "Yes/No block", options: ["Yes","No"], correct: "set", explanations: {}, venn: item.venn ?? null, statements: (item.statements ?? []).map((s: any, i: number) => ({ text: s.statement, correct: s.correct ?? "Yes", explanation: s.explanation ?? "", sort_order: i })) }] };
+    return { section: "dm", content: item.context, chart: item.chart ?? null, questions: [{ q_type: "mcq", subtype: item.subtype ?? "Syllogisms", difficulty: item.difficulty ?? "Silver", question_text: item.question, options: item.options ?? [], correct: item.correct ?? "A", explanations: item.explanations ?? {}, venn: item.venn ?? null, sort_order: 0 }] };
   }
   if (section === "qr") return { section: "qr", content: item.context, chart: item.chart ?? null, questions: (item.questions ?? []).map((q: any, i: number) => ({ q_type: "mcq", subtype: q.subtype ?? "Data Interpretation", difficulty: q.difficulty ?? "Silver", question_text: q.question, options: q.options ?? [], correct: q.correct ?? "A", explanations: q.explanations ?? {}, sort_order: i })) };
   return { section: "sjt", content: item.scenario, questions: (item.questions ?? []).map((q: any, i: number) => q.type === "mostleast" ? { q_type: "mostleast", subtype: q.subtype ?? "Patient Safety", difficulty: q.difficulty ?? "Silver", question_text: "mostleast", options: q.actions ?? [], correct: JSON.stringify({ most: q.most ?? 0, least: q.least ?? 1 }), explanations: {}, sort_order: i } : { q_type: q.type, subtype: q.subtype ?? "Patient Safety", difficulty: q.difficulty ?? "Silver", question_text: q.type, options: (q.items ?? []).map((it: any) => it.action ?? it.factor ?? ""), correct: JSON.stringify(Object.fromEntries((q.items ?? []).map((it: any, j: number) => [j, it.correct ?? "A"]))), explanations: {}, sort_order: i }) };
@@ -443,8 +471,19 @@ function PracticeEdit({ savedIds, onEdit }: { savedIds: Set<string>; onEdit: (t:
   const [adminQs, setAdminQs] = useState<any[]>([]);
   const [sourceQs, setSourceQs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [backfilling, setBackfilling] = useState(false);
+  const [backfillResult, setBackfillResult] = useState<{ updated: number; total: number } | null>(null);
   const color = COLORS[section];
   const sectionLabel = section === "vr" ? "Passage" : section === "sjt" ? "Scenario" : section === "qr" ? "Dataset" : "Stimulus";
+
+  async function runChartBackfill() {
+    setBackfilling(true); setBackfillResult(null);
+    const res = await fetch("/api/admin/dm-chart-backfill", { method: "POST" });
+    const data = await res.json();
+    setBackfillResult({ updated: data.updated ?? 0, total: data.total ?? 0 });
+    setBackfilling(false);
+    if (section === "dm") load("dm", search);
+  }
 
   async function load(sec: string, q: string) {
     setLoading(true);
@@ -476,6 +515,20 @@ function PracticeEdit({ savedIds, onEdit }: { savedIds: Set<string>; onEdit: (t:
           <button type="submit" style={{ ...primary(color), padding: "8px 16px", fontSize: 12 }}>Search</button>
           {search && <button type="button" onClick={() => { setSearch(""); load(section, ""); }} style={ghost}>Clear</button>}
         </form>
+        {section === "dm" && (
+          <button
+            onClick={runChartBackfill}
+            disabled={backfilling}
+            style={{ border: "1.5px solid #8B6BFF", background: backfilling ? "#f1ecff" : "#f1ecff", color: "#6747d8", borderRadius: 9, padding: "8px 16px", fontSize: 12, fontWeight: 800, cursor: backfilling ? "default" : "pointer", opacity: backfilling ? 0.6 : 1 }}
+          >
+            {backfilling ? "Generating charts…" : "⚡ Auto-generate charts"}
+          </button>
+        )}
+        {backfillResult && (
+          <span style={{ fontSize: 12, fontWeight: 700, color: backfillResult.updated > 0 ? "#3dbe6c" : "#9ba6b5" }}>
+            {backfillResult.updated > 0 ? `✓ Added charts to ${backfillResult.updated} of ${backfillResult.total} questions` : "No chart data found in existing questions"}
+          </span>
+        )}
       </div>
 
       {loading && <p style={{ fontSize: 13, color: "#9ba6b5" }}>Loading…</p>}

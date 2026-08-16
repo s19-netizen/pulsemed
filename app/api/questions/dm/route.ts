@@ -62,15 +62,54 @@ export async function GET(req: NextRequest) {
     remaining--;
   }
 
+  // Also include admin-imported DM questions
+  const { data: adminQs } = await supabase
+    .from("admin_qs")
+    .select("id, question_text, options, correct, explanations, subtype, difficulty, passage_id, admin_passages(content, chart)")
+    .eq("section", "dm")
+    .limit(count);
+
+  for (const aq of adminQs ?? []) {
+    const context: string = (aq.admin_passages as any)?.content ?? "";
+    const chartFigure = (aq.admin_passages as any)?.chart ?? null;
+    const opts: string[] = Array.isArray(aq.options) ? aq.options : ["Yes", "No"];
+
+    const correctRaw = String(aq.correct ?? opts[0] ?? "").trim().toLowerCase();
+    let correctIdx = opts.findIndex(o => String(o).trim().toLowerCase() === correctRaw);
+    if (correctIdx < 0 && /^[a-e]$/.test(correctRaw)) correctIdx = "abcde".indexOf(correctRaw);
+    if (correctIdx < 0) correctIdx = 0;
+
+    const expObj: Record<string, string> = (aq.explanations as any) ?? {};
+    const correctLabel = opts[correctIdx] ?? "";
+    const explanation =
+      expObj[correctLabel] ??
+      Object.entries(expObj).find(([k]) => k.toLowerCase() === correctLabel.toLowerCase())?.[1] ??
+      Object.values(expObj)[0] ??
+      "";
+
+    questions.push({
+      id: aq.id,
+      tag: `dm-${String(aq.subtype ?? "").toLowerCase().replace(/\s+/g, "-") || "admin"}`,
+      contextLabel: "SCENARIO",
+      context,
+      chartFigure,
+      question: aq.question_text,
+      options: opts,
+      correct: correctIdx,
+      explanation,
+      difficulty: aq.difficulty ?? "Silver",
+      questionType: aq.subtype ?? "Decision Making",
+      suggestedTimeSec: 55,
+    });
+  }
+
   return NextResponse.json({ questions, sessionId: `dm-${Date.now()}` });
 }
 
-function formatQuestion(q: Record<string, string | number>) {
+function formatQuestion(q: Record<string, any>) {
   const isYN = q.format === "YN-5";
   const options = isYN ? ["Yes", "No"] : [q.option_a, q.option_b].filter(Boolean) as string[];
 
-  // For YN-5: correct_answer is "Yes" or "No"
-  // For MCQ: correct_answer is the text of the correct option
   let correct = 0;
   if (isYN) {
     correct = String(q.correct_answer).trim().toLowerCase() === "yes" ? 0 : 1;
@@ -85,6 +124,7 @@ function formatQuestion(q: Record<string, string | number>) {
     tag: `dm-${String(q.family ?? "").toLowerCase().replace(/\s+/g, "-")}`,
     contextLabel: isYN ? "RULES" : "SCENARIO",
     context: q.stimulus,
+    chartFigure: q.chart ?? null,
     question: q.question,
     options,
     correct,

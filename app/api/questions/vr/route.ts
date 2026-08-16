@@ -8,6 +8,11 @@ function correctIndex(letter: string): number {
   return Math.max(0, "ABCD".indexOf(letter.trim().toUpperCase()[0]));
 }
 
+function parseHighlightTag(text: string): { highlight: string; clean: string } {
+  const m = String(text ?? "").match(/^\s*\[Highlight:\s*"([^"]+)"\]\s*/);
+  return m ? { highlight: m[1], clean: text.slice(m[0].length) } : { highlight: "", clean: String(text ?? "") };
+}
+
 function mapDifficulty(d: string): string {
   return d === "Diamond" ? "Platinum" : d;
 }
@@ -131,6 +136,58 @@ export async function GET(req: NextRequest) {
         skillFocus: q.skill_focus ?? "",
       });
     }
+  }
+
+  // Also include admin-imported VR questions (with [Highlight: "..."] support)
+  const { data: adminQs } = await supabase
+    .from("admin_qs")
+    .select("id, question_text, options, correct, explanations, passage_id, difficulty, subtype, admin_passages(content)")
+    .eq("section", "vr")
+    .limit(totalCount);
+
+  for (const aq of adminQs ?? []) {
+    const passageContent: string = (aq.admin_passages as any)?.content ?? "";
+    const options: string[] = Array.isArray(aq.options) ? aq.options : ["True", "False", "Can't Tell"];
+
+    // Resolve correct answer to numeric index
+    const correctRaw = String(aq.correct ?? "True").trim();
+    let correctIdx = options.findIndex(o => o.toLowerCase() === correctRaw.toLowerCase());
+    if (correctIdx < 0 && /^[A-E]$/i.test(correctRaw)) correctIdx = "ABCDE".indexOf(correctRaw.toUpperCase());
+    if (correctIdx < 0) correctIdx = 0;
+
+    // Extract [Highlight: "..."] from the correct option's explanation → supportingEvidence
+    const explanationsObj: Record<string, string> = (aq.explanations as any) ?? {};
+    const correctLabel = options[correctIdx] ?? correctRaw;
+    const correctExpRaw =
+      explanationsObj[correctLabel] ??
+      Object.entries(explanationsObj).find(([k]) => k.toLowerCase() === correctLabel.toLowerCase())?.[1] ??
+      "";
+    const { highlight: supportingEvidence, clean: correctExpClean } = parseHighlightTag(correctExpRaw);
+
+    // Build a readable explanation string from all options, stripped of highlight tags
+    const explanationStr =
+      Object.entries(explanationsObj)
+        .map(([k, v]) => `${k}: ${parseHighlightTag(v).clean}`)
+        .join(" | ") || correctExpClean;
+
+    sessionQuestions.push({
+      id: aq.id,
+      passageCode: aq.passage_id,
+      passageTitle: "Passage",
+      setKey: aq.passage_id,
+      format: options.length <= 3 && options[0] === "True" ? "TFCT" : "MCQ",
+      difficulty: aq.difficulty ?? "Gold",
+      tag: `vr-${String(aq.subtype ?? "").toLowerCase().replace(/[\s/]+/g, "-") || "admin"}`,
+      contextLabel: "Passage",
+      context: passageContent,
+      question: aq.question_text,
+      options,
+      correct: correctIdx,
+      explanation: correctExpClean || explanationStr,
+      supportingEvidence,
+      primarySubtype: aq.subtype ?? "",
+      skillFocus: "",
+    });
   }
 
   return NextResponse.json({

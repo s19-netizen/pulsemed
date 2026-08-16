@@ -125,6 +125,154 @@ function VennDiagram({ fig }: { fig: VennFigure }) {
   return <VennDiagram3 fig={fig} />;
 }
 
+// ─── Chart / Table figures ────────────────────────────────────────────────────
+
+type ChartSeries = { label: string; value: number };
+
+type ChartFigure =
+  | { type: "line";  title?: string; xLabel?: string; yLabel?: string; series: ChartSeries[] }
+  | { type: "bar";   title?: string; xLabel?: string; yLabel?: string; series: ChartSeries[] }
+  | { type: "table"; title?: string; headers: string[]; rows: (string | number)[][] };
+
+function niceStep(raw: number): number {
+  const mag = Math.pow(10, Math.floor(Math.log10(Math.max(raw, 0.001))));
+  const n = raw / mag;
+  return (n < 1.5 ? 1 : n < 3.5 ? 2 : n < 7.5 ? 5 : 10) * mag;
+}
+
+function LineChart({ fig }: { fig: Extract<ChartFigure, { type: "line" }> }) {
+  const { series, title, xLabel, yLabel } = fig;
+  const W = 320, H = 185;
+  const PL = yLabel ? 52 : 42, PR = 16, PT = title ? 30 : 16, PB = xLabel ? 46 : 34;
+  const pw = W - PL - PR, ph = H - PT - PB;
+
+  const vals = series.map(s => s.value);
+  const rawMin = Math.min(...vals), rawMax = Math.max(...vals);
+  const vStep = niceStep((rawMax - rawMin || rawMax || 1) / 4);
+  const yMin = Math.floor(rawMin / vStep) * vStep;
+  const yMax = Math.ceil(rawMax / vStep) * vStep || vStep;
+
+  const xPos = (i: number) => PL + (series.length > 1 ? i * pw / (series.length - 1) : pw / 2);
+  const yPos = (v: number) => PT + ph - ((v - yMin) / (yMax - yMin)) * ph;
+
+  const pts = series.map((s, i) => ({ x: xPos(i), y: yPos(s.value), ...s }));
+  const line = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const area = `${line} L${pts[pts.length-1].x},${PT+ph} L${pts[0].x},${PT+ph} Z`;
+
+  const gridVals: number[] = [];
+  for (let v = yMin; v <= yMax + vStep * 0.01; v += vStep) gridVals.push(Math.round(v * 100) / 100);
+
+  return (
+    <div style={{ margin: "10px 0" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: W, display: "block" }} aria-label={title ?? "Line chart"}>
+        {title && <text x={W/2} y={14} textAnchor="middle" style={{ fontSize: 10, fontWeight: 700, fill: "#6747d8", fontFamily: "inherit" }}>{title}</text>}
+        {gridVals.map(v => (
+          <g key={v}>
+            <line x1={PL} y1={yPos(v)} x2={PL+pw} y2={yPos(v)} stroke="#e8ebf0" strokeWidth={1} />
+            <text x={PL-5} y={yPos(v)} textAnchor="end" dominantBaseline="central" style={{ fontSize: 9, fill: "#9ca3af", fontFamily: "inherit" }}>{v}</text>
+          </g>
+        ))}
+        <line x1={PL} y1={PT} x2={PL} y2={PT+ph} stroke="#d1d5db" strokeWidth={1.5} />
+        <line x1={PL} y1={PT+ph} x2={PL+pw} y2={PT+ph} stroke="#d1d5db" strokeWidth={1.5} />
+        <path d={area} fill="rgba(139,107,255,0.09)" />
+        <path d={line} fill="none" stroke="#8b6bff" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
+        {pts.map((p, i) => (
+          <g key={i}>
+            <circle cx={p.x} cy={p.y} r={4} fill="white" stroke="#8b6bff" strokeWidth={2} />
+            <text x={p.x} y={p.y - 9} textAnchor="middle" style={{ fontSize: 9, fontWeight: 700, fill: "#4b3fa0", fontFamily: "inherit" }}>{p.value}</text>
+            <text x={p.x} y={PT+ph+14} textAnchor="middle" style={{ fontSize: 9, fill: "#6b7280", fontFamily: "inherit" }}>{p.label}</text>
+          </g>
+        ))}
+        {yLabel && <text transform={`rotate(-90) translate(${-(PT+ph/2)},13)`} textAnchor="middle" style={{ fontSize: 9, fill: "#9ca3af", fontFamily: "inherit" }}>{yLabel}</text>}
+        {xLabel && <text x={PL+pw/2} y={H-4} textAnchor="middle" style={{ fontSize: 9, fill: "#9ca3af", fontFamily: "inherit" }}>{xLabel}</text>}
+      </svg>
+    </div>
+  );
+}
+
+function BarChart({ fig }: { fig: Extract<ChartFigure, { type: "bar" }> }) {
+  const { series, title, xLabel, yLabel } = fig;
+  const W = 320, H = 185;
+  const PL = yLabel ? 52 : 42, PR = 16, PT = title ? 30 : 16, PB = xLabel ? 46 : 34;
+  const pw = W - PL - PR, ph = H - PT - PB;
+
+  const vals = series.map(s => s.value);
+  const rawMax = Math.max(...vals);
+  const vStep = niceStep(rawMax / 4);
+  const yMax = Math.ceil(rawMax / vStep) * vStep || vStep;
+  const yPos = (v: number) => PT + ph - (v / yMax) * ph;
+
+  const gridVals: number[] = [];
+  for (let v = 0; v <= yMax + vStep * 0.01; v += vStep) gridVals.push(Math.round(v * 100) / 100);
+
+  const slot = pw / series.length;
+  const bw = slot * 0.55;
+
+  return (
+    <div style={{ margin: "10px 0" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: W, display: "block" }} aria-label={title ?? "Bar chart"}>
+        {title && <text x={W/2} y={14} textAnchor="middle" style={{ fontSize: 10, fontWeight: 700, fill: "#6747d8", fontFamily: "inherit" }}>{title}</text>}
+        {gridVals.map(v => (
+          <g key={v}>
+            <line x1={PL} y1={yPos(v)} x2={PL+pw} y2={yPos(v)} stroke="#e8ebf0" strokeWidth={1} />
+            <text x={PL-5} y={yPos(v)} textAnchor="end" dominantBaseline="central" style={{ fontSize: 9, fill: "#9ca3af", fontFamily: "inherit" }}>{v}</text>
+          </g>
+        ))}
+        <line x1={PL} y1={PT} x2={PL} y2={PT+ph} stroke="#d1d5db" strokeWidth={1.5} />
+        <line x1={PL} y1={PT+ph} x2={PL+pw} y2={PT+ph} stroke="#d1d5db" strokeWidth={1.5} />
+        {series.map((s, i) => {
+          const bx = PL + i * slot + (slot - bw) / 2;
+          const by = yPos(s.value);
+          const bh = PT + ph - by;
+          return (
+            <g key={i}>
+              <rect x={bx} y={by} width={bw} height={bh} rx={3} fill="#8b6bff" opacity={0.82} />
+              <text x={bx+bw/2} y={by-5} textAnchor="middle" style={{ fontSize: 9, fontWeight: 700, fill: "#4b3fa0", fontFamily: "inherit" }}>{s.value}</text>
+              <text x={bx+bw/2} y={PT+ph+14} textAnchor="middle" style={{ fontSize: 9, fill: "#6b7280", fontFamily: "inherit" }}>{s.label}</text>
+            </g>
+          );
+        })}
+        {yLabel && <text transform={`rotate(-90) translate(${-(PT+ph/2)},13)`} textAnchor="middle" style={{ fontSize: 9, fill: "#9ca3af", fontFamily: "inherit" }}>{yLabel}</text>}
+        {xLabel && <text x={PL+pw/2} y={H-4} textAnchor="middle" style={{ fontSize: 9, fill: "#9ca3af", fontFamily: "inherit" }}>{xLabel}</text>}
+      </svg>
+    </div>
+  );
+}
+
+function DataTable({ fig }: { fig: Extract<ChartFigure, { type: "table" }> }) {
+  const { headers, rows, title } = fig;
+  return (
+    <div style={{ margin: "12px 0", overflowX: "auto" }}>
+      {title && <p style={{ margin: "0 0 7px", fontSize: 11, fontWeight: 800, color: "#6747d8", textTransform: "uppercase", letterSpacing: ".06em" }}>{title}</p>}
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+        <thead>
+          <tr>
+            {headers.map((h, i) => (
+              <th key={i} style={{ padding: "7px 12px", background: "#f1ecff", color: "#4b3fa0", fontWeight: 800, textAlign: i === 0 ? "left" : "center", fontSize: 11, letterSpacing: ".03em", borderBottom: "2px solid #d4c8ff", whiteSpace: "nowrap" }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, ri) => (
+            <tr key={ri} style={{ background: ri % 2 === 0 ? "white" : "#faf9ff" }}>
+              {row.map((cell, ci) => (
+                <td key={ci} style={{ padding: "7px 12px", color: "#1a2535", textAlign: ci === 0 ? "left" : "center", borderBottom: "1px solid #f0eeff", fontWeight: ci === 0 ? 700 : 400, whiteSpace: "nowrap" }}>{cell}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ChartRenderer({ fig }: { fig: ChartFigure }) {
+  if (fig.type === "line")  return <LineChart  fig={fig} />;
+  if (fig.type === "bar")   return <BarChart   fig={fig} />;
+  if (fig.type === "table") return <DataTable  fig={fig} />;
+  return null;
+}
+
 // ─── Section colours ─────────────────────────────────────────────────────────
 
 const SECTION_COLORS: Record<string, { color: string; deep: string; tint: string; short: string }> = {
@@ -135,6 +283,11 @@ const SECTION_COLORS: Record<string, { color: string; deep: string; tint: string
 };
 
 // ─── Passage highlighting ────────────────────────────────────────────────────
+
+function parseHighlightTag(text: string): { highlight: string; clean: string } {
+  const m = String(text ?? "").match(/^\s*\[Highlight:\s*"([^"]+)"\]\s*/);
+  return m ? { highlight: m[1], clean: text.slice(m[0].length) } : { highlight: "", clean: String(text ?? "") };
+}
 
 function applyHighlights(text: string, terms: string[]): React.ReactNode {
   // Build a list of [start, end] ranges to highlight, then render
@@ -175,6 +328,11 @@ function HighlightedPassage({ text, evidence, revealed }: { text: string; eviden
   if (!revealed || !evidence) return <>{text}</>;
   const terms = evidence.split("||").map(s => s.trim()).filter(Boolean);
   return applyHighlights(text, terms);
+}
+
+// Strip [Highlight: "..."] tags from a displayed explanation string
+function cleanExplanation(text: string): string {
+  return text.replace(/\[Highlight:\s*"[^"]+"\]\s*/g, "");
 }
 
 // ─── Explanation parser ──────────────────────────────────────────────────────
@@ -234,7 +392,8 @@ function parseOptionExplanations(explanation: string, options: string[], correct
 
 function AnswerExplanation({ q, selected, takenMs, section }: { q: GuestQuestion; selected: number; takenMs: number; section: string }) {
   const isRight = selected === q.correct;
-  const parts = parseOptionExplanations(q.explanation, q.options, q.correct);
+  const rawExplanation = cleanExplanation(q.explanation ?? "");
+  const parts = parseOptionExplanations(rawExplanation, q.options, q.correct);
   const target = TARGET_S[section] ?? 40;
   const timing = timingLabel(takenMs, target);
 
@@ -492,6 +651,12 @@ function QuestionSession() {
   const curPassageCode = (q0 as any).passageCode;
   const isNewPassage = useVRBank && curPassageCode && (prevPassageCode as any)?.passageCode !== curPassageCode;
 
+  // Derive effective highlighting evidence:
+  // 1. Use supportingEvidence if set, OR
+  // 2. Extract [Highlight: "..."] from the explanation string as fallback
+  const q0SupportingEvidence = (q0 as any).supportingEvidence ?? "";
+  const effectiveEvidence = q0SupportingEvidence || (revealed ? parseHighlightTag((q0 as any).explanation ?? "").highlight : "");
+
   // Can we confirm?
   const canConfirm = slot.kind === "single"
     ? selected !== null
@@ -688,13 +853,16 @@ function QuestionSession() {
             >
               <p style={section === "vr" ? { margin: "0 0 12px", color: "var(--section)", letterSpacing: ".1em", fontSize: 10, fontWeight: 800, textTransform: "uppercase" } : undefined}>{q0.contextLabel}</p>
               <div
-                className={`passage-text ${revealed && q0.supportingEvidence ? "passage-text--revealed" : ""}`}
+                className={`passage-text ${revealed && effectiveEvidence ? "passage-text--revealed" : ""}`}
                 style={{ whiteSpace: "pre-line", fontFamily: "Georgia, serif", fontSize: 15, lineHeight: 1.85, color: "#334354" }}
               >
-                <HighlightedPassage text={q0.context} evidence={q0.supportingEvidence} revealed={revealed} />
+                <HighlightedPassage text={q0.context} evidence={effectiveEvidence} revealed={revealed} />
               </div>
               {(q0 as any).vennFigure && (
                 <VennDiagram fig={(q0 as any).vennFigure as VennFigure} />
+              )}
+              {(q0 as any).chartFigure && (
+                <ChartRenderer fig={(q0 as any).chartFigure as ChartFigure} />
               )}
             </div>
 

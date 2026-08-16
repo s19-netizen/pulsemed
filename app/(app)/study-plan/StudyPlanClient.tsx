@@ -387,6 +387,61 @@ function FullPlan({ responses }: { responses: any[] }) {
   );
 }
 
+// ── Early practice nudge (has some practice, no diagnostic) ─────────────────
+
+function EarlyPracticeNudge({ practiceCount }: { practiceCount: number }) {
+  const needed = 10 - practiceCount;
+  const pct = Math.round((practiceCount / 10) * 100);
+  return (
+    <div>
+      <div className="page-header" style={{ marginBottom: 28 }}>
+        <div>
+          <p className="eyebrow">Study plan</p>
+          <h1>You're almost there</h1>
+          <p style={{ maxWidth: 500 }}>
+            Your plan unlocks after <strong>10 practice questions</strong>. You've done {practiceCount} —
+            just {needed} more to go.
+          </p>
+        </div>
+      </div>
+
+      <div style={{ background: "white", border: "1px solid #e5e9f0", borderRadius: 14, padding: "20px 24px", marginBottom: 20, maxWidth: 520 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#1a2535" }}>{practiceCount} / 10 questions</span>
+          <span style={{ fontSize: 12, color: "#2D7FF9", fontWeight: 800 }}>{pct}%</span>
+        </div>
+        <div style={{ height: 8, background: "#f0f2f5", borderRadius: 4 }}>
+          <div style={{ height: 8, borderRadius: 4, background: "linear-gradient(90deg,#2D7FF9,#3DBE6C)", width: `${pct}%`, transition: "width .4s" }} />
+        </div>
+        <p style={{ margin: "14px 0 0", fontSize: 13, color: "#6b7a8c" }}>
+          Keep practising across any section — once you hit 10, we'll generate a personalised plan based on your actual performance.
+        </p>
+      </div>
+
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        {[
+          { label: "VR Practice", href: "/practice/vr", color: "#2D7FF9" },
+          { label: "DM Practice", href: "/practice/dm", color: "#8B6BFF" },
+          { label: "QR Practice", href: "/practice/qr", color: "#3DBE6C" },
+          { label: "SJT Practice", href: "/practice/sjt", color: "#FF6B5C" },
+        ].map(s => (
+          <Link key={s.href} href={s.href} style={{ background: s.color, color: "white", borderRadius: 10, padding: "10px 20px", fontWeight: 700, fontSize: 13, textDecoration: "none" }}>
+            {s.label} →
+          </Link>
+        ))}
+      </div>
+
+      <div style={{ marginTop: 20, padding: "14px 18px", background: "#f8fafd", border: "1px solid #e5e9f0", borderRadius: 12, maxWidth: 520 }}>
+        <p style={{ margin: 0, fontSize: 12, color: "#6b7a8c" }}>
+          <strong style={{ color: "#1a2535" }}>Tip:</strong> Want a deeper baseline across all 4 sections right now?{" "}
+          <Link href="/diagnostic" style={{ color: "#2D7FF9", fontWeight: 700 }}>Take the diagnostic →</Link>
+          {" "}It takes 20 minutes and unlocks your plan immediately.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ── Root ────────────────────────────────────────────────────────────────────
 
 type Props = { responses: any[]; diagnosticReport: any | null; examDate: string | null };
@@ -398,5 +453,6 @@ export default function StudyPlanClient({ responses, diagnosticReport, examDate 
 
   if (practiceCount >= 10) return <FullPlan responses={responses} />;
   if (hasDiagnostic)        return <DiagnosticPlan report={diagnosticReport} practiceCount={practiceCount} />;
+  if (practiceCount > 0)    return <EarlyPracticeNudge practiceCount={practiceCount} />;
   return <SetupChecklist hasExamDate={hasExamDate} hasDiagnostic={hasDiagnostic} />;
 }
