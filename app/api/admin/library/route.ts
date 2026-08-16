@@ -24,26 +24,74 @@ export async function GET(req: NextRequest) {
 
   // Also fetch from Supabase practice tables for each section
   let sourceRows: any[] = [];
+
   if (section === "dm") {
     let dq = db.from("dm_questions").select("id, family, difficulty, question, stimulus, format").limit(limit);
     if (search) dq = dq.ilike("question", `%${search}%`);
     const { data: dmData } = await dq;
-    sourceRows = (dmData ?? []).map(r => ({ id: r.id, section: "dm", q_type: r.format === "YN-5" ? "yn5" : "mcq", subtype: r.family, difficulty: r.difficulty, question_text: r.question, context: r.stimulus, _source: "supabase_dm" }));
+    sourceRows = (dmData ?? []).map(r => ({
+      id: r.id, section: "dm", q_type: r.format === "YN-5" ? "yn5" : "mcq",
+      subtype: r.family, difficulty: r.difficulty,
+      question_text: r.question, context: r.stimulus, _source: "supabase_dm",
+    }));
+
   } else if (section === "vr") {
     let vq = db.from("vr_questions").select("id, passage_code, format, difficulty, question, primary_subtype").limit(limit);
     if (search) vq = vq.ilike("question", `%${search}%`);
     const { data: vrData } = await vq;
-    sourceRows = (vrData ?? []).map(r => ({ id: r.id, section: "vr", q_type: r.format === "TFCT" ? "tf" : "mcq", subtype: r.primary_subtype, difficulty: r.difficulty, question_text: r.question, _source: "supabase_vr" }));
+
+    // Fetch passages for all returned questions
+    const codes = [...new Set((vrData ?? []).map(r => r.passage_code))];
+    const { data: passages } = codes.length
+      ? await db.from("vr_passages").select("code, passage, title").in("code", codes)
+      : { data: [] };
+    const passageMap: Record<string, { passage: string; title: string }> = {};
+    for (const p of passages ?? []) passageMap[p.code] = { passage: p.passage, title: p.title };
+
+    sourceRows = (vrData ?? []).map(r => ({
+      id: r.id, section: "vr", q_type: r.format === "TFCT" ? "tf" : "mcq",
+      subtype: r.primary_subtype, difficulty: r.difficulty,
+      question_text: r.question,
+      context: passageMap[r.passage_code]?.passage ?? "",
+      contextLabel: passageMap[r.passage_code]?.title ?? "Passage",
+      _source: "supabase_vr",
+    }));
+
   } else if (section === "qr") {
-    let qq = db.from("qr_questions").select("id, difficulty, question, topic").limit(limit);
+    let qq = db.from("qr_questions").select("id, difficulty, question, topic, dataset_id").limit(limit);
     if (search) qq = qq.ilike("question", `%${search}%`);
     const { data: qrData } = await qq;
-    sourceRows = (qrData ?? []).map(r => ({ id: r.id, section: "qr", q_type: "mcq", subtype: r.topic, difficulty: r.difficulty, question_text: r.question, _source: "supabase_qr" }));
+
+    // Fetch datasets for all returned questions
+    const dsIds = [...new Set((qrData ?? []).map(r => r.dataset_id))];
+    const { data: datasets } = dsIds.length
+      ? await db.from("qr_datasets").select("id, title, scenario, figure_brief").in("id", dsIds)
+      : { data: [] };
+    const dsMap: Record<string, { title: string; scenario: string; figure_brief: string }> = {};
+    for (const d of datasets ?? []) dsMap[d.id] = { title: d.title, scenario: d.scenario, figure_brief: d.figure_brief };
+
+    sourceRows = (qrData ?? []).map(r => {
+      const ds = dsMap[r.dataset_id];
+      const context = ds ? (ds.figure_brief ? `[${ds.figure_brief}]\n\n${ds.scenario}` : ds.scenario) : "";
+      return {
+        id: r.id, section: "qr", q_type: "mcq",
+        subtype: r.topic, difficulty: r.difficulty,
+        question_text: r.question,
+        context, contextLabel: ds?.title ?? "Data set",
+        _source: "supabase_qr",
+      };
+    });
+
   } else if (section === "sjt") {
-    let sq = db.from("sjt_questions").select("id, format, difficulty, professional_theme, question").limit(limit);
+    let sq = db.from("sjt_questions").select("id, format, difficulty, professional_theme, question, scenario").limit(limit);
     if (search) sq = sq.ilike("question", `%${search}%`);
     const { data: sjtData } = await sq;
-    sourceRows = (sjtData ?? []).map(r => ({ id: r.id, section: "sjt", q_type: r.format, subtype: r.professional_theme, difficulty: r.difficulty, question_text: r.question, _source: "supabase_sjt" }));
+    sourceRows = (sjtData ?? []).map(r => ({
+      id: r.id, section: "sjt", q_type: r.format,
+      subtype: r.professional_theme, difficulty: r.difficulty,
+      question_text: r.question, context: r.scenario, contextLabel: "Scenario",
+      _source: "supabase_sjt",
+    }));
   }
 
   return NextResponse.json({
