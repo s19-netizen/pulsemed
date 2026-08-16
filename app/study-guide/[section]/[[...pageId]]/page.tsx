@@ -625,13 +625,15 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 28 }}>
 
         {/* All A are B */}
-        <div style={{ borderRadius: 12, border: "1px solid var(--line)", background: "white", padding: "14px 16px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-            <div>
-              <strong style={{ fontSize: 13, color: c, display: "block", marginBottom: 4 }}>All A are B</strong>
-              <code style={{ fontSize: 17, fontWeight: 900, color: d, background: t, padding: "2px 8px", borderRadius: 6 }}>A ⊆ B</code>
+        <div style={{ borderRadius: 12, border: "1px solid var(--line)", background: "white", padding: "16px" }}>
+          <strong style={{ fontSize: 13, color: c, display: "block", marginBottom: 12 }}>All A are B</strong>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <div style={{ flex: "1 1 0", border: `2px dashed ${c}`, borderRadius: 10, padding: "10px 12px", background: t, textAlign: "center" as const }}>
+              <p style={{ margin: "0 0 4px", fontSize: 9, fontWeight: 800, color: c, letterSpacing: ".1em", textTransform: "uppercase" as const }}>Write this</p>
+              <code style={{ fontSize: 28, fontWeight: 900, color: d, letterSpacing: ".04em", display: "block" }}>A ⇒ B</code>
+              <p style={{ margin: "4px 0 0", fontSize: 10, color: c, fontStyle: "italic" }}>double arrow = all of A goes into B</p>
             </div>
-            <svg viewBox="0 0 100 68" width="88" height="60" aria-hidden="true">
+            <svg viewBox="0 0 100 68" width="90" height="62" aria-hidden="true" style={{ flexShrink: 0 }}>
               <circle cx="54" cy="34" r="29" fill={t} stroke={c} strokeWidth="1.5"/>
               <circle cx="46" cy="36" r="14" fill={c} fillOpacity=".25" stroke={c} strokeWidth="1.5"/>
               <text x="46" y="40" textAnchor="middle" fontSize="11" fontWeight="800" fill={d}>A</text>
@@ -646,13 +648,15 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
         </div>
 
         {/* No A are B */}
-        <div style={{ borderRadius: 12, border: "1px solid var(--line)", background: "white", padding: "14px 16px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-            <div>
-              <strong style={{ fontSize: 13, color: c, display: "block", marginBottom: 4 }}>No A are B</strong>
-              <code style={{ fontSize: 17, fontWeight: 900, color: d, background: t, padding: "2px 8px", borderRadius: 6 }}>A ✕ B</code>
+        <div style={{ borderRadius: 12, border: "1px solid var(--line)", background: "white", padding: "16px" }}>
+          <strong style={{ fontSize: 13, color: c, display: "block", marginBottom: 12 }}>No A are B</strong>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <div style={{ flex: "1 1 0", border: `2px dashed ${c}`, borderRadius: 10, padding: "10px 12px", background: t, textAlign: "center" as const }}>
+              <p style={{ margin: "0 0 4px", fontSize: 9, fontWeight: 800, color: c, letterSpacing: ".1em", textTransform: "uppercase" as const }}>Write this</p>
+              <code style={{ fontSize: 28, fontWeight: 900, color: d, letterSpacing: ".04em", display: "block" }}>A ✕ B</code>
+              <p style={{ margin: "4px 0 0", fontSize: 10, color: c, fontStyle: "italic" }}>✕ = totally separate, no overlap</p>
             </div>
-            <svg viewBox="0 0 108 68" width="97" height="60" aria-hidden="true">
+            <svg viewBox="0 0 108 68" width="97" height="62" aria-hidden="true" style={{ flexShrink: 0 }}>
               <circle cx="27" cy="34" r="22" fill={t} stroke={c} strokeWidth="1.5"/>
               <circle cx="81" cy="34" r="22" fill={t} stroke={c} strokeWidth="1.5"/>
               <line x1="51" y1="28" x2="57" y2="40" stroke="#d94b3e" strokeWidth="2.5" strokeLinecap="round"/>
@@ -669,13 +673,15 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
         </div>
 
         {/* Some A are B */}
-        <div style={{ borderRadius: 12, border: "1px solid var(--line)", background: "white", padding: "14px 16px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-            <div>
-              <strong style={{ fontSize: 13, color: c, display: "block", marginBottom: 4 }}>Some A are B</strong>
-              <code style={{ fontSize: 17, fontWeight: 900, color: d, background: t, padding: "2px 8px", borderRadius: 6 }}>A → B</code>
+        <div style={{ borderRadius: 12, border: "1px solid var(--line)", background: "white", padding: "16px" }}>
+          <strong style={{ fontSize: 13, color: c, display: "block", marginBottom: 12 }}>Some A are B</strong>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <div style={{ flex: "1 1 0", border: `2px dashed ${c}`, borderRadius: 10, padding: "10px 12px", background: t, textAlign: "center" as const }}>
+              <p style={{ margin: "0 0 4px", fontSize: 9, fontWeight: 800, color: c, letterSpacing: ".1em", textTransform: "uppercase" as const }}>Write this</p>
+              <code style={{ fontSize: 28, fontWeight: 900, color: d, letterSpacing: ".04em", display: "block" }}>A → B</code>
+              <p style={{ margin: "4px 0 0", fontSize: 10, color: c, fontStyle: "italic" }}>→ = some of A links to B</p>
             </div>
-            <svg viewBox="0 0 108 68" width="97" height="60" aria-hidden="true">
+            <svg viewBox="0 0 108 68" width="97" height="62" aria-hidden="true" style={{ flexShrink: 0 }}>
               <defs><clipPath id="sl-c1"><circle cx="36" cy="34" r="23"/></clipPath></defs>
               <circle cx="36" cy="34" r="23" fill={t} stroke={c} strokeWidth="1.5"/>
               <circle cx="72" cy="34" r="23" fill={t} stroke={c} strokeWidth="1.5"/>
@@ -692,13 +698,15 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
         </div>
 
         {/* Some A are not B */}
-        <div style={{ borderRadius: 12, border: "1px solid var(--line)", background: "white", padding: "14px 16px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-            <div>
-              <strong style={{ fontSize: 13, color: c, display: "block", marginBottom: 4 }}>Some A are not B</strong>
-              <code style={{ fontSize: 14, fontWeight: 900, color: d, background: t, padding: "2px 8px", borderRadius: 6 }}>A →✕ B</code>
+        <div style={{ borderRadius: 12, border: "1px solid var(--line)", background: "white", padding: "16px" }}>
+          <strong style={{ fontSize: 13, color: c, display: "block", marginBottom: 12 }}>Some A are not B</strong>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <div style={{ flex: "1 1 0", border: `2px dashed ${c}`, borderRadius: 10, padding: "10px 12px", background: t, textAlign: "center" as const }}>
+              <p style={{ margin: "0 0 4px", fontSize: 9, fontWeight: 800, color: c, letterSpacing: ".1em", textTransform: "uppercase" as const }}>Write this</p>
+              <code style={{ fontSize: 24, fontWeight: 900, color: d, letterSpacing: ".04em", display: "block" }}>A →✕ B</code>
+              <p style={{ margin: "4px 0 0", fontSize: 10, color: c, fontStyle: "italic" }}>→✕ = some A are cut off from B</p>
             </div>
-            <svg viewBox="0 0 108 68" width="97" height="60" aria-hidden="true">
+            <svg viewBox="0 0 108 68" width="97" height="62" aria-hidden="true" style={{ flexShrink: 0 }}>
               <defs><clipPath id="sl-c2"><circle cx="40" cy="34" r="23"/></clipPath></defs>
               <circle cx="40" cy="34" r="23" fill={c} fillOpacity=".14" stroke={c} strokeWidth="1.5"/>
               <circle cx="76" cy="34" r="23" fill={t} stroke={c} strokeWidth="1.5"/>
@@ -717,6 +725,25 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
 
       </div>
 
+      {/* Equals sign callout */}
+      <div style={{ borderRadius: 12, border: `2px solid ${c}`, background: t, padding: "14px 18px", marginBottom: 28, display: "flex", gap: 16, alignItems: "flex-start" }}>
+        <div style={{ flex: "0 0 auto", border: `2px dashed ${c}`, borderRadius: 10, padding: "8px 14px", background: "white", textAlign: "center" as const }}>
+          <p style={{ margin: "0 0 3px", fontSize: 9, fontWeight: 800, color: c, letterSpacing: ".1em", textTransform: "uppercase" as const }}>Also valid</p>
+          <code style={{ fontSize: 26, fontWeight: 900, color: d }}>A = B</code>
+        </div>
+        <div>
+          <strong style={{ fontSize: 13, color: c, display: "block", marginBottom: 4 }}>When can you write A = B?</strong>
+          <p style={{ margin: "0 0 6px", fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>
+            Only when you know <em>both</em> "All A are B" <em>and</em> "All B are A" — meaning the two sets are completely identical.
+            A&nbsp;=&nbsp;B means every A is a B and every B is an A, so you can swap them freely in any direction.
+          </p>
+          <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>
+            <strong>A ⇒ B alone is not enough</strong> — that only tells you A goes into B, not that B goes into A.
+            Use = only when a question explicitly tells you the sets are identical, which is rare.
+          </p>
+        </div>
+      </div>
+
       {/* ── 2. Chaining ── */}
       <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 6px", color: "var(--ink)" }}>2 — Chaining premises</h2>
       <p style={{ fontSize: 13, lineHeight: 1.7, color: "var(--ink-soft)", margin: "0 0 14px" }}>
@@ -732,9 +759,9 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
             chain: (
               <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
                 <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>Nurses</span>
-                <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>──⊆──►</span>
+                <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>══⇒══►</span>
                 <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>Healthcare</span>
-                <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>──⊆──►</span>
+                <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>══⇒══►</span>
                 <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>DBS checks</span>
               </div>
             ),
@@ -746,7 +773,7 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
             chain: (
               <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
                 <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>Cats</span>
-                <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>──⊆──►</span>
+                <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>══⇒══►</span>
                 <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>Mammals</span>
                 <span style={{ color: "#d94b3e", fontWeight: 900, fontSize: 13 }}>──✕──</span>
                 <span style={{ padding: "4px 10px", background: "white", border: "1px solid #d94b3e", borderRadius: 7, fontSize: 12, fontWeight: 700, color: "#d94b3e" }}>Fish</span>
@@ -762,7 +789,7 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
                 <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>Doctors</span>
                 <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>──→──►</span>
                 <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>Researchers</span>
-                <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>──⊆──►</span>
+                <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>══⇒══►</span>
                 <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>PhDs</span>
               </div>
             ),
@@ -774,12 +801,12 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
             chain: (
               <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
                 <span style={{ padding: "4px 10px", background: "white", border: "1px solid #d94b3e", borderRadius: 7, fontSize: 12, fontWeight: 700, color: "#d94b3e" }}>Accountants</span>
-                <span style={{ color: "#d94b3e", fontWeight: 900, fontSize: 13 }}>──⊆──►</span>
+                <span style={{ color: "#d94b3e", fontWeight: 900, fontSize: 13 }}>══⇒══►</span>
                 <span style={{ padding: "4px 10px", background: "white", border: "1px solid #d94b3e", borderRadius: 7, fontSize: 12, fontWeight: 700, color: "#d94b3e" }}>Graduates</span>
                 <span style={{ color: "var(--ink-soft)", fontWeight: 800, fontSize: 12 }}>← Sara is here, but...</span>
               </div>
             ),
-            conclusion: "✗ Sara does not have to be inside Accountants. A ⊆ B ≠ B ⊆ A.",
+            conclusion: "✗ Sara does not have to be inside Accountants. A ⇒ B ≠ B ⇒ A.",
           },
         ] as const).map((ex, i) => (
           <div key={i} style={{ borderRadius: 12, border: `1px solid ${ex.valid ? c : "#d94b3e"}`, background: ex.valid ? t : "#fff5f5", padding: "14px 16px" }}>
@@ -820,12 +847,12 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
           <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
             <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Working</p>
             {[
-              "Translate: Reptiles ⊆ Cold-blooded. Cold-blooded ✕ Warm-blooded. Lizards →(some) Reptiles.",
+              "Translate: Reptiles ⇒ Cold-blooded. Cold-blooded ✕ Warm-blooded. Lizards →(some) Reptiles.",
               "From P1: everything in the Reptiles circle is also in Cold-blooded.",
               "From P2: Cold-blooded and Warm-blooded are completely separate circles — so Reptiles are also outside Warm-blooded.",
               "From P3: some lizards sit inside the Reptiles circle.",
               "Those lizards are therefore inside Cold-blooded, and therefore outside Warm-blooded.",
-              "Chain: Lizards →(some) Reptiles ⊆ Cold-blooded ✕ Warm-blooded → some lizards are not warm-blooded.",
+              "Chain: Lizards →(some) Reptiles ⇒ Cold-blooded ✕ Warm-blooded → some lizards are not warm-blooded.",
             ].map((s, i) => (
               <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 7 }}>
                 <span style={{ width: 20, height: 20, borderRadius: 6, background: t, color: c, fontSize: 10, fontWeight: 800, display: "grid", placeItems: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
@@ -858,10 +885,10 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
           <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
             <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Working</p>
             {[
-              "Translate: Pilots ⊆ Licensed-to-fly. James ∈ Licensed-to-fly.",
+              "Translate: Pilots ⇒ Licensed-to-fly. James ∈ Licensed-to-fly.",
               "Draw: Licensed-to-fly is a large set. Pilots is a smaller circle inside it. James is somewhere in Licensed-to-fly.",
               "Ask: must James be inside the Pilots circle? No — James could be a flight instructor, a drone operator, a student with a training licence. Many arrangements are valid.",
-              "This is the converse error. A ⊆ B (All pilots are licensed) does not mean B ⊆ A (all licensed people are pilots).",
+              "This is the converse error. A ⇒ B (All pilots are licensed) does not mean B ⇒ A (all licensed people are pilots).",
               "One valid counterexample — James is a flight instructor, not a pilot — is enough to prove the conclusion does not must follow.",
             ].map((s, i) => (
               <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 7 }}>
@@ -897,10 +924,10 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
             <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Judge each statement</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {([
-                { stmt: "All surgeons must complete CPD.", answer: "Yes" as const, reason: "Surgeons ⊆ Doctors (P1). Doctors must complete CPD (P2). The chain forces: all surgeons must complete CPD." },
+                { stmt: "All surgeons must complete CPD.", answer: "Yes" as const, reason: "Surgeons ⇒ Doctors (P1). Doctors must complete CPD (P2). The chain forces it: all surgeons must complete CPD." },
                 { stmt: "Some doctors are researchers.", answer: "Yes" as const, reason: "Some surgeons are researchers (P3). All surgeons are doctors (P1). Those surgeon-researchers are therefore doctors who are also researchers — so some doctors are researchers." },
                 { stmt: "No surgeons work fewer than 50 hours per week.", answer: "No" as const, reason: "Only some surgeons are researchers (P3), so only those have the 50-hour rule (P4). Non-researcher surgeons could work fewer hours. The word 'no' is too strong here." },
-                { stmt: "All researchers must complete CPD.", answer: "No" as const, reason: "The premises only establish that surgeons ⊆ doctors, and doctors must do CPD. Researchers who are not surgeons are not proven to be doctors, so P2 does not apply to them. Only researcher-surgeons definitely must complete CPD." },
+                { stmt: "All researchers must complete CPD.", answer: "No" as const, reason: "P1 tells us surgeons ⇒ doctors, and P2 says doctors must do CPD. But researchers who are not surgeons are not shown to be doctors, so P2 does not apply to them. Only researcher-surgeons definitely must complete CPD." },
                 { stmt: "Some researchers are doctors.", answer: "Yes" as const, reason: "Some surgeons are researchers (P3). All surgeons are doctors (P1). Those surgeon-researchers are both doctors and researchers, so some researchers are doctors." },
               ]).map((item, i) => (
                 <div key={i} style={{ borderRadius: 10, border: `1px solid ${item.answer === "Yes" ? "#259650" : "#d94b3e"}`, overflow: "hidden" }}>
@@ -921,8 +948,8 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
       <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>4 — Rules to remember</h2>
       <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 12, overflow: "hidden", border: "1px solid var(--line)", marginBottom: 28 }}>
         {([
-          ["A ⊆ B ≠ B ⊆ A", "The converse is not valid. All A are B does not mean All B are A. This is the most common mistake in UCAT syllogisms."],
-          ["A ✕ B = B ✕ A", "Exclusion is symmetric. No A are B also means No B are A — you can always reverse a 'no' statement."],
+          ["A ⇒ B ≠ B ⇒ A", "The converse is not valid. All A are B does not mean All B are A. This is the most common mistake in UCAT syllogisms."],
+          ["A ✕ B = B ✕ A", "Exclusion works both ways. No A are B also means No B are A — you can always reverse a 'no' statement."],
           ["A → B = B → A", "Some A are B also means Some B are A. Overlap works both ways."],
           ["A →✕ B ≠ B →✕ A", "Some A are not B tells you nothing about B's perspective. Never reverse a 'some are not' statement."],
           ["Some means at least one", "'Some' does not mean 'not all'. It means one or more, and could theoretically include all."],
