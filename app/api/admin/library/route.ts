@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
   const section = sp.get("section") ?? "vr";
   const search  = sp.get("search") ?? "";
-  const limit   = Math.min(100, Number(sp.get("limit")) || 60);
+  const limit   = Math.min(500, Number(sp.get("limit")) || 200);
 
   // Fetch from admin_qs (admin-created questions)
   let q = db.from("admin_qs")

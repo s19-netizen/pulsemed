@@ -353,33 +353,38 @@ function DiagnosticEdit({ questions, savedIds, onEdit }: { questions: DiagQuesti
 
 // ── Practice — Edit (Library) ─────────────────────────────────────────────────
 
-function groupByPassage(qs: any[]): { key: string; label: string; context: string; contextLabel: string; questions: any[] }[] {
+function groupByPassage(qs: any[], fallbackPrefix = "Passage"): { key: string; label: string; context: string; contextLabel: string; questions: any[] }[] {
   const map = new Map<string, { key: string; label: string; context: string; contextLabel: string; questions: any[] }>();
+  let idx = 1;
   for (const q of qs) {
     const key = q.groupKey ?? q.passage_id ?? q.id;
-    if (!map.has(key)) map.set(key, { key, label: q.groupLabel ?? q.contextLabel ?? "Passage", context: q.context ?? "", contextLabel: q.contextLabel ?? "CONTEXT", questions: [] });
+    if (!map.has(key)) {
+      const rawLabel = q.groupLabel ?? "";
+      const label = rawLabel.length > 6 ? rawLabel : `${fallbackPrefix} ${idx++}`;
+      map.set(key, { key, label, context: q.context ?? "", contextLabel: q.contextLabel ?? "CONTEXT", questions: [] });
+    }
     map.get(key)!.questions.push(q);
   }
   return [...map.values()];
 }
 
-function PassageGroup({ group, section, savedIds, onEdit, source, color }: { group: { key: string; label: string; context: string; contextLabel: string; questions: any[] }; section: string; savedIds: Set<string>; onEdit: (t: EditTarget) => void; source: string; color: string }) {
-  const [open, setOpen] = useState(true);
+function PassageGroup({ group, section, savedIds, onEdit, source, color, index }: { group: { key: string; label: string; context: string; contextLabel: string; questions: any[] }; section: string; savedIds: Set<string>; onEdit: (t: EditTarget) => void; source: string; color: string; index: number }) {
+  const [open, setOpen] = useState(false);
   const contextLabel = section === "vr" ? "PASSAGE" : section === "sjt" ? "SCENARIO" : "CONTEXT";
+  const tint = TINTS[section] ?? "#f5f7fb";
   return (
-    <div style={{ border: "1.5px solid #e5e9f0", borderRadius: 12, overflow: "hidden" }}>
-      <button onClick={() => setOpen(o => !o)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "11px 14px", background: "#f8fafd", border: 0, cursor: "pointer", textAlign: "left" }}>
-        <span style={{ fontSize: 12, color: open ? color : "#9ba6b5" }}>{open ? "▾" : "▸"}</span>
-        <span style={{ fontSize: 12, fontWeight: 700, color: "#1a2535", flex: 1 }}>{group.label || group.context.slice(0, 70) || "Untitled"}</span>
-        <span style={{ fontSize: 10, color: "#9ba6b5", fontWeight: 600 }}>{group.questions.length} Q</span>
+    <div style={{ borderRadius: 10, border: "1px solid #e5e9f0", overflow: "hidden" }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: open ? tint : "white", border: 0, cursor: "pointer", textAlign: "left", transition: "background .15s" }}
+      >
+        <span style={{ width: 20, height: 20, borderRadius: 6, background: open ? color : "#e5e9f0", color: open ? "white" : "#9ba6b5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, flexShrink: 0 }}>{index + 1}</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: "#1a2535", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{group.label}</span>
+        <span style={{ fontSize: 10, background: open ? color : "#f0f2f5", color: open ? "white" : "#9ba6b5", borderRadius: 5, padding: "2px 8px", fontWeight: 700, flexShrink: 0 }}>{group.questions.length}Q</span>
+        <span style={{ fontSize: 11, color: open ? color : "#c5cdd8", flexShrink: 0 }}>{open ? "▲" : "▼"}</span>
       </button>
       {open && (
-        <div style={{ padding: "0 12px 12px", display: "flex", flexDirection: "column", gap: 6 }}>
-          {group.context && (
-            <p style={{ margin: "8px 0 10px", fontSize: 11, color: "#6b7a8c", lineHeight: 1.55, background: "#f5f7fb", borderRadius: 8, padding: "8px 12px", borderLeft: `3px solid ${color}` }}>
-              {group.context.length > 200 ? group.context.slice(0, 200) + "…" : group.context}
-            </p>
-          )}
+        <div style={{ borderTop: `2px solid ${color}20`, padding: "10px 12px 12px", display: "flex", flexDirection: "column", gap: 6, background: "#fafbfd" }}>
           {group.questions.map(q => (
             <QuestionCard key={q.id} q={q} section={section} saved={savedIds.has(q.id)} badge={q.subtype ?? q.q_type ?? undefined}
               onClick={() => onEdit({ mockId: source, section, questionId: q.id, question: q, context: group.context, contextLabel })} />
@@ -397,10 +402,11 @@ function PracticeEdit({ savedIds, onEdit }: { savedIds: Set<string>; onEdit: (t:
   const [sourceQs, setSourceQs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const color = COLORS[section];
+  const sectionLabel = section === "vr" ? "Passage" : section === "sjt" ? "Scenario" : section === "qr" ? "Dataset" : "Stimulus";
 
   async function load(sec: string, q: string) {
     setLoading(true);
-    const res = await fetch(`/api/admin/library?section=${sec}&search=${encodeURIComponent(q)}&limit=60`);
+    const res = await fetch(`/api/admin/library?section=${sec}&search=${encodeURIComponent(q)}&limit=500`);
     const data = await res.json();
     setAdminQs(data.adminQuestions ?? []);
     setSourceQs(data.sourceQuestions ?? []);
@@ -411,8 +417,11 @@ function PracticeEdit({ savedIds, onEdit }: { savedIds: Set<string>; onEdit: (t:
 
   function handleSearch(e: React.FormEvent) { e.preventDefault(); load(section, search); }
 
-  const adminGroups  = groupByPassage(adminQs.map(q => ({ ...q, groupKey: q.passage_id, groupLabel: (q.admin_passages as any)?.content?.slice(0, 80) ?? "Admin passage", context: (q.admin_passages as any)?.content ?? "" })));
-  const sourceGroups = groupByPassage(sourceQs);
+  const adminGroups  = groupByPassage(
+    adminQs.map(q => ({ ...q, groupKey: q.passage_id, groupLabel: (q.admin_passages as any)?.content?.slice(0, 60) ?? "", context: (q.admin_passages as any)?.content ?? "" })),
+    `Admin ${sectionLabel}`
+  );
+  const sourceGroups = groupByPassage(sourceQs, sectionLabel);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -430,24 +439,24 @@ function PracticeEdit({ savedIds, onEdit }: { savedIds: Set<string>; onEdit: (t:
       {loading && <p style={{ fontSize: 13, color: "#9ba6b5" }}>Loading…</p>}
       {!loading && adminQs.length === 0 && sourceQs.length === 0 && (
         <div style={{ background: "white", border: "1px solid #e5e9f0", borderRadius: 14, padding: 28, textAlign: "center" }}>
-          <p style={{ color: "#9ba6b5", fontSize: 13, margin: 0 }}>No questions found{search ? ` for "${search}"` : ""}. Create some or import via Bulk Import.</p>
+          <p style={{ color: "#9ba6b5", fontSize: 13, margin: 0 }}>No questions found{search ? ` for "${search}"` : ""}.</p>
         </div>
       )}
 
       {!loading && adminGroups.length > 0 && (
         <div style={{ background: "white", border: "1px solid #e5e9f0", borderRadius: 14, padding: 18 }}>
-          <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 800, color }}>ADMIN-CREATED ({adminQs.length} questions, {adminGroups.length} passages)</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 560, overflowY: "auto" }}>
-            {adminGroups.map(g => <PassageGroup key={g.key} group={g} section={section} savedIds={savedIds} onEdit={onEdit} source="admin" color={color} />)}
+          <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 800, color }}> ADMIN-CREATED · {adminQs.length} questions · {adminGroups.length} {sectionLabel.toLowerCase()}s</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 560, overflowY: "auto" }}>
+            {adminGroups.map((g, i) => <PassageGroup key={g.key} group={g} section={section} savedIds={savedIds} onEdit={onEdit} source="admin" color={color} index={i} />)}
           </div>
         </div>
       )}
 
       {!loading && sourceGroups.length > 0 && (
         <div style={{ background: "white", border: "1px solid #e5e9f0", borderRadius: 14, padding: 18 }}>
-          <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 800, color: "#6b7a8c" }}>EXISTING IN SUPABASE ({sourceQs.length} questions, {sourceGroups.length} passages)</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 560, overflowY: "auto" }}>
-            {sourceGroups.map(g => <PassageGroup key={g.key} group={g} section={section} savedIds={savedIds} onEdit={onEdit} source="practice" color={color} />)}
+          <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 800, color: "#6b7a8c" }}>SUPABASE · {sourceQs.length} questions · {sourceGroups.length} {sectionLabel.toLowerCase()}s</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 560, overflowY: "auto" }}>
+            {sourceGroups.map((g, i) => <PassageGroup key={g.key} group={g} section={section} savedIds={savedIds} onEdit={onEdit} source="practice" color={color} index={i} />)}
           </div>
         </div>
       )}
