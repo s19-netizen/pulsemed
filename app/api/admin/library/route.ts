@@ -47,6 +47,8 @@ export async function GET(req: NextRequest) {
       correct: String(r.correct_answer ?? "yes").toLowerCase() === "yes" ? 0 : 1,
       explanation: r.walkthrough ?? "",
       context: r.stimulus,
+      groupKey: r.stimulus ?? r.id,
+      groupLabel: (r.stimulus ?? "").slice(0, 80),
       _source: "supabase_dm",
     }));
 
@@ -85,6 +87,8 @@ export async function GET(req: NextRequest) {
         explanation: r.explanation ?? "",
         context: passageMap[r.passage_code]?.passage ?? "",
         contextLabel: passageMap[r.passage_code]?.title ?? "Passage",
+        groupKey: r.passage_code,
+        groupLabel: passageMap[r.passage_code]?.title ?? r.passage_code,
         _source: "supabase_vr",
       };
     });
@@ -114,6 +118,8 @@ export async function GET(req: NextRequest) {
         correct: letterToIndex(r.correct_answer ?? "A"),
         explanation: r.walkthrough ?? "",
         context, contextLabel: ds?.title ?? "Data set",
+        groupKey: r.dataset_id,
+        groupLabel: ds?.title ?? "Data set",
         _source: "supabase_qr",
       };
     });
@@ -148,6 +154,8 @@ export async function GET(req: NextRequest) {
         explanation: r.walkthrough ?? "",
         context: r.scenario,
         contextLabel: "Scenario",
+        groupKey: r.scenario ?? r.id,
+        groupLabel: (r.scenario ?? "").slice(0, 80),
         _source: "supabase_sjt",
       };
     });
