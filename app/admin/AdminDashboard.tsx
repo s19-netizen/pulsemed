@@ -35,8 +35,43 @@ const primary = (c: string): React.CSSProperties => ({ border: 0, background: c,
 
 const qText    = (q: any) => q?.questionText ?? q?.question ?? q?.stem ?? q?.question_text ?? "";
 const qOptions = (q: any): string[] => q?.options ?? q?.opts ?? [];
-const qCorrect = (q: any): number => typeof (q?.correct ?? q?.cor) === "number" ? (q?.correct ?? q?.cor) : 0;
-const qExpl    = (q: any): string => q?.explanation ?? "";
+const qCorrect = (q: any): number => {
+  const raw = q?.correct ?? q?.cor;
+  if (typeof raw === "number") return raw;
+  const opts = qOptions(q);
+  if (typeof raw === "string") {
+    // letter index: "A"→0, "B"→1 etc.
+    const letter = raw.trim().toUpperCase();
+    if (/^[A-E]$/.test(letter)) return "ABCDE".indexOf(letter);
+    // TF text: "True"→0, "False"→1, "Can't Tell"→2
+    if (letter === "TRUE") return 0;
+    if (letter === "FALSE") return 1;
+    if (letter.startsWith("CAN")) return 2;
+    // fallback: find in options array
+    const idx = opts.findIndex((o: string) => o.toLowerCase() === raw.toLowerCase());
+    if (idx >= 0) return idx;
+  }
+  return 0;
+};
+const qExpl = (q: any): string => {
+  if (q?.explanation) return q.explanation;
+  // admin questions: explanations is an object keyed by option label
+  if (q?.explanations && typeof q.explanations === "object") {
+    const opts = qOptions(q);
+    const correctIdx = qCorrect(q);
+    const correctOpt = opts[correctIdx];
+    // return correct answer explanation, then append others
+    const entries = Object.entries(q.explanations as Record<string, string>);
+    if (entries.length === 0) return "";
+    const correctEntry = entries.find(([k]) => k === correctOpt || k === String(correctIdx));
+    const others = entries.filter(([k]) => k !== correctOpt && k !== String(correctIdx));
+    return [
+      correctEntry ? `✓ ${correctEntry[0]}: ${correctEntry[1]}` : "",
+      ...others.map(([k, v]) => `✗ ${k}: ${v}`),
+    ].filter(Boolean).join("\n\n");
+  }
+  return "";
+};
 const qId      = (q: any): string => String(q?.id ?? "");
 
 // ── Shared components ─────────────────────────────────────────────────────────
@@ -139,14 +174,21 @@ function QuestionEditor({ target, onClose, onSaved }: { target: EditTarget; onCl
             <textarea value={questionText} onChange={e => setQuestionText(e.target.value)} rows={3} style={{ ...ta, fontSize: 14, fontWeight: 500 }} />
           </Field>
           <Field label="ANSWER OPTIONS — click letter to mark correct" color={color}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {options.map((opt, idx) => {
                 const isCor = correct === idx;
+                const optKey = opt || String.fromCharCode(65 + idx);
+                const perOptExpl: string = (orig?.explanations as any)?.[optKey] ?? (orig?.explanations as any)?.[String.fromCharCode(65 + idx)] ?? "";
                 return (
-                  <div key={idx} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <button onClick={() => setCorrect(idx)} style={{ width: 30, height: 30, borderRadius: 8, flexShrink: 0, border: isCor ? `2px solid ${color}` : "1.5px solid #dce2ea", background: isCor ? tint : "white", color: isCor ? color : "#9ba6b5", fontWeight: 850, fontSize: 11, cursor: "pointer" }}>{String.fromCharCode(65 + idx)}</button>
-                    <input value={opt} onChange={e => { const n = [...options]; n[idx] = e.target.value; setOptions(n); }} style={{ flex: 1, border: isCor ? `1.5px solid ${color}` : "1.5px solid #e5e9f0", background: isCor ? tint : "white", borderRadius: 9, padding: "9px 12px", fontSize: 13, color: "#1a2535", outline: "none" }} />
-                    {isCor && <span style={{ fontSize: 10, fontWeight: 800, color, whiteSpace: "nowrap" }}>✓ correct</span>}
+                  <div key={idx} style={{ border: isCor ? `1.5px solid ${color}` : "1.5px solid #e5e9f0", borderRadius: 10, overflow: "hidden", background: isCor ? tint : "white" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px" }}>
+                      <button onClick={() => setCorrect(idx)} style={{ width: 28, height: 28, borderRadius: 7, flexShrink: 0, border: isCor ? `2px solid ${color}` : "1.5px solid #dce2ea", background: isCor ? color : "white", color: isCor ? "white" : "#9ba6b5", fontWeight: 850, fontSize: 11, cursor: "pointer" }}>{String.fromCharCode(65 + idx)}</button>
+                      <input value={opt} onChange={e => { const n = [...options]; n[idx] = e.target.value; setOptions(n); }} style={{ flex: 1, border: "none", background: "transparent", fontSize: 13, color: "#1a2535", outline: "none", fontWeight: isCor ? 700 : 400 }} />
+                      {isCor && <span style={{ fontSize: 10, fontWeight: 800, color, whiteSpace: "nowrap" }}>✓ correct</span>}
+                    </div>
+                    {perOptExpl && (
+                      <div style={{ padding: "0 10px 8px 46px", fontSize: 11, color: isCor ? "#2a6040" : "#6b7a8c", lineHeight: 1.5 }}>{perOptExpl}</div>
+                    )}
                   </div>
                 );
               })}
@@ -154,7 +196,7 @@ function QuestionEditor({ target, onClose, onSaved }: { target: EditTarget; onCl
             <button onClick={() => setOptions([...options, ""])} style={{ marginTop: 8, border: "1.5px dashed #dce2ea", background: "none", borderRadius: 8, padding: "6px 14px", fontSize: 11, color: "#9ba6b5", cursor: "pointer" }}>+ Add option</button>
           </Field>
           <Field label="EXPLANATION" color={color}>
-            <textarea value={explanation} onChange={e => setExplanation(e.target.value)} rows={6} style={ta} />
+            <textarea value={explanation} onChange={e => setExplanation(e.target.value)} rows={4} style={ta} placeholder="Overall explanation (or edit per-option above)" />
           </Field>
         </div>
         <div style={{ padding: "14px 22px", background: "white", borderTop: "1px solid #e5e9f0", display: "flex", gap: 10, alignItems: "center" }}>
