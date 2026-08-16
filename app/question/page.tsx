@@ -129,10 +129,14 @@ function VennDiagram({ fig }: { fig: VennFigure }) {
 
 type ChartSeries = { label: string; value: number };
 
+type MultiSeries = { label: string; values: number[] };
+
 type ChartFigure =
-  | { type: "line";  title?: string; xLabel?: string; yLabel?: string; series: ChartSeries[] }
-  | { type: "bar";   title?: string; xLabel?: string; yLabel?: string; series: ChartSeries[] }
-  | { type: "table"; title?: string; headers: string[]; rows: (string | number)[][] };
+  | { type: "line";      title?: string; xLabel?: string; yLabel?: string; series: ChartSeries[] }
+  | { type: "bar";       title?: string; xLabel?: string; yLabel?: string; series: ChartSeries[] }
+  | { type: "pie";       title?: string; series: ChartSeries[] }
+  | { type: "multiline"; title?: string; xLabel?: string; yLabel?: string; xLabels: string[]; series: MultiSeries[] }
+  | { type: "table";     title?: string; headers: string[]; rows: (string | number)[][] };
 
 function niceStep(raw: number): number {
   const mag = Math.pow(10, Math.floor(Math.log10(Math.max(raw, 0.001))));
@@ -266,10 +270,103 @@ function DataTable({ fig }: { fig: Extract<ChartFigure, { type: "table" }> }) {
   );
 }
 
+const CHART_COLORS = ["#8b6bff","#2d7ff9","#3dbe6c","#ff6b5c","#f59e0b","#06b6d4","#ec4899","#84cc16"];
+
+function PieChart({ fig }: { fig: Extract<ChartFigure, { type: "pie" }> }) {
+  const { series, title } = fig;
+  const total = series.reduce((s, d) => s + d.value, 0);
+  if (total === 0) return null;
+  const W = 320, H = 190, cx = 100, cy = 95, r = 78;
+  let angle = -Math.PI / 2;
+  const slices = series.map((s, i) => {
+    const frac = s.value / total;
+    const sa = angle; angle += frac * 2 * Math.PI;
+    const ea = angle;
+    const x1 = cx + r * Math.cos(sa), y1 = cy + r * Math.sin(sa);
+    const x2 = cx + r * Math.cos(ea), y2 = cy + r * Math.sin(ea);
+    const mid = sa + frac * Math.PI;
+    return { path: `M${cx},${cy} L${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r},0,${frac > 0.5 ? 1 : 0},1,${x2.toFixed(1)},${y2.toFixed(1)} Z`, color: CHART_COLORS[i % CHART_COLORS.length], frac, pct: Math.round(frac * 100), lx: cx + r * 0.62 * Math.cos(mid), ly: cy + r * 0.62 * Math.sin(mid), ...s };
+  });
+  return (
+    <div style={{ margin: "10px 0" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: W, display: "block" }} aria-label={title ?? "Pie chart"}>
+        {title && <text x={W / 2} y={13} textAnchor="middle" style={{ fontSize: 10, fontWeight: 700, fill: "#6747d8", fontFamily: "inherit" }}>{title}</text>}
+        {slices.map((s, i) => (
+          <g key={i}>
+            <path d={s.path} fill={s.color} opacity={0.85} stroke="white" strokeWidth={1.5} />
+            {s.frac > 0.07 && <text x={s.lx} y={s.ly} textAnchor="middle" dominantBaseline="central" style={{ fontSize: 9, fontWeight: 700, fill: "white", fontFamily: "inherit" }}>{s.pct}%</text>}
+          </g>
+        ))}
+        {slices.map((s, i) => (
+          <g key={i} transform={`translate(196,${(title ? 26 : 14) + i * 16})`}>
+            <rect width={9} height={9} rx={2} fill={s.color} opacity={0.85} />
+            <text x={13} y={7} dominantBaseline="central" style={{ fontSize: 9, fill: "#374151", fontFamily: "inherit" }}>{s.label} ({s.value})</text>
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function MultiLineChart({ fig }: { fig: Extract<ChartFigure, { type: "multiline" }> }) {
+  const { series, xLabels, title, xLabel, yLabel } = fig;
+  const W = 320, H = 195;
+  const PL = yLabel ? 52 : 42, PR = 16, PT = title ? 30 : 16, PB = xLabel ? 50 : 38;
+  const pw = W - PL - PR, ph = H - PT - PB;
+  const allVals = series.flatMap(s => s.values);
+  const rawMin = Math.min(...allVals), rawMax = Math.max(...allVals);
+  const vStep = niceStep((rawMax - rawMin || rawMax || 1) / 4);
+  const yMin = Math.floor(rawMin / vStep) * vStep;
+  const yMax = Math.ceil(rawMax / vStep) * vStep || vStep;
+  const n = xLabels.length;
+  const xPos = (i: number) => PL + (n > 1 ? i * pw / (n - 1) : pw / 2);
+  const yPos = (v: number) => PT + ph - ((v - yMin) / (yMax - yMin)) * ph;
+  const gridVals: number[] = [];
+  for (let v = yMin; v <= yMax + vStep * 0.01; v += vStep) gridVals.push(Math.round(v * 100) / 100);
+  return (
+    <div style={{ margin: "10px 0" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: W, display: "block" }} aria-label={title ?? "Line chart"}>
+        {title && <text x={W / 2} y={14} textAnchor="middle" style={{ fontSize: 10, fontWeight: 700, fill: "#6747d8", fontFamily: "inherit" }}>{title}</text>}
+        {gridVals.map(v => (
+          <g key={v}>
+            <line x1={PL} y1={yPos(v)} x2={PL + pw} y2={yPos(v)} stroke="#e8ebf0" strokeWidth={1} />
+            <text x={PL - 5} y={yPos(v)} textAnchor="end" dominantBaseline="central" style={{ fontSize: 9, fill: "#9ca3af", fontFamily: "inherit" }}>{v}</text>
+          </g>
+        ))}
+        <line x1={PL} y1={PT} x2={PL} y2={PT + ph} stroke="#d1d5db" strokeWidth={1.5} />
+        <line x1={PL} y1={PT + ph} x2={PL + pw} y2={PT + ph} stroke="#d1d5db" strokeWidth={1.5} />
+        {series.map((s, si) => {
+          const color = CHART_COLORS[si % CHART_COLORS.length];
+          const pts = s.values.map((v, i) => ({ x: xPos(i), y: yPos(v), v }));
+          const linePath = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+          return (
+            <g key={si}>
+              <path d={linePath} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" strokeDasharray={si > 0 ? "5,3" : undefined} />
+              {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={3} fill="white" stroke={color} strokeWidth={1.5} />)}
+            </g>
+          );
+        })}
+        {xLabels.map((l, i) => <text key={i} x={xPos(i)} y={PT + ph + 14} textAnchor="middle" style={{ fontSize: 9, fill: "#6b7280", fontFamily: "inherit" }}>{l}</text>)}
+        {/* Legend */}
+        {series.map((s, i) => (
+          <g key={i} transform={`translate(${PL},${PT + ph + (xLabel ? 28 : 22) + i * 13})`}>
+            <line x1={0} y1={5} x2={14} y2={5} stroke={CHART_COLORS[i % CHART_COLORS.length]} strokeWidth={2} strokeDasharray={i > 0 ? "4,2" : undefined} />
+            <text x={18} y={8} dominantBaseline="central" style={{ fontSize: 9, fill: "#374151", fontFamily: "inherit" }}>{s.label}</text>
+          </g>
+        ))}
+        {yLabel && <text transform={`rotate(-90) translate(${-(PT + ph / 2)},13)`} textAnchor="middle" style={{ fontSize: 9, fill: "#9ca3af", fontFamily: "inherit" }}>{yLabel}</text>}
+        {xLabel && <text x={PL + pw / 2} y={H - 4} textAnchor="middle" style={{ fontSize: 9, fill: "#9ca3af", fontFamily: "inherit" }}>{xLabel}</text>}
+      </svg>
+    </div>
+  );
+}
+
 function ChartRenderer({ fig }: { fig: ChartFigure }) {
-  if (fig.type === "line")  return <LineChart  fig={fig} />;
-  if (fig.type === "bar")   return <BarChart   fig={fig} />;
-  if (fig.type === "table") return <DataTable  fig={fig} />;
+  if (fig.type === "line")      return <LineChart      fig={fig} />;
+  if (fig.type === "bar")       return <BarChart       fig={fig} />;
+  if (fig.type === "pie")       return <PieChart       fig={fig} />;
+  if (fig.type === "multiline") return <MultiLineChart fig={fig} />;
+  if (fig.type === "table")     return <DataTable      fig={fig} />;
   return null;
 }
 

@@ -37,15 +37,15 @@ export async function GET(req: NextRequest) {
 
   const chosenDatasets = shuffle(eligible).slice(0, datasetCount);
 
-  // Fetch dataset text
+  // Fetch dataset text + chart data
   const { data: dsRows } = await supabase
     .from("qr_datasets")
-    .select("id, title, figure_brief, scenario")
+    .select("id, title, figure_brief, scenario, chart")
     .in("id", chosenDatasets);
 
-  const dsMap: Record<string, { title: string; figure_brief: string; scenario: string }> = {};
+  const dsMap: Record<string, { title: string; figure_brief: string; scenario: string; chart: object | null }> = {};
   for (const ds of dsRows ?? []) {
-    dsMap[ds.id] = { title: ds.title, figure_brief: ds.figure_brief, scenario: ds.scenario };
+    dsMap[ds.id] = { title: ds.title, figure_brief: ds.figure_brief, scenario: ds.scenario, chart: ds.chart ?? null };
   }
 
   // Fetch questions for chosen datasets, filtered to requested difficulties
@@ -70,6 +70,7 @@ export async function GET(req: NextRequest) {
       tag: `qr-${q.topic?.toLowerCase().replace(/\s+/g, "-") ?? "general"}`,
       contextLabel: ds?.title ?? "Data set",
       context,
+      chartFigure: ds?.chart ?? null,
       question: q.question,
       options,
       correct: correctIndex(q.correct_answer),

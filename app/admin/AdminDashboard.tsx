@@ -478,11 +478,12 @@ function PracticeEdit({ savedIds, onEdit }: { savedIds: Set<string>; onEdit: (t:
 
   async function runChartBackfill() {
     setBackfilling(true); setBackfillResult(null);
-    const res = await fetch("/api/admin/dm-chart-backfill", { method: "POST" });
+    const endpoint = section === "qr" ? "/api/admin/qr-chart-backfill" : "/api/admin/dm-chart-backfill";
+    const res = await fetch(endpoint, { method: "POST" });
     const data = await res.json();
     setBackfillResult({ updated: data.updated ?? 0, total: data.total ?? 0 });
     setBackfilling(false);
-    if (section === "dm") load("dm", search);
+    load(section, search);
   }
 
   async function load(sec: string, q: string) {
@@ -515,11 +516,11 @@ function PracticeEdit({ savedIds, onEdit }: { savedIds: Set<string>; onEdit: (t:
           <button type="submit" style={{ ...primary(color), padding: "8px 16px", fontSize: 12 }}>Search</button>
           {search && <button type="button" onClick={() => { setSearch(""); load(section, ""); }} style={ghost}>Clear</button>}
         </form>
-        {section === "dm" && (
+        {(section === "dm" || section === "qr") && (
           <button
             onClick={runChartBackfill}
             disabled={backfilling}
-            style={{ border: "1.5px solid #8B6BFF", background: backfilling ? "#f1ecff" : "#f1ecff", color: "#6747d8", borderRadius: 9, padding: "8px 16px", fontSize: 12, fontWeight: 800, cursor: backfilling ? "default" : "pointer", opacity: backfilling ? 0.6 : 1 }}
+            style={{ border: `1.5px solid ${color}`, background: TINTS[section], color, borderRadius: 9, padding: "8px 16px", fontSize: 12, fontWeight: 800, cursor: backfilling ? "default" : "pointer", opacity: backfilling ? 0.6 : 1 }}
           >
             {backfilling ? "Generating charts…" : "⚡ Auto-generate charts"}
           </button>
