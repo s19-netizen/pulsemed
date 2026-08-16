@@ -30,15 +30,20 @@ export async function GET(req: NextRequest) {
     const { data: dmData } = await dq;
     sourceRows = (dmData ?? []).map(r => ({ id: r.id, section: "dm", q_type: r.format === "YN-5" ? "yn5" : "mcq", subtype: r.family, difficulty: r.difficulty, question_text: r.question, context: r.stimulus, _source: "supabase_dm" }));
   } else if (section === "vr") {
-    let vq = db.from("vr_questions").select("id, passage_code, format, difficulty, question_text, primary_subtype").limit(limit);
-    if (search) vq = vq.ilike("question_text", `%${search}%`);
+    let vq = db.from("vr_questions").select("id, passage_code, format, difficulty, question, primary_subtype").limit(limit);
+    if (search) vq = vq.ilike("question", `%${search}%`);
     const { data: vrData } = await vq;
-    sourceRows = (vrData ?? []).map(r => ({ id: r.id, section: "vr", q_type: r.format === "TFCT" ? "tf" : "mcq", subtype: r.primary_subtype, difficulty: r.difficulty, question_text: r.question_text, _source: "supabase_vr" }));
+    sourceRows = (vrData ?? []).map(r => ({ id: r.id, section: "vr", q_type: r.format === "TFCT" ? "tf" : "mcq", subtype: r.primary_subtype, difficulty: r.difficulty, question_text: r.question, _source: "supabase_vr" }));
   } else if (section === "qr") {
-    let qq = db.from("qr_questions").select("id, difficulty, question_text, subtype").limit(limit);
-    if (search) qq = qq.ilike("question_text", `%${search}%`);
+    let qq = db.from("qr_questions").select("id, difficulty, question, topic").limit(limit);
+    if (search) qq = qq.ilike("question", `%${search}%`);
     const { data: qrData } = await qq;
-    sourceRows = (qrData ?? []).map(r => ({ id: r.id, section: "qr", q_type: "mcq", subtype: r.subtype, difficulty: r.difficulty, question_text: r.question_text, _source: "supabase_qr" }));
+    sourceRows = (qrData ?? []).map(r => ({ id: r.id, section: "qr", q_type: "mcq", subtype: r.topic, difficulty: r.difficulty, question_text: r.question, _source: "supabase_qr" }));
+  } else if (section === "sjt") {
+    let sq = db.from("sjt_questions").select("id, format, difficulty, professional_theme, question").limit(limit);
+    if (search) sq = sq.ilike("question", `%${search}%`);
+    const { data: sjtData } = await sq;
+    sourceRows = (sjtData ?? []).map(r => ({ id: r.id, section: "sjt", q_type: r.format, subtype: r.professional_theme, difficulty: r.difficulty, question_text: r.question, _source: "supabase_sjt" }));
   }
 
   return NextResponse.json({
