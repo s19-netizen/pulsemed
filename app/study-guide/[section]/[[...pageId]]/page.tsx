@@ -591,6 +591,358 @@ const SHAPE: Record<string, [string, string, string, string, string]> = {
 const SHAPE_LABELS = ["S", "H", "A", "P", "E"] as const;
 const SHAPE_HINTS = ["Safety first", "Honesty always", "Act within your role", "Proportionate", "Escalate right"] as const;
 
+// ─── Syllogisms deep page ────────────────────────────────────────────────────
+
+function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
+  section: GuideSection;
+  topic: NonNullable<ReturnType<typeof findTopic>>;
+  pageId: string;
+  onNavigate: (id: string) => void;
+  onPractice: () => void;
+}) {
+  const c = section.color, t = section.tint, d = section.deep;
+  const row = (i: number, name: string, desc: string) => (
+    <div key={name} style={{ display: "grid", gridTemplateColumns: "180px 1fr", borderTop: i > 0 ? "1px solid var(--line)" : undefined, background: "white" }}>
+      <div style={{ padding: "12px 14px", background: t, borderRight: "1px solid var(--line)" }}>
+        <strong style={{ fontSize: 11, fontWeight: 800, color: c, fontFamily: "monospace" }}>{name}</strong>
+      </div>
+      <p style={{ margin: 0, padding: "12px 14px", fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>{desc}</p>
+    </div>
+  );
+
+  return (
+    <>
+      <GuidePageHeader section={section} pageId={pageId} title="Syllogisms" eyebrow="DM topic guide"
+        subtitle="Translate every premise into notation, draw the smallest diagram you can, then check whether the conclusion is forced." />
+
+      <p style={{ fontSize: 14, lineHeight: 1.8, color: "var(--ink)", borderLeft: `3px solid ${c}`, background: t, padding: "13px 18px", borderRadius: "0 12px 12px 0", margin: "0 0 26px" }}>
+        Syllogisms give you two or three premises about categories, then ask whether a conclusion <strong>must</strong> follow.
+        The golden rule: never add anything that is not in the premises. Only draw what the arrows force.
+      </p>
+
+      {/* ── 1. The four statements ── */}
+      <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 12px", color: "var(--ink)" }}>1 — The four statement types</h2>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 28 }}>
+
+        {/* All A are B */}
+        <div style={{ borderRadius: 12, border: "1px solid var(--line)", background: "white", padding: "14px 16px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+            <div>
+              <strong style={{ fontSize: 13, color: c, display: "block", marginBottom: 4 }}>All A are B</strong>
+              <code style={{ fontSize: 17, fontWeight: 900, color: d, background: t, padding: "2px 8px", borderRadius: 6 }}>A ⊆ B</code>
+            </div>
+            <svg viewBox="0 0 100 68" width="88" height="60" aria-hidden="true">
+              <circle cx="54" cy="34" r="29" fill={t} stroke={c} strokeWidth="1.5"/>
+              <circle cx="46" cy="36" r="14" fill={c} fillOpacity=".25" stroke={c} strokeWidth="1.5"/>
+              <text x="46" y="40" textAnchor="middle" fontSize="11" fontWeight="800" fill={d}>A</text>
+              <text x="73" y="17" textAnchor="middle" fontSize="11" fontWeight="800" fill={d}>B</text>
+            </svg>
+          </div>
+          <p style={{ margin: "0 0 10px", fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>A sits completely inside B. Every member of A is also a member of B.</p>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 6, paddingTop: 8, borderTop: "1px solid var(--line)" }}>
+            <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 20, background: "#fff0f0", color: "#d94b3e", flexShrink: 0 }}>✗ Not reversible</span>
+            <span style={{ fontSize: 11, color: "var(--ink-soft)" }}>All B are A is not implied — B can contain members outside A.</span>
+          </div>
+        </div>
+
+        {/* No A are B */}
+        <div style={{ borderRadius: 12, border: "1px solid var(--line)", background: "white", padding: "14px 16px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+            <div>
+              <strong style={{ fontSize: 13, color: c, display: "block", marginBottom: 4 }}>No A are B</strong>
+              <code style={{ fontSize: 17, fontWeight: 900, color: d, background: t, padding: "2px 8px", borderRadius: 6 }}>A ✕ B</code>
+            </div>
+            <svg viewBox="0 0 108 68" width="97" height="60" aria-hidden="true">
+              <circle cx="27" cy="34" r="22" fill={t} stroke={c} strokeWidth="1.5"/>
+              <circle cx="81" cy="34" r="22" fill={t} stroke={c} strokeWidth="1.5"/>
+              <line x1="51" y1="28" x2="57" y2="40" stroke="#d94b3e" strokeWidth="2.5" strokeLinecap="round"/>
+              <line x1="57" y1="28" x2="51" y2="40" stroke="#d94b3e" strokeWidth="2.5" strokeLinecap="round"/>
+              <text x="27" y="38" textAnchor="middle" fontSize="11" fontWeight="800" fill={d}>A</text>
+              <text x="81" y="38" textAnchor="middle" fontSize="11" fontWeight="800" fill={d}>B</text>
+            </svg>
+          </div>
+          <p style={{ margin: "0 0 10px", fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>A and B are completely separate. No member of A is in B.</p>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 6, paddingTop: 8, borderTop: "1px solid var(--line)" }}>
+            <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 20, background: "#edfbf3", color: "#259650", flexShrink: 0 }}>✓ Reversible</span>
+            <span style={{ fontSize: 11, color: "var(--ink-soft)" }}>No B are A is equally true — exclusion is symmetric.</span>
+          </div>
+        </div>
+
+        {/* Some A are B */}
+        <div style={{ borderRadius: 12, border: "1px solid var(--line)", background: "white", padding: "14px 16px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+            <div>
+              <strong style={{ fontSize: 13, color: c, display: "block", marginBottom: 4 }}>Some A are B</strong>
+              <code style={{ fontSize: 17, fontWeight: 900, color: d, background: t, padding: "2px 8px", borderRadius: 6 }}>A → B</code>
+            </div>
+            <svg viewBox="0 0 108 68" width="97" height="60" aria-hidden="true">
+              <defs><clipPath id="sl-c1"><circle cx="36" cy="34" r="23"/></clipPath></defs>
+              <circle cx="36" cy="34" r="23" fill={t} stroke={c} strokeWidth="1.5"/>
+              <circle cx="72" cy="34" r="23" fill={t} stroke={c} strokeWidth="1.5"/>
+              <circle cx="72" cy="34" r="23" fill={c} fillOpacity=".32" clipPath="url(#sl-c1)" stroke="none"/>
+              <text x="24" y="38" textAnchor="middle" fontSize="11" fontWeight="800" fill={d}>A</text>
+              <text x="84" y="38" textAnchor="middle" fontSize="11" fontWeight="800" fill={d}>B</text>
+            </svg>
+          </div>
+          <p style={{ margin: "0 0 10px", fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>At least one A is also a B. The circles partially overlap.</p>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 6, paddingTop: 8, borderTop: "1px solid var(--line)" }}>
+            <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 20, background: "#edfbf3", color: "#259650", flexShrink: 0 }}>✓ Reversible</span>
+            <span style={{ fontSize: 11, color: "var(--ink-soft)" }}>Some B are A is equally true — if one item is in both sets, that works both ways.</span>
+          </div>
+        </div>
+
+        {/* Some A are not B */}
+        <div style={{ borderRadius: 12, border: "1px solid var(--line)", background: "white", padding: "14px 16px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+            <div>
+              <strong style={{ fontSize: 13, color: c, display: "block", marginBottom: 4 }}>Some A are not B</strong>
+              <code style={{ fontSize: 14, fontWeight: 900, color: d, background: t, padding: "2px 8px", borderRadius: 6 }}>A →✕ B</code>
+            </div>
+            <svg viewBox="0 0 108 68" width="97" height="60" aria-hidden="true">
+              <defs><clipPath id="sl-c2"><circle cx="40" cy="34" r="23"/></clipPath></defs>
+              <circle cx="40" cy="34" r="23" fill={c} fillOpacity=".14" stroke={c} strokeWidth="1.5"/>
+              <circle cx="76" cy="34" r="23" fill={t} stroke={c} strokeWidth="1.5"/>
+              <circle cx="76" cy="34" r="23" fill={c} fillOpacity=".22" clipPath="url(#sl-c2)" stroke="none"/>
+              <circle cx="22" cy="34" r="4" fill={c} fillOpacity=".7"/>
+              <text x="29" y="52" textAnchor="middle" fontSize="9" fill={d} fontWeight="700">A</text>
+              <text x="87" y="52" textAnchor="middle" fontSize="9" fill={d} fontWeight="700">B</text>
+            </svg>
+          </div>
+          <p style={{ margin: "0 0 10px", fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>At least one A (the dot) falls outside B. Part of A extends beyond the B circle.</p>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 6, paddingTop: 8, borderTop: "1px solid var(--line)" }}>
+            <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 20, background: "#fff0f0", color: "#d94b3e", flexShrink: 0 }}>✗ Not reversible</span>
+            <span style={{ fontSize: 11, color: "var(--ink-soft)" }}>Tells us nothing from B's perspective — never reverse this.</span>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── 2. Chaining ── */}
+      <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 6px", color: "var(--ink)" }}>2 — Chaining premises</h2>
+      <p style={{ fontSize: 13, lineHeight: 1.7, color: "var(--ink-soft)", margin: "0 0 14px" }}>
+        Put premises end-to-end. If you can trace an unbroken path from start to finish, the conclusion follows.
+        If the chain breaks or arrows don't connect, it does not follow.
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
+
+        {([
+          {
+            title: "All + All → All", valid: true,
+            premises: ["All nurses are healthcare workers.", "All healthcare workers have DBS checks."],
+            chain: (
+              <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+                <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>Nurses</span>
+                <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>──⊆──►</span>
+                <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>Healthcare</span>
+                <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>──⊆──►</span>
+                <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>DBS checks</span>
+              </div>
+            ),
+            conclusion: "∴ All nurses have DBS checks ✓",
+          },
+          {
+            title: "All + No → No", valid: true,
+            premises: ["All cats are mammals.", "No mammals are fish."],
+            chain: (
+              <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+                <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>Cats</span>
+                <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>──⊆──►</span>
+                <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>Mammals</span>
+                <span style={{ color: "#d94b3e", fontWeight: 900, fontSize: 13 }}>──✕──</span>
+                <span style={{ padding: "4px 10px", background: "white", border: "1px solid #d94b3e", borderRadius: 7, fontSize: 12, fontWeight: 700, color: "#d94b3e" }}>Fish</span>
+              </div>
+            ),
+            conclusion: "∴ No cats are fish ✓",
+          },
+          {
+            title: "Some + All → Some", valid: true,
+            premises: ["Some doctors are researchers.", "All researchers have PhDs."],
+            chain: (
+              <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+                <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>Doctors</span>
+                <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>──→──►</span>
+                <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>Researchers</span>
+                <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>──⊆──►</span>
+                <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>PhDs</span>
+              </div>
+            ),
+            conclusion: "∴ Some doctors have PhDs ✓",
+          },
+          {
+            title: "Reversed All — converse error", valid: false,
+            premises: ["All accountants are graduates.", "Sara is a graduate."],
+            chain: (
+              <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
+                <span style={{ padding: "4px 10px", background: "white", border: "1px solid #d94b3e", borderRadius: 7, fontSize: 12, fontWeight: 700, color: "#d94b3e" }}>Accountants</span>
+                <span style={{ color: "#d94b3e", fontWeight: 900, fontSize: 13 }}>──⊆──►</span>
+                <span style={{ padding: "4px 10px", background: "white", border: "1px solid #d94b3e", borderRadius: 7, fontSize: 12, fontWeight: 700, color: "#d94b3e" }}>Graduates</span>
+                <span style={{ color: "var(--ink-soft)", fontWeight: 800, fontSize: 12 }}>← Sara is here, but...</span>
+              </div>
+            ),
+            conclusion: "✗ Sara does not have to be inside Accountants. A ⊆ B ≠ B ⊆ A.",
+          },
+        ] as const).map((ex, i) => (
+          <div key={i} style={{ borderRadius: 12, border: `1px solid ${ex.valid ? c : "#d94b3e"}`, background: ex.valid ? t : "#fff5f5", padding: "14px 16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <strong style={{ fontSize: 12, color: ex.valid ? c : "#d94b3e", fontWeight: 800 }}>{ex.title}</strong>
+              <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 20, background: ex.valid ? c : "#d94b3e", color: "white" }}>{ex.valid ? "✓ FOLLOWS" : "✗ INVALID"}</span>
+            </div>
+            <div style={{ fontSize: 12, color: "var(--ink)", marginBottom: 10 }}>
+              {ex.premises.map((p, j) => <div key={j} style={{ marginBottom: 2 }}>• {p}</div>)}
+            </div>
+            {ex.chain}
+            <p style={{ margin: "8px 0 0", fontSize: 12, fontWeight: 700, color: ex.valid ? "#259650" : "#d94b3e" }}>{ex.conclusion}</p>
+          </div>
+        ))}
+
+      </div>
+
+      {/* ── 3. Worked examples ── */}
+      <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>3 — Worked examples</h2>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 28 }}>
+
+        {/* Example 1 — three-premise chain */}
+        <div style={{ borderRadius: 14, border: "1px solid var(--line)", background: "white", overflow: "hidden" }}>
+          <div style={{ padding: "10px 16px", background: t, borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 10 }}>
+            <strong style={{ fontSize: 11, color: c, fontWeight: 800, letterSpacing: ".04em" }}>EXAMPLE 1</strong>
+            <span style={{ fontSize: 12, color: "var(--ink)", fontWeight: 600 }}>Three-premise chain</span>
+          </div>
+          <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
+            <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Given</p>
+            {["All reptiles are cold-blooded.", "No cold-blooded animals are warm-blooded.", "Some lizards are reptiles."].map((p, i) => (
+              <div key={i} style={{ padding: "6px 12px", borderRadius: 7, background: t, marginBottom: 5, fontSize: 13, color: "var(--ink)", fontStyle: "italic" }}>{p}</div>
+            ))}
+          </div>
+          <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--line)", background: "#fafafa" }}>
+            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Conclusion to test</p>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>Some lizards are not warm-blooded.</p>
+          </div>
+          <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
+            <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Working</p>
+            {[
+              "Translate: Reptiles ⊆ Cold-blooded. Cold-blooded ✕ Warm-blooded. Lizards →(some) Reptiles.",
+              "From P1: everything in the Reptiles circle is also in Cold-blooded.",
+              "From P2: Cold-blooded and Warm-blooded are completely separate circles — so Reptiles are also outside Warm-blooded.",
+              "From P3: some lizards sit inside the Reptiles circle.",
+              "Those lizards are therefore inside Cold-blooded, and therefore outside Warm-blooded.",
+              "Chain: Lizards →(some) Reptiles ⊆ Cold-blooded ✕ Warm-blooded → some lizards are not warm-blooded.",
+            ].map((s, i) => (
+              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 7 }}>
+                <span style={{ width: 20, height: 20, borderRadius: 6, background: t, color: c, fontSize: 10, fontWeight: 800, display: "grid", placeItems: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
+                <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>{s}</p>
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: "10px 16px", background: "#edfbf3", display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: "#259650", color: "white" }}>Follows</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#259650" }}>YES — must follow</span>
+          </div>
+        </div>
+
+        {/* Example 2 — converse trap */}
+        <div style={{ borderRadius: 14, border: "1px solid var(--line)", background: "white", overflow: "hidden" }}>
+          <div style={{ padding: "10px 16px", background: t, borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 10 }}>
+            <strong style={{ fontSize: 11, color: c, fontWeight: 800, letterSpacing: ".04em" }}>EXAMPLE 2</strong>
+            <span style={{ fontSize: 12, color: "var(--ink)", fontWeight: 600 }}>The converse trap</span>
+          </div>
+          <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
+            <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Given</p>
+            {["All pilots are licensed to fly.", "James is licensed to fly."].map((p, i) => (
+              <div key={i} style={{ padding: "6px 12px", borderRadius: 7, background: t, marginBottom: 5, fontSize: 13, color: "var(--ink)", fontStyle: "italic" }}>{p}</div>
+            ))}
+          </div>
+          <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--line)", background: "#fafafa" }}>
+            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Conclusion to test</p>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>James is a pilot.</p>
+          </div>
+          <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
+            <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Working</p>
+            {[
+              "Translate: Pilots ⊆ Licensed-to-fly. James ∈ Licensed-to-fly.",
+              "Draw: Licensed-to-fly is a large set. Pilots is a smaller circle inside it. James is somewhere in Licensed-to-fly.",
+              "Ask: must James be inside the Pilots circle? No — James could be a flight instructor, a drone operator, a student with a training licence. Many arrangements are valid.",
+              "This is the converse error. A ⊆ B (All pilots are licensed) does not mean B ⊆ A (all licensed people are pilots).",
+              "One valid counterexample — James is a flight instructor, not a pilot — is enough to prove the conclusion does not must follow.",
+            ].map((s, i) => (
+              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 7 }}>
+                <span style={{ width: 20, height: 20, borderRadius: 6, background: "#fff0f0", color: "#d94b3e", fontSize: 10, fontWeight: 800, display: "grid", placeItems: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
+                <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>{s}</p>
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: "10px 16px", background: "#fff0f0", display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: "#d94b3e", color: "white" }}>Does not follow</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: "#d94b3e" }}>NO — converse error</span>
+          </div>
+        </div>
+
+        {/* Example 3 — five-statement Yes/No set */}
+        <div style={{ borderRadius: 14, border: "1px solid var(--line)", background: "white", overflow: "hidden" }}>
+          <div style={{ padding: "10px 16px", background: t, borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 10 }}>
+            <strong style={{ fontSize: 11, color: c, fontWeight: 800, letterSpacing: ".04em" }}>EXAMPLE 3</strong>
+            <span style={{ fontSize: 12, color: "var(--ink)", fontWeight: 600 }}>Five-statement Yes / No set</span>
+          </div>
+          <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
+            <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Given</p>
+            {[
+              "All surgeons are doctors.",
+              "All doctors must complete continuing professional development (CPD).",
+              "Some surgeons are also researchers.",
+              "No researchers work fewer than 50 hours per week.",
+            ].map((p, i) => (
+              <div key={i} style={{ padding: "6px 12px", borderRadius: 7, background: t, marginBottom: 5, fontSize: 13, color: "var(--ink)", fontStyle: "italic" }}>{p}</div>
+            ))}
+          </div>
+          <div style={{ padding: "14px 16px" }}>
+            <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Judge each statement</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {([
+                { stmt: "All surgeons must complete CPD.", answer: "Yes" as const, reason: "Surgeons ⊆ Doctors (P1). Doctors must complete CPD (P2). The chain forces: all surgeons must complete CPD." },
+                { stmt: "Some doctors are researchers.", answer: "Yes" as const, reason: "Some surgeons are researchers (P3). All surgeons are doctors (P1). Those surgeon-researchers are therefore doctors who are also researchers — so some doctors are researchers." },
+                { stmt: "No surgeons work fewer than 50 hours per week.", answer: "No" as const, reason: "Only some surgeons are researchers (P3), so only those have the 50-hour rule (P4). Non-researcher surgeons could work fewer hours. The word 'no' is too strong here." },
+                { stmt: "All researchers must complete CPD.", answer: "No" as const, reason: "The premises only establish that surgeons ⊆ doctors, and doctors must do CPD. Researchers who are not surgeons are not proven to be doctors, so P2 does not apply to them. Only researcher-surgeons definitely must complete CPD." },
+                { stmt: "Some researchers are doctors.", answer: "Yes" as const, reason: "Some surgeons are researchers (P3). All surgeons are doctors (P1). Those surgeon-researchers are both doctors and researchers, so some researchers are doctors." },
+              ]).map((item, i) => (
+                <div key={i} style={{ borderRadius: 10, border: `1px solid ${item.answer === "Yes" ? "#259650" : "#d94b3e"}`, overflow: "hidden" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr auto", padding: "8px 12px", background: item.answer === "Yes" ? "#edfbf3" : "#fff5f5", borderBottom: "1px solid var(--line)" }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{item.stmt}</span>
+                    <span style={{ fontSize: 11, fontWeight: 800, padding: "2px 10px", borderRadius: 20, background: item.answer === "Yes" ? "#259650" : "#d94b3e", color: "white", alignSelf: "center" }}>{item.answer}</span>
+                  </div>
+                  <p style={{ margin: 0, padding: "8px 12px", fontSize: 11, lineHeight: 1.6, color: "var(--ink-soft)" }}>{item.reason}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── 4. Rules recap ── */}
+      <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>4 — Rules to remember</h2>
+      <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 12, overflow: "hidden", border: "1px solid var(--line)", marginBottom: 28 }}>
+        {([
+          ["A ⊆ B ≠ B ⊆ A", "The converse is not valid. All A are B does not mean All B are A. This is the most common mistake in UCAT syllogisms."],
+          ["A ✕ B = B ✕ A", "Exclusion is symmetric. No A are B also means No B are A — you can always reverse a 'no' statement."],
+          ["A → B = B → A", "Some A are B also means Some B are A. Overlap works both ways."],
+          ["A →✕ B ≠ B →✕ A", "Some A are not B tells you nothing about B's perspective. Never reverse a 'some are not' statement."],
+          ["Some means at least one", "'Some' does not mean 'not all'. It means one or more, and could theoretically include all."],
+          ["Existence is never guaranteed", "All X are Y does not prove any X exist. Universal statements work on what is given to exist in the question."],
+          ["One counterexample defeats must", "If you can draw a valid arrangement where the conclusion is false, it does not must follow. Draw it and move on."],
+        ] as [string, string][]).map(([name, desc], i) => row(i, name, desc))}
+      </div>
+
+      <section className="vrg-bottom-practice">
+        <div>
+          <strong>Ready to try Syllogisms?</strong>
+          <p>We'll take you to the practice setup so you can choose your session length and timing.</p>
+        </div>
+        <button className="vrg-practice-cta" onClick={onPractice} type="button">Set up practice →</button>
+      </section>
+      <GuidePageActions section={section} pageId={pageId} onNavigate={onNavigate} />
+    </>
+  );
+}
+
 // ─── Topic page ───────────────────────────────────────────────────────────────
 
 function TopicPage({ section, topic, pageId, onNavigate, onPractice }: {
@@ -788,7 +1140,9 @@ export default function StudyGuidePage() {
           <main className="vrg-content">
             {pageId === "overview" && <GuideOverview section={section} pageId={pageId} onNavigate={goToPage} />}
             {foundation && <FoundationPage section={section} page={foundation} pageId={pageId} onNavigate={goToPage} />}
-            {topic && <TopicPage section={section} topic={topic} pageId={pageId} onNavigate={goToPage} onPractice={() => router.push(`/practice/${sectionKey}`)} />}
+            {topic && topic.id === "syllogisms"
+              ? <SyllogismsPage section={section} topic={topic} pageId={pageId} onNavigate={goToPage} onPractice={() => router.push(`/practice/${sectionKey}`)} />
+              : topic && <TopicPage section={section} topic={topic} pageId={pageId} onNavigate={goToPage} onPractice={() => router.push(`/practice/${sectionKey}`)} />}
           </main>
         </div>
       </div>
