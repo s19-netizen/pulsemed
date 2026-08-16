@@ -43,6 +43,19 @@ export default function SettingsClient({ user, userRow, practiceSessions }: { us
         </div>
       </div>
 
+      {user.email === "sawdaj19@gmail.com" && (
+        <a href="/admin" style={{ textDecoration: "none", display: "block", marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 20px", background: "#FFFDF0", border: "1.5px solid #EBD56A", borderRadius: 12, cursor: "pointer" }}>
+            <span style={{ fontSize: 20, lineHeight: 1 }}>⚙</span>
+            <div>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#9B7000" }}>Admin dashboard</p>
+              <p style={{ margin: 0, fontSize: 11, color: "#b8920a" }}>Edit questions, mocks and content</p>
+            </div>
+            <span style={{ marginLeft: "auto", fontSize: 16, color: "#EBD56A", fontWeight: 700 }}>→</span>
+          </div>
+        </a>
+      )}
+
       <div className="settings-grid">
         {/* Profile card */}
         <div className="content-card settings-card">
@@ -73,22 +86,6 @@ export default function SettingsClient({ user, userRow, practiceSessions }: { us
             {saved ? "Saved ✓" : "Save changes"}
           </button>
         </div>
-
-        {/* Admin link */}
-        {user.email === "sawdaj19@gmail.com" && (
-          <a href="/admin" style={{ textDecoration: "none" }}>
-            <div className="content-card settings-card" style={{ cursor: "pointer", border: "1.5px solid #EBD56A", background: "#FFFDF0" }}>
-              <div className="settings-heading">
-                <div className="settings-symbol" style={{ background: "#FFF8DF", color: "#9B7000" }}>⚙</div>
-                <div>
-                  <h2 style={{ color: "#9B7000" }}>Admin dashboard</h2>
-                  <p>Edit questions, mocks and content</p>
-                </div>
-                <span style={{ marginLeft: "auto", fontSize: 18, color: "#EBD56A" }}>→</span>
-              </div>
-            </div>
-          </a>
-        )}
 
         {/* Study preferences */}
         <div className="content-card settings-card">

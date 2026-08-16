@@ -6,20 +6,20 @@ import { CreateVR }  from "./CreateVR";
 import { CreateDM }  from "./CreateDM";
 import { CreateQR }  from "./CreateQR";
 import { CreateSJT } from "./CreateSJT";
-import { BulkImport } from "./BulkImport";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type MockData = { id: string; label: string; vr: VRPassage[]; dm: DMQuestion[]; qr: QRDataset[]; sjt: SJTScenario[] };
-type EditTarget = { mockId: string; section: string; questionId: string; question: any; context?: string; contextLabel?: string };
+type MockData    = { id: string; label: string; vr: VRPassage[]; dm: DMQuestion[]; qr: QRDataset[]; sjt: SJTScenario[] };
+type EditTarget  = { mockId: string; section: string; questionId: string; question: any; context?: string; contextLabel?: string };
 type PresentationType = "text" | "table" | "bar" | "line" | "pie";
-type MainTab = "mocks" | "create" | "library" | "bulk" | "diagnostic";
+type MainTab     = "mocks" | "diagnostic" | "practice";
+type SubTab      = "edit" | "create";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const COLORS: Record<string, string> = { vr: "#2D7FF9", dm: "#8B6BFF", qr: "#3DBE6C", sjt: "#FF6B5C" };
 const TINTS:  Record<string, string> = { vr: "#EAF2FF", dm: "#F1ECFF", qr: "#EDFBF3", sjt: "#FFEDEA" };
-const DIFFS   = ["Bronze","Silver","Gold","Diamond"];
+const DIFFS = ["Bronze","Silver","Gold","Diamond"];
 const PRESENTATION_OPTIONS: { key: PresentationType; label: string; icon: string }[] = [
   { key: "text", label: "Text", icon: "≡" }, { key: "table", label: "Table", icon: "⊞" },
   { key: "bar",  label: "Bar",  icon: "▐" }, { key: "line",  label: "Line",  icon: "∿" },
@@ -33,13 +33,13 @@ const lbl = (c: string): React.CSSProperties => ({ display: "block", fontSize: 1
 const ghost: React.CSSProperties = { border: "1.5px solid #e5e9f0", background: "white", borderRadius: 9, padding: "9px 18px", fontSize: 12, fontWeight: 700, cursor: "pointer", color: "#6b7a8c" };
 const primary = (c: string): React.CSSProperties => ({ border: 0, background: c, color: "white", borderRadius: 9, padding: "9px 22px", fontSize: 12, fontWeight: 800, cursor: "pointer" });
 
-// ── Shared helpers ─────────────────────────────────────────────────────────────
-
 const qText    = (q: any) => q?.questionText ?? q?.question ?? q?.stem ?? q?.question_text ?? "";
 const qOptions = (q: any): string[] => q?.options ?? q?.opts ?? [];
-const qCorrect = (q: any): number => q?.correct ?? q?.cor ?? 0;
+const qCorrect = (q: any): number => typeof (q?.correct ?? q?.cor) === "number" ? (q?.correct ?? q?.cor) : 0;
 const qExpl    = (q: any): string => q?.explanation ?? "";
 const qId      = (q: any): string => String(q?.id ?? "");
+
+// ── Shared components ─────────────────────────────────────────────────────────
 
 function SectionBadge({ section }: { section: string }) {
   return <span style={{ display: "inline-block", padding: "2px 8px", borderRadius: 5, background: TINTS[section] ?? "#f5f7fb", color: COLORS[section] ?? "#6b7a8c", fontSize: 10, fontWeight: 850, letterSpacing: "0.06em" }}>{section.toUpperCase()}</span>;
@@ -63,12 +63,10 @@ function Field({ label, color, children }: { label: string; color: string; child
   return <div><label style={lbl(color)}>{label}</label>{children}</div>;
 }
 
-// ── Question card ─────────────────────────────────────────────────────────────
-
 function QuestionCard({ q, section, onClick, saved, badge }: { q: any; section: string; onClick: () => void; saved: boolean; badge?: string }) {
   const text = qText(q);
   const opts = qOptions(q);
-  const cor  = typeof qCorrect(q) === "number" ? qCorrect(q) : 0;
+  const cor  = qCorrect(q);
   return (
     <button onClick={onClick} style={{ background: "white", border: "1px solid #e5e9f0", borderRadius: 12, padding: "13px 16px", textAlign: "left", cursor: "pointer", display: "flex", flexDirection: "column", gap: 6, width: "100%" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -87,18 +85,18 @@ function QuestionCard({ q, section, onClick, saved, badge }: { q: any; section: 
   );
 }
 
-// ── Question editor (slide-in) ────────────────────────────────────────────────
+// ── Question editor panel ─────────────────────────────────────────────────────
 
 function QuestionEditor({ target, onClose, onSaved }: { target: EditTarget; onClose: () => void; onSaved: (id: string) => void }) {
   const orig = target.question;
   const [questionText, setQuestionText] = useState(qText(orig));
-  const [options, setOptions] = useState<string[]>([...qOptions(orig)]);
-  const [correct, setCorrect] = useState(qCorrect(orig));
-  const [explanation, setExplanation] = useState(qExpl(orig));
-  const [context, setContext] = useState(target.context ?? "");
+  const [options,      setOptions]      = useState<string[]>([...qOptions(orig)]);
+  const [correct,      setCorrect]      = useState(qCorrect(orig));
+  const [explanation,  setExplanation]  = useState(qExpl(orig));
+  const [context,      setContext]      = useState(target.context ?? "");
   const [presentation, setPresentation] = useState<PresentationType>("text");
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saving,       setSaving]       = useState(false);
+  const [saved,        setSaved]        = useState(false);
   const color = COLORS[target.section] ?? "#2D7FF9";
   const tint  = TINTS[target.section]  ?? "#EAF2FF";
 
@@ -170,41 +168,141 @@ function QuestionEditor({ target, onClose, onSaved }: { target: EditTarget; onCl
   );
 }
 
-// ── Mock section ──────────────────────────────────────────────────────────────
+// ── Bulk import modal ─────────────────────────────────────────────────────────
 
-function MockSection({ mock, savedIds, onEdit }: { mock: MockData; savedIds: Set<string>; onEdit: (t: EditTarget) => void }) {
-  const [openSection, setOpenSection] = useState<string | null>(null);
-  const sections = [
-    { key: "vr",  label: "VR",  count: mock.vr.reduce((s, p) => s + p.questions.length, 0) },
-    { key: "dm",  label: "DM",  count: mock.dm.length },
-    { key: "qr",  label: "QR",  count: mock.qr.reduce((s, d) => s + d.questions.length, 0) },
-    { key: "sjt", label: "SJT", count: mock.sjt.reduce((s, sc) => s + sc.questions.length, 0) },
-  ];
+const BULK_PARSERS: Record<string, (raw: any[]) => { count: number; errors: string[] }> = {
+  vr: raw => { const errors: string[] = []; let count = 0; raw.forEach((item, i) => { if (!item.passage) errors.push(`Item ${i+1}: missing "passage"`); if (!Array.isArray(item.questions)?.length) errors.push(`Item ${i+1}: missing "questions"`); else item.questions.forEach((q: any, j: number) => { if (!q.question) errors.push(`Item ${i+1} Q${j+1}: missing "question"`); else count++; }); }); return { count, errors }; },
+  dm: raw => { const errors: string[] = []; let count = 0; raw.forEach((item, i) => { if (!item.type) { errors.push(`Item ${i+1}: missing "type"`); return; } if (item.type === "yn5") { if (!item.stimulus) errors.push(`Item ${i+1}: missing "stimulus"`); if (!Array.isArray(item.statements) || item.statements.length !== 5) errors.push(`Item ${i+1}: "statements" must be exactly 5`); count++; } else { if (!item.context) errors.push(`Item ${i+1}: missing "context"`); if (!item.question) errors.push(`Item ${i+1}: missing "question"`); count++; } }); return { count, errors }; },
+  qr: raw => { const errors: string[] = []; let count = 0; raw.forEach((item, i) => { if (!item.context) errors.push(`Item ${i+1}: missing "context"`); if (!Array.isArray(item.questions)?.length) errors.push(`Item ${i+1}: missing "questions"`); else item.questions.forEach((q: any, j: number) => { if (!q.question) errors.push(`Item ${i+1} Q${j+1}: missing "question"`); else count++; }); }); return { count, errors }; },
+  sjt: raw => { const errors: string[] = []; let count = 0; raw.forEach((item, i) => { if (!item.scenario) errors.push(`Item ${i+1}: missing "scenario"`); if (!Array.isArray(item.questions)?.length) errors.push(`Item ${i+1}: missing "questions"`); else item.questions.forEach((q: any, j: number) => { if (!q.type) errors.push(`Item ${i+1} Q${j+1}: missing "type"`); else count++; }); }); return { count, errors }; },
+};
+
+function toPayload(section: string, item: any): object {
+  if (section === "vr") return { section: "vr", content: item.passage, questions: (item.questions ?? []).map((q: any, i: number) => ({ q_type: q.type ?? "tf", subtype: q.subtype ?? "Direct Retrieval", difficulty: q.difficulty ?? "Silver", question_text: q.question, options: q.type === "mcq" ? (q.options ?? []) : ["True","False","Can't Tell"], correct: q.correct ?? "True", explanations: q.explanations ?? {}, sort_order: i })) };
+  if (section === "dm") {
+    if (item.type === "yn5") return { section: "dm", content: item.stimulus, questions: [{ q_type: "yn5", subtype: item.subtype ?? "Interpreting Information", difficulty: item.difficulty ?? "Silver", question_text: "Yes/No block", options: ["Yes","No"], correct: "set", explanations: {}, venn: item.venn ?? null, statements: (item.statements ?? []).map((s: any, i: number) => ({ text: s.statement, correct: s.correct ?? "Yes", explanation: s.explanation ?? "", sort_order: i })) }] };
+    return { section: "dm", content: item.context, questions: [{ q_type: "mcq", subtype: item.subtype ?? "Syllogisms", difficulty: item.difficulty ?? "Silver", question_text: item.question, options: item.options ?? [], correct: item.correct ?? "A", explanations: item.explanations ?? {}, venn: item.venn ?? null, sort_order: 0 }] };
+  }
+  if (section === "qr") return { section: "qr", content: item.context, chart: item.chart ?? null, questions: (item.questions ?? []).map((q: any, i: number) => ({ q_type: "mcq", subtype: q.subtype ?? "Data Interpretation", difficulty: q.difficulty ?? "Silver", question_text: q.question, options: q.options ?? [], correct: q.correct ?? "A", explanations: q.explanations ?? {}, sort_order: i })) };
+  return { section: "sjt", content: item.scenario, questions: (item.questions ?? []).map((q: any, i: number) => q.type === "mostleast" ? { q_type: "mostleast", subtype: q.subtype ?? "Patient Safety", difficulty: q.difficulty ?? "Silver", question_text: "mostleast", options: q.actions ?? [], correct: JSON.stringify({ most: q.most ?? 0, least: q.least ?? 1 }), explanations: {}, sort_order: i } : { q_type: q.type, subtype: q.subtype ?? "Patient Safety", difficulty: q.difficulty ?? "Silver", question_text: q.type, options: (q.items ?? []).map((it: any) => it.action ?? it.factor ?? ""), correct: JSON.stringify(Object.fromEntries((q.items ?? []).map((it: any, j: number) => [j, it.correct ?? "A"]))), explanations: {}, sort_order: i }) };
+}
+
+function BulkModal({ section, onClose }: { section: string; onClose: () => void }) {
+  const [activeSection, setActiveSection] = useState(section);
+  const [text, setText] = useState("");
+  const [result, setResult] = useState<{ ok: boolean; count: number; errors: string[] } | null>(null);
+  const [parsed, setParsed] = useState<any[] | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [done, setDone] = useState(false);
+  const color = COLORS[activeSection];
+
+  function validate() {
+    setResult(null); setParsed(null); setDone(false);
+    let raw: any[];
+    try { raw = JSON.parse(text); } catch { setResult({ ok: false, count: 0, errors: ["Invalid JSON — check brackets and commas."] }); return; }
+    if (!Array.isArray(raw)) { setResult({ ok: false, count: 0, errors: ["Must be a JSON array [ ... ]"] }); return; }
+    const { count, errors } = BULK_PARSERS[activeSection](raw);
+    setResult({ ok: errors.length === 0, count, errors });
+    if (errors.length === 0) setParsed(raw);
+  }
+
+  async function handleSave() {
+    if (!parsed) return;
+    setSaving(true);
+    for (const item of parsed) {
+      const res = await fetch("/api/admin/passage", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(toPayload(activeSection, item)) });
+      const data = await res.json();
+      if (data.error) { setResult({ ok: false, count: 0, errors: [data.error] }); setSaving(false); return; }
+    }
+    setDone(true); setSaving(false);
+  }
+
+  function switchSection(s: string) { setActiveSection(s); setText(""); setResult(null); setParsed(null); setDone(false); }
+
   return (
-    <div style={{ border: "1px solid #e5e9f0", borderRadius: 14, overflow: "hidden", background: "white" }}>
-      <div style={{ display: "flex", borderBottom: "1px solid #e5e9f0" }}>
-        {sections.map(s => (
-          <button key={s.key} onClick={() => setOpenSection(prev => prev === s.key ? null : s.key)} style={{ flex: 1, padding: "12px 8px", border: 0, background: "none", cursor: "pointer", borderBottom: openSection === s.key ? `2.5px solid ${COLORS[s.key]}` : "2.5px solid transparent", color: openSection === s.key ? COLORS[s.key] : "#6b7a8c", fontWeight: openSection === s.key ? 800 : 600, fontSize: 11 }}>
-            <span style={{ display: "block", fontWeight: 850, fontSize: 13 }}>{s.label}</span>
-            <span style={{ fontSize: 9, opacity: 0.75 }}>{s.count} questions</span>
-          </button>
-        ))}
-      </div>
-      {openSection && (
-        <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 8, maxHeight: 480, overflowY: "auto" }}>
-          {openSection === "vr"  && mock.vr.flatMap(p => p.questions.map(q => <QuestionCard key={q.id} q={q} section="vr" saved={savedIds.has(q.id)} onClick={() => onEdit({ mockId: mock.id, section: "vr", questionId: q.id, question: q, context: p.passageText, contextLabel: "PASSAGE" })} />))}
-          {openSection === "dm"  && mock.dm.map(q => <QuestionCard key={q.id} q={q} section="dm" saved={savedIds.has(q.id)} onClick={() => onEdit({ mockId: mock.id, section: "dm", questionId: q.id, question: q, context: q.context, contextLabel: (q as any).contextLabel ?? "CONTEXT" })} />)}
-          {openSection === "qr"  && mock.qr.flatMap(ds => ds.questions.map(q => <QuestionCard key={q.id} q={q} section="qr" saved={savedIds.has(q.id)} onClick={() => onEdit({ mockId: mock.id, section: "qr", questionId: q.id, question: q, context: ds.scenario, contextLabel: "DATA / SCENARIO" })} />))}
-          {openSection === "sjt" && mock.sjt.flatMap(sc => sc.questions.map(q => <QuestionCard key={q.id} q={q} section="sjt" saved={savedIds.has(q.id)} onClick={() => onEdit({ mockId: mock.id, section: "sjt", questionId: q.id, question: q, context: sc.scenarioText, contextLabel: "SCENARIO" })} />))}
+    <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(10,20,40,.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background: "white", borderRadius: 16, width: "min(680px, 100%)", maxHeight: "90dvh", display: "flex", flexDirection: "column", boxShadow: "0 24px 64px rgba(0,0,0,.18)" }}>
+        {/* Header */}
+        <div style={{ padding: "18px 24px", borderBottom: "1px solid #e5e9f0", display: "flex", alignItems: "center", gap: 14 }}>
+          <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "#1a2535", flex: 1 }}>Bulk JSON Import</p>
+          <div style={{ display: "flex", gap: 3, background: "#f5f7fb", borderRadius: 9, padding: 3 }}>
+            {["vr","dm","qr","sjt"].map(s => (
+              <button key={s} onClick={() => switchSection(s)} style={{ border: 0, borderRadius: 6, padding: "5px 14px", cursor: "pointer", background: activeSection === s ? COLORS[s] : "transparent", color: activeSection === s ? "white" : "#6b7a8c", fontWeight: activeSection === s ? 800 : 600, fontSize: 11, transition: "all .12s" }}>{s.toUpperCase()}</button>
+            ))}
+          </div>
+          <button onClick={onClose} style={{ border: 0, background: "none", fontSize: 18, color: "#9ba6b5", cursor: "pointer" }}>✕</button>
         </div>
-      )}
+
+        {/* Body */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "18px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <p style={{ margin: 0, fontSize: 12, color: "#6b7a8c" }}>Paste a JSON array of {activeSection.toUpperCase()} passages/questions. Validate first, then import.</p>
+          <textarea value={text} onChange={e => { setText(e.target.value); setResult(null); setParsed(null); setDone(false); }} rows={14} placeholder={`[ { ... }, { ... } ]`} style={{ ...ta, fontFamily: "monospace", fontSize: 12 }} />
+
+          {result && !result.ok && result.errors.length > 0 && (
+            <div style={{ background: "#fff5f5", border: "1px solid #ffd0cc", borderRadius: 8, padding: "10px 14px" }}>
+              {result.errors.slice(0, 6).map((e, i) => <p key={i} style={{ margin: "0 0 2px", fontSize: 11, color: "#c0392b" }}>• {e}</p>)}
+              {result.errors.length > 6 && <p style={{ margin: 0, fontSize: 11, color: "#c0392b" }}>…and {result.errors.length - 6} more</p>}
+            </div>
+          )}
+          {done && <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#3dbe6c" }}>✓ All imported successfully!</p>}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: "14px 24px", borderTop: "1px solid #e5e9f0", display: "flex", gap: 10, alignItems: "center" }}>
+          {result?.ok && <span style={{ fontSize: 12, fontWeight: 700, color: "#3dbe6c" }}>✓ {result.count} question{result.count !== 1 ? "s" : ""} ready</span>}
+          {result && !result.ok && <span style={{ fontSize: 12, color: "#ff6b5c", fontWeight: 700 }}>Fix errors above</span>}
+          <div style={{ flex: 1 }} />
+          <button onClick={onClose} style={ghost}>Close</button>
+          <button onClick={validate} disabled={!text.trim()} style={{ border: `1.5px solid ${color}`, background: TINTS[activeSection], color, borderRadius: 9, padding: "9px 18px", fontSize: 12, fontWeight: 800, cursor: "pointer", opacity: !text.trim() ? 0.4 : 1 }}>Validate</button>
+          <button onClick={handleSave} disabled={!result?.ok || saving || done} style={{ ...primary(color), opacity: (!result?.ok || saving || done) ? 0.4 : 1 }}>{saving ? "Saving…" : "Import"}</button>
+        </div>
+      </div>
     </div>
   );
 }
 
-// ── Add mock modal ────────────────────────────────────────────────────────────
+// ── Mocks — Edit ──────────────────────────────────────────────────────────────
 
-function AddMockModal({ onClose }: { onClose: () => void }) {
+function MocksEdit({ mocks, savedIds, onEdit }: { mocks: MockData[]; savedIds: Set<string>; onEdit: (t: EditTarget) => void }) {
+  const [openMock, setOpenMock] = useState<string | null>(mocks[0]?.id ?? null);
+  const [openSection, setOpenSection] = useState<string | null>(null);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <p style={{ margin: 0, fontSize: 13, color: "#6b7a8c" }}>Click a mock to expand, then a section, then a question to edit it.</p>
+      {mocks.map(mock => (
+        <div key={mock.id} style={{ border: "1px solid #e5e9f0", borderRadius: 14, overflow: "hidden", background: "white" }}>
+          <button onClick={() => setOpenMock(prev => prev === mock.id ? null : mock.id)} style={{ width: "100%", padding: "14px 18px", border: 0, background: openMock === mock.id ? "#f8fafd" : "white", cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 10, borderBottom: openMock === mock.id ? "1px solid #e5e9f0" : "none" }}>
+            <span style={{ fontSize: 14, fontWeight: 800, color: "#1a2535", flex: 1 }}>{mock.label}</span>
+            <span style={{ fontSize: 12, color: "#9ba6b5" }}>{openMock === mock.id ? "▴" : "▾"}</span>
+          </button>
+          {openMock === mock.id && (
+            <div>
+              <div style={{ display: "flex", borderBottom: "1px solid #e5e9f0" }}>
+                {[{ key: "vr", count: mock.vr.reduce((s, p) => s + p.questions.length, 0) }, { key: "dm", count: mock.dm.length }, { key: "qr", count: mock.qr.reduce((s, d) => s + d.questions.length, 0) }, { key: "sjt", count: mock.sjt.reduce((s, sc) => s + sc.questions.length, 0) }].map(s => (
+                  <button key={s.key} onClick={() => setOpenSection(prev => prev === s.key ? null : s.key)} style={{ flex: 1, padding: "10px 8px", border: 0, background: "none", cursor: "pointer", borderBottom: openSection === s.key ? `2.5px solid ${COLORS[s.key]}` : "2.5px solid transparent", color: openSection === s.key ? COLORS[s.key] : "#6b7a8c", fontWeight: openSection === s.key ? 800 : 600, fontSize: 11 }}>
+                    <span style={{ display: "block", fontWeight: 850, fontSize: 13 }}>{s.key.toUpperCase()}</span>
+                    <span style={{ fontSize: 9, opacity: 0.7 }}>{s.count} q</span>
+                  </button>
+                ))}
+              </div>
+              {openSection && (
+                <div style={{ padding: 14, display: "flex", flexDirection: "column", gap: 8, maxHeight: 420, overflowY: "auto" }}>
+                  {openSection === "vr"  && mock.vr.flatMap(p => p.questions.map(q => <QuestionCard key={q.id} q={q} section="vr" saved={savedIds.has(q.id)} onClick={() => onEdit({ mockId: mock.id, section: "vr", questionId: q.id, question: q, context: p.passageText, contextLabel: "PASSAGE" })} />))}
+                  {openSection === "dm"  && mock.dm.map(q => <QuestionCard key={q.id} q={q} section="dm" saved={savedIds.has(q.id)} onClick={() => onEdit({ mockId: mock.id, section: "dm", questionId: q.id, question: q, context: q.context, contextLabel: (q as any).contextLabel ?? "CONTEXT" })} />)}
+                  {openSection === "qr"  && mock.qr.flatMap(ds => ds.questions.map(q => <QuestionCard key={q.id} q={q} section="qr" saved={savedIds.has(q.id)} onClick={() => onEdit({ mockId: mock.id, section: "qr", questionId: q.id, question: q, context: ds.scenario, contextLabel: "DATA / SCENARIO" })} />))}
+                  {openSection === "sjt" && mock.sjt.flatMap(sc => sc.questions.map(q => <QuestionCard key={q.id} q={q} section="sjt" saved={savedIds.has(q.id)} onClick={() => onEdit({ mockId: mock.id, section: "sjt", questionId: q.id, question: q, context: sc.scenarioText, contextLabel: "SCENARIO" })} />))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MocksCreate() {
   const [title, setTitle] = useState("");
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
@@ -212,61 +310,56 @@ function AddMockModal({ onClose }: { onClose: () => void }) {
     if (!title.trim()) return;
     setSaving(true);
     await fetch("/api/admin/save", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "new_mock", title }) });
-    setDone(true); setSaving(false);
+    setDone(true); setSaving(false); setTitle("");
+    setTimeout(() => setDone(false), 2000);
   }
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(10,20,40,.45)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: "white", borderRadius: 16, padding: "28px 30px", width: 400, boxShadow: "0 16px 48px rgba(0,0,0,.15)" }}>
-        {done ? (
-          <><p style={{ fontSize: 16, fontWeight: 800, color: "#1a2535", margin: "0 0 8px" }}>Mock created ✓</p><p style={{ fontSize: 13, color: "#6b7a8c", margin: "0 0 20px" }}>"{title}" has been saved.</p><button onClick={onClose} style={primary("#2D7FF9")}>Done</button></>
-        ) : (
-          <>
-            <p style={{ fontSize: 16, fontWeight: 800, color: "#1a2535", margin: "0 0 4px" }}>New Mock Test</p>
-            <p style={{ fontSize: 12, color: "#9ba6b5", margin: "0 0 18px" }}>Give it a name — you'll add sections and questions after.</p>
-            <input autoFocus value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Mock Test 3" style={{ width: "100%", border: "1.5px solid #e5e9f0", borderRadius: 9, padding: "10px 13px", fontSize: 14, color: "#1a2535", marginBottom: 16, boxSizing: "border-box" as const }} />
-            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-              <button onClick={onClose} style={ghost}>Cancel</button>
-              <button onClick={handleCreate} disabled={saving || !title.trim()} style={{ ...primary("#2D7FF9"), opacity: (!title.trim() || saving) ? 0.5 : 1 }}>{saving ? "Creating…" : "Create mock"}</button>
-            </div>
-          </>
-        )}
+    <div style={{ background: "white", border: "1px solid #e5e9f0", borderRadius: 14, padding: 28, maxWidth: 480 }}>
+      <p style={{ margin: "0 0 4px", fontSize: 15, fontWeight: 800, color: "#1a2535" }}>New Mock Test</p>
+      <p style={{ margin: "0 0 18px", fontSize: 12, color: "#9ba6b5" }}>Create the mock first, then add questions to it.</p>
+      <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Mock Test 3" style={{ width: "100%", border: "1.5px solid #e5e9f0", borderRadius: 9, padding: "10px 13px", fontSize: 14, color: "#1a2535", marginBottom: 14, boxSizing: "border-box" as const }} />
+      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        {done && <span style={{ fontSize: 12, color: "#3dbe6c", fontWeight: 700 }}>✓ Created!</span>}
+        <div style={{ flex: 1 }} />
+        <button onClick={handleCreate} disabled={saving || !title.trim()} style={{ ...primary("#2D7FF9"), opacity: (!title.trim() || saving) ? 0.5 : 1 }}>{saving ? "Creating…" : "Create mock"}</button>
       </div>
     </div>
   );
 }
 
-// ── Create tab ────────────────────────────────────────────────────────────────
+// ── Diagnostic ────────────────────────────────────────────────────────────────
 
-function CreateTab() {
-  const [section, setSection] = useState<string>("vr");
-  const [key, setKey] = useState(0);
-  const sections = ["vr","dm","qr","sjt"];
-
+function DiagnosticEdit({ questions, savedIds, onEdit }: { questions: DiagQuestion[]; savedIds: Set<string>; onEdit: (t: EditTarget) => void }) {
+  const [section, setSection] = useState("vr");
+  const [search, setSearch] = useState("");
+  const filtered = questions.filter(q => q.section === section && (!search || qText(q).toLowerCase().includes(search.toLowerCase())));
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ display: "flex", gap: 4, background: "white", border: "1px solid #e5e9f0", borderRadius: 11, padding: 4, width: "fit-content" }}>
-        {sections.map(s => (
-          <button key={s} onClick={() => setSection(s)} style={{ border: 0, borderRadius: 8, padding: "7px 18px", cursor: "pointer", background: section === s ? COLORS[s] : "transparent", color: section === s ? "white" : "#6b7a8c", fontWeight: section === s ? 800 : 600, fontSize: 12, transition: "all .15s" }}>{s.toUpperCase()}</button>
-        ))}
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 3, background: "white", border: "1px solid #e5e9f0", borderRadius: 10, padding: 3 }}>
+          {["vr","dm","qr","sjt"].map(s => <button key={s} onClick={() => setSection(s)} style={{ border: 0, borderRadius: 7, padding: "6px 16px", cursor: "pointer", background: section === s ? COLORS[s] : "transparent", color: section === s ? "white" : "#6b7a8c", fontWeight: section === s ? 800 : 600, fontSize: 12 }}>{s.toUpperCase()}</button>)}
+        </div>
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…" style={{ border: "1.5px solid #e5e9f0", borderRadius: 9, padding: "8px 13px", fontSize: 13, color: "#1a2535", outline: "none", width: 220 }} />
       </div>
-      <div key={`${section}-${key}`}>
-        {section === "vr"  && <CreateVR  onSaved={() => setKey(k => k + 1)} />}
-        {section === "dm"  && <CreateDM  onSaved={() => setKey(k => k + 1)} />}
-        {section === "qr"  && <CreateQR  onSaved={() => setKey(k => k + 1)} />}
-        {section === "sjt" && <CreateSJT onSaved={() => setKey(k => k + 1)} />}
+      <div style={{ background: "white", border: "1px solid #e5e9f0", borderRadius: 14, padding: 18 }}>
+        <p style={{ margin: "0 0 12px", fontSize: 12, color: "#6b7a8c" }}>{filtered.length} questions in {section.toUpperCase()}</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 560, overflowY: "auto" }}>
+          {filtered.map(q => <QuestionCard key={q.id} q={q} section={q.section} saved={savedIds.has(q.id)} onClick={() => onEdit({ mockId: "diagnostic", section: q.section, questionId: q.id, question: q })} />)}
+        </div>
       </div>
     </div>
   );
 }
 
-// ── Library tab ───────────────────────────────────────────────────────────────
+// ── Practice — Edit (Library) ─────────────────────────────────────────────────
 
-function LibraryTab({ savedIds, onEdit }: { savedIds: Set<string>; onEdit: (t: EditTarget) => void }) {
-  const [section, setSection] = useState<string>("vr");
+function PracticeEdit({ savedIds, onEdit }: { savedIds: Set<string>; onEdit: (t: EditTarget) => void }) {
+  const [section, setSection] = useState("vr");
   const [search, setSearch] = useState("");
   const [adminQs, setAdminQs] = useState<any[]>([]);
   const [sourceQs, setSourceQs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const color = COLORS[section];
 
   async function load(sec: string, q: string) {
     setLoading(true);
@@ -279,56 +372,38 @@ function LibraryTab({ savedIds, onEdit }: { savedIds: Set<string>; onEdit: (t: E
 
   useEffect(() => { load(section, ""); }, [section]);
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    load(section, search);
-  }
-
-  const color = COLORS[section];
+  function handleSearch(e: React.FormEvent) { e.preventDefault(); load(section, search); }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-        <div style={{ display: "flex", gap: 4, background: "white", border: "1px solid #e5e9f0", borderRadius: 11, padding: 4 }}>
-          {["vr","dm","qr","sjt"].map(s => (
-            <button key={s} onClick={() => { setSection(s); setSearch(""); }} style={{ border: 0, borderRadius: 8, padding: "7px 18px", cursor: "pointer", background: section === s ? COLORS[s] : "transparent", color: section === s ? "white" : "#6b7a8c", fontWeight: section === s ? 800 : 600, fontSize: 12, transition: "all .15s" }}>{s.toUpperCase()}</button>
-          ))}
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 3, background: "white", border: "1px solid #e5e9f0", borderRadius: 10, padding: 3 }}>
+          {["vr","dm","qr","sjt"].map(s => <button key={s} onClick={() => { setSection(s); setSearch(""); }} style={{ border: 0, borderRadius: 7, padding: "6px 16px", cursor: "pointer", background: section === s ? COLORS[s] : "transparent", color: section === s ? "white" : "#6b7a8c", fontWeight: section === s ? 800 : 600, fontSize: 12 }}>{s.toUpperCase()}</button>)}
         </div>
-        <form onSubmit={handleSearch} style={{ display: "flex", gap: 8, flex: 1, maxWidth: 380 }}>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search question text…" style={{ flex: 1, border: "1.5px solid #e5e9f0", borderRadius: 9, padding: "8px 13px", fontSize: 13, color: "#1a2535", outline: "none" }} />
+        <form onSubmit={handleSearch} style={{ display: "flex", gap: 8 }}>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search question text…" style={{ border: "1.5px solid #e5e9f0", borderRadius: 9, padding: "8px 13px", fontSize: 13, color: "#1a2535", outline: "none", width: 240 }} />
           <button type="submit" style={{ ...primary(color), padding: "8px 16px", fontSize: 12 }}>Search</button>
           {search && <button type="button" onClick={() => { setSearch(""); load(section, ""); }} style={ghost}>Clear</button>}
         </form>
       </div>
 
-      {loading && <p style={{ fontSize: 13, color: "#9ba6b5", padding: "12px 0" }}>Loading…</p>}
-
-      {!loading && adminQs.length === 0 && sourceQs.length === 0 && (
-        <div style={{ background: "white", border: "1px solid #e5e9f0", borderRadius: 14, padding: "28px", textAlign: "center" }}>
-          <p style={{ color: "#9ba6b5", fontSize: 13, margin: 0 }}>No questions found{search ? ` for "${search}"` : ""}. Create some in the Create tab or import via Bulk Import.</p>
-        </div>
-      )}
+      {loading && <p style={{ fontSize: 13, color: "#9ba6b5" }}>Loading…</p>}
+      {!loading && adminQs.length === 0 && sourceQs.length === 0 && <div style={{ background: "white", border: "1px solid #e5e9f0", borderRadius: 14, padding: 28, textAlign: "center" }}><p style={{ color: "#9ba6b5", fontSize: 13, margin: 0 }}>No questions found{search ? ` for "${search}"` : ""}. Create some or import via Bulk Import.</p></div>}
 
       {!loading && adminQs.length > 0 && (
-        <div style={{ background: "white", border: "1px solid #e5e9f0", borderRadius: 14, padding: 20 }}>
-          <p style={{ margin: "0 0 12px", fontSize: 12, fontWeight: 800, color: color }}>ADMIN-CREATED ({adminQs.length})</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 500, overflowY: "auto" }}>
-            {adminQs.map(q => (
-              <QuestionCard key={q.id} q={q} section={section} saved={savedIds.has(q.id)} badge={q.q_type ?? undefined}
-                onClick={() => onEdit({ mockId: "admin", section, questionId: q.id, question: q, context: (q.admin_passages as any)?.content, contextLabel: section === "vr" ? "PASSAGE" : section === "sjt" ? "SCENARIO" : "CONTEXT" })} />
-            ))}
+        <div style={{ background: "white", border: "1px solid #e5e9f0", borderRadius: 14, padding: 18 }}>
+          <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 800, color }}>ADMIN-CREATED ({adminQs.length})</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 480, overflowY: "auto" }}>
+            {adminQs.map(q => <QuestionCard key={q.id} q={q} section={section} saved={savedIds.has(q.id)} badge={q.q_type ?? undefined} onClick={() => onEdit({ mockId: "admin", section, questionId: q.id, question: q, context: (q.admin_passages as any)?.content, contextLabel: section === "vr" ? "PASSAGE" : section === "sjt" ? "SCENARIO" : "CONTEXT" })} />)}
           </div>
         </div>
       )}
 
       {!loading && sourceQs.length > 0 && (
-        <div style={{ background: "white", border: "1px solid #e5e9f0", borderRadius: 14, padding: 20 }}>
-          <p style={{ margin: "0 0 12px", fontSize: 12, fontWeight: 800, color: "#6b7a8c" }}>EXISTING IN SUPABASE ({sourceQs.length})</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 500, overflowY: "auto" }}>
-            {sourceQs.map(q => (
-              <QuestionCard key={q.id} q={q} section={section} saved={savedIds.has(q.id)} badge={q.subtype ?? undefined}
-                onClick={() => onEdit({ mockId: "practice", section, questionId: q.id, question: q, context: q.context, contextLabel: section === "vr" ? "PASSAGE" : "CONTEXT" })} />
-            ))}
+        <div style={{ background: "white", border: "1px solid #e5e9f0", borderRadius: 14, padding: 18 }}>
+          <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 800, color: "#6b7a8c" }}>EXISTING IN SUPABASE ({sourceQs.length})</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 480, overflowY: "auto" }}>
+            {sourceQs.map(q => <QuestionCard key={q.id} q={q} section={section} saved={savedIds.has(q.id)} badge={q.subtype ?? undefined} onClick={() => onEdit({ mockId: "practice", section, questionId: q.id, question: q, context: q.context, contextLabel: section === "vr" ? "PASSAGE" : "CONTEXT" })} />)}
           </div>
         </div>
       )}
@@ -336,32 +411,40 @@ function LibraryTab({ savedIds, onEdit }: { savedIds: Set<string>; onEdit: (t: E
   );
 }
 
-// ── Diagnostic section ────────────────────────────────────────────────────────
+// ── Practice — Create ─────────────────────────────────────────────────────────
 
-function DiagnosticSection({ questions, savedIds, onEdit }: { questions: DiagQuestion[]; savedIds: Set<string>; onEdit: (t: EditTarget) => void }) {
-  const [section, setSection] = useState<string>("vr");
-  const [search, setSearch] = useState("");
-  const filtered = questions.filter(q => q.section === section && (!search || qText(q).toLowerCase().includes(search.toLowerCase())));
-
+function PracticeCreate() {
+  const [section, setSection] = useState("vr");
+  const [key, setKey] = useState(0);
+  const [showBulk, setShowBulk] = useState(false);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-        <div style={{ display: "flex", gap: 4, background: "white", border: "1px solid #e5e9f0", borderRadius: 11, padding: 4 }}>
-          {["vr","dm","qr","sjt"].map(s => (
-            <button key={s} onClick={() => setSection(s)} style={{ border: 0, borderRadius: 8, padding: "7px 16px", cursor: "pointer", background: section === s ? COLORS[s] : "transparent", color: section === s ? "white" : "#6b7a8c", fontWeight: section === s ? 800 : 600, fontSize: 12 }}>{s.toUpperCase()}</button>
-          ))}
+      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 3, background: "white", border: "1px solid #e5e9f0", borderRadius: 10, padding: 3 }}>
+          {["vr","dm","qr","sjt"].map(s => <button key={s} onClick={() => setSection(s)} style={{ border: 0, borderRadius: 7, padding: "7px 18px", cursor: "pointer", background: section === s ? COLORS[s] : "transparent", color: section === s ? "white" : "#6b7a8c", fontWeight: section === s ? 800 : 600, fontSize: 12, transition: "all .15s" }}>{s.toUpperCase()}</button>)}
         </div>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…" style={{ border: "1.5px solid #e5e9f0", borderRadius: 9, padding: "8px 13px", fontSize: 13, color: "#1a2535", outline: "none", width: 220 }} />
+        <div style={{ flex: 1 }} />
+        <button onClick={() => setShowBulk(true)} style={{ border: "1.5px solid #8B6BFF", background: "#F1ECFF", color: "#6747d8", borderRadius: 9, padding: "8px 18px", fontSize: 12, fontWeight: 800, cursor: "pointer" }}>⬇ Bulk Import</button>
       </div>
-      <div style={{ background: "white", border: "1px solid #e5e9f0", borderRadius: 14, padding: 20 }}>
-        <p style={{ margin: "0 0 12px", fontSize: 13, color: "#6b7a8c" }}>{filtered.length} diagnostic questions in {section.toUpperCase()}. Click any to edit.</p>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 600, overflowY: "auto" }}>
-          {filtered.map(q => (
-            <QuestionCard key={q.id} q={q} section={q.section} saved={savedIds.has(q.id)}
-              onClick={() => onEdit({ mockId: "diagnostic", section: q.section, questionId: q.id, question: q })} />
-          ))}
-        </div>
+      <div key={`${section}-${key}`}>
+        {section === "vr"  && <CreateVR  onSaved={() => setKey(k => k + 1)} />}
+        {section === "dm"  && <CreateDM  onSaved={() => setKey(k => k + 1)} />}
+        {section === "qr"  && <CreateQR  onSaved={() => setKey(k => k + 1)} />}
+        {section === "sjt" && <CreateSJT onSaved={() => setKey(k => k + 1)} />}
       </div>
+      {showBulk && <BulkModal section={section} onClose={() => setShowBulk(false)} />}
+    </div>
+  );
+}
+
+// ── Sub-tab bar ───────────────────────────────────────────────────────────────
+
+function SubTabBar({ value, onChange }: { value: SubTab; onChange: (v: SubTab) => void }) {
+  return (
+    <div style={{ display: "flex", gap: 0, marginBottom: 20, borderBottom: "2px solid #e5e9f0" }}>
+      {(["edit","create"] as SubTab[]).map(t => (
+        <button key={t} onClick={() => onChange(t)} style={{ border: 0, background: "none", padding: "10px 24px", cursor: "pointer", fontSize: 13, fontWeight: value === t ? 800 : 600, color: value === t ? "#1a2535" : "#6b7a8c", borderBottom: value === t ? "2.5px solid #1a2535" : "2.5px solid transparent", marginBottom: -2, transition: "all .15s", textTransform: "capitalize" }}>{t}</button>
+      ))}
     </div>
   );
 }
@@ -369,24 +452,24 @@ function DiagnosticSection({ questions, savedIds, onEdit }: { questions: DiagQue
 // ── Main dashboard ────────────────────────────────────────────────────────────
 
 export default function AdminDashboard({ mocks, dmBank, diagQuestions }: { mocks: MockData[]; dmBank: any[]; diagQuestions: DiagQuestion[] }) {
-  const [tab, setTab] = useState<MainTab>("mocks");
+  const [tab,     setTab]     = useState<MainTab>("mocks");
+  const [subTab,  setSubTab]  = useState<SubTab>("edit");
   const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
-  const [showAddMock, setShowAddMock] = useState(false);
   const handleSaved = useCallback((id: string) => setSavedIds(prev => new Set([...prev, id])), []);
+
+  function switchMain(t: MainTab) { setTab(t); setSubTab("edit"); }
+
+  const MAIN_TABS: { key: MainTab; label: string }[] = [
+    { key: "mocks",      label: "Mocks" },
+    { key: "diagnostic", label: "Diagnostic" },
+    { key: "practice",   label: "Practice" },
+  ];
 
   const totalMockQ = mocks.reduce((s, m) =>
     s + m.vr.reduce((a, p) => a + p.questions.length, 0) + m.dm.length
       + m.qr.reduce((a, d) => a + d.questions.length, 0)
       + m.sjt.reduce((a, sc) => a + sc.questions.length, 0), 0);
-
-  const TABS: { key: MainTab; label: string }[] = [
-    { key: "mocks",      label: "Mocks" },
-    { key: "create",     label: "Create" },
-    { key: "library",    label: "Library" },
-    { key: "bulk",       label: "Bulk Import" },
-    { key: "diagnostic", label: "Diagnostic" },
-  ];
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f7fb", fontFamily: "var(--font-inter, system-ui), sans-serif" }}>
@@ -398,7 +481,6 @@ export default function AdminDashboard({ mocks, dmBank, diagQuestions }: { mocks
         </a>
         <span style={{ fontSize: 11, padding: "3px 10px", background: "#FFF8DF", color: "#9B7000", borderRadius: 6, fontWeight: 750, border: "1px solid #EBD56A" }}>Admin</span>
         <div style={{ flex: 1 }} />
-        <span style={{ fontSize: 11, color: "#9ba6b5" }}>sawdaj19@gmail.com</span>
         <a href="/" style={{ fontSize: 11, color: "#2D7FF9", textDecoration: "none", fontWeight: 700 }}>← Back to app</a>
       </div>
 
@@ -418,37 +500,25 @@ export default function AdminDashboard({ mocks, dmBank, diagQuestions }: { mocks
           ))}
         </div>
 
-        {/* Tab bar */}
-        <div style={{ display: "flex", gap: 4, marginBottom: 20, background: "white", border: "1px solid #e5e9f0", borderRadius: 11, padding: 4, width: "fit-content" }}>
-          {TABS.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)} style={{ border: 0, borderRadius: 8, padding: "8px 18px", cursor: "pointer", background: tab === t.key ? "#1a2535" : "transparent", color: tab === t.key ? "white" : "#6b7a8c", fontWeight: tab === t.key ? 800 : 600, fontSize: 12, transition: "all .15s" }}>{t.label}</button>
+        {/* Main tab bar */}
+        <div style={{ display: "flex", gap: 4, marginBottom: 24, background: "white", border: "1px solid #e5e9f0", borderRadius: 11, padding: 4, width: "fit-content" }}>
+          {MAIN_TABS.map(t => (
+            <button key={t.key} onClick={() => switchMain(t.key)} style={{ border: 0, borderRadius: 8, padding: "8px 24px", cursor: "pointer", background: tab === t.key ? "#1a2535" : "transparent", color: tab === t.key ? "white" : "#6b7a8c", fontWeight: tab === t.key ? 800 : 600, fontSize: 13, transition: "all .15s" }}>{t.label}</button>
           ))}
         </div>
 
-        {/* Mocks */}
-        {tab === "mocks" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <p style={{ margin: 0, fontSize: 13, color: "#6b7a8c" }}>Click a section to expand, then a question to edit it.</p>
-              <button onClick={() => setShowAddMock(true)} style={primary("#2D7FF9")}>+ New mock</button>
-            </div>
-            {mocks.map(mock => (
-              <div key={mock.id}>
-                <p style={{ margin: "0 0 10px", fontSize: 15, fontWeight: 800, color: "#1a2535" }}>{mock.label}</p>
-                <MockSection mock={mock} savedIds={savedIds} onEdit={setEditTarget} />
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Sub-tab bar + content */}
+        <SubTabBar value={subTab} onChange={setSubTab} />
 
-        {tab === "create"     && <CreateTab />}
-        {tab === "library"    && <LibraryTab savedIds={savedIds} onEdit={setEditTarget} />}
-        {tab === "bulk"       && <BulkImport />}
-        {tab === "diagnostic" && <DiagnosticSection questions={diagQuestions} savedIds={savedIds} onEdit={setEditTarget} />}
+        {tab === "mocks"      && subTab === "edit"   && <MocksEdit mocks={mocks} savedIds={savedIds} onEdit={setEditTarget} />}
+        {tab === "mocks"      && subTab === "create"  && <MocksCreate />}
+        {tab === "diagnostic" && subTab === "edit"   && <DiagnosticEdit questions={diagQuestions} savedIds={savedIds} onEdit={setEditTarget} />}
+        {tab === "diagnostic" && subTab === "create"  && <PracticeCreate />}
+        {tab === "practice"   && subTab === "edit"   && <PracticeEdit savedIds={savedIds} onEdit={setEditTarget} />}
+        {tab === "practice"   && subTab === "create"  && <PracticeCreate />}
       </div>
 
-      {editTarget  && <QuestionEditor target={editTarget} onClose={() => setEditTarget(null)} onSaved={handleSaved} />}
-      {showAddMock && <AddMockModal onClose={() => setShowAddMock(false)} />}
+      {editTarget && <QuestionEditor target={editTarget} onClose={() => setEditTarget(null)} onSaved={handleSaved} />}
     </div>
   );
 }
