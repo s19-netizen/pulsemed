@@ -373,18 +373,18 @@ function PassageGroup({ group, section, savedIds, onEdit, source, color, index }
   const contextLabel = section === "vr" ? "PASSAGE" : section === "sjt" ? "SCENARIO" : "CONTEXT";
   const tint = TINTS[section] ?? "#f5f7fb";
   return (
-    <div style={{ borderRadius: 10, border: "1px solid #e5e9f0", overflow: "hidden" }}>
+    <div style={{ borderRadius: 12, border: `1.5px solid ${open ? color + "40" : "#e5e9f0"}`, overflow: "hidden", transition: "border-color .15s" }}>
       <button
         onClick={() => setOpen(o => !o)}
-        style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", background: open ? tint : "white", border: 0, cursor: "pointer", textAlign: "left", transition: "background .15s" }}
+        style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", background: open ? tint : "white", border: 0, cursor: "pointer", textAlign: "left" }}
       >
-        <span style={{ width: 20, height: 20, borderRadius: 6, background: open ? color : "#e5e9f0", color: open ? "white" : "#9ba6b5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, flexShrink: 0 }}>{index + 1}</span>
-        <span style={{ fontSize: 12, fontWeight: 700, color: "#1a2535", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{group.label}</span>
-        <span style={{ fontSize: 10, background: open ? color : "#f0f2f5", color: open ? "white" : "#9ba6b5", borderRadius: 5, padding: "2px 8px", fontWeight: 700, flexShrink: 0 }}>{group.questions.length}Q</span>
-        <span style={{ fontSize: 11, color: open ? color : "#c5cdd8", flexShrink: 0 }}>{open ? "▲" : "▼"}</span>
+        <span style={{ minWidth: 26, height: 26, borderRadius: 8, background: open ? color : "#f0f2f5", color: open ? "white" : "#9ba6b5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{index + 1}</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: "#1a2535", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{group.label}</span>
+        <span style={{ fontSize: 11, background: open ? color : "#f0f2f5", color: open ? "white" : "#9ba6b5", borderRadius: 6, padding: "3px 10px", fontWeight: 700, flexShrink: 0 }}>{group.questions.length} Q</span>
+        <span style={{ fontSize: 12, color: open ? color : "#c5cdd8", flexShrink: 0 }}>{open ? "▲" : "▼"}</span>
       </button>
       {open && (
-        <div style={{ borderTop: `2px solid ${color}20`, padding: "10px 12px 12px", display: "flex", flexDirection: "column", gap: 6, background: "#fafbfd" }}>
+        <div style={{ borderTop: `1.5px solid ${color}30`, padding: "14px 16px 16px", display: "flex", flexDirection: "column", gap: 8, background: "#fafbfd" }}>
           {group.questions.map(q => (
             <QuestionCard key={q.id} q={q} section={section} saved={savedIds.has(q.id)} badge={q.subtype ?? q.q_type ?? undefined}
               onClick={() => onEdit({ mockId: source, section, questionId: q.id, question: q, context: group.context, contextLabel })} />
@@ -446,7 +446,7 @@ function PracticeEdit({ savedIds, onEdit }: { savedIds: Set<string>; onEdit: (t:
       {!loading && adminGroups.length > 0 && (
         <div style={{ background: "white", border: "1px solid #e5e9f0", borderRadius: 14, padding: 18 }}>
           <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 800, color }}> ADMIN-CREATED · {adminQs.length} questions · {adminGroups.length} {sectionLabel.toLowerCase()}s</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 560, overflowY: "auto" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {adminGroups.map((g, i) => <PassageGroup key={g.key} group={g} section={section} savedIds={savedIds} onEdit={onEdit} source="admin" color={color} index={i} />)}
           </div>
         </div>
@@ -455,7 +455,7 @@ function PracticeEdit({ savedIds, onEdit }: { savedIds: Set<string>; onEdit: (t:
       {!loading && sourceGroups.length > 0 && (
         <div style={{ background: "white", border: "1px solid #e5e9f0", borderRadius: 14, padding: 18 }}>
           <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 800, color: "#6b7a8c" }}>SUPABASE · {sourceQs.length} questions · {sourceGroups.length} {sectionLabel.toLowerCase()}s</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 560, overflowY: "auto" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {sourceGroups.map((g, i) => <PassageGroup key={g.key} group={g} section={section} savedIds={savedIds} onEdit={onEdit} source="practice" color={color} index={i} />)}
           </div>
         </div>
