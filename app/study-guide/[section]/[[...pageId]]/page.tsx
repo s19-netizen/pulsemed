@@ -591,6 +591,331 @@ const SHAPE: Record<string, [string, string, string, string, string]> = {
 const SHAPE_LABELS = ["S", "H", "A", "P", "E"] as const;
 const SHAPE_HINTS = ["Safety first", "Honesty always", "Act within your role", "Proportionate", "Escalate right"] as const;
 
+// ─── DM lesson data ──────────────────────────────────────────────────────────
+
+const DM_LESSONS: Record<string, {
+  idea: string;
+  method: [string, string][];
+  concepts: { label: string; symbol: string; detail: string }[];
+  example: { title: string; stimulus: string[]; q: string; steps: string[]; answer: string };
+  rules: [string, string][];
+}> = {
+  "interpreting-information": {
+    idea: "Read each rule exactly as written, map who it applies to, then trace what must follow — never add anything the rules don't give you.",
+    method: [
+      ["List the rules", "Number each rule. Separate if-then rules from direct facts about named people or things."],
+      ["Find the trigger", "Each rule fires only when a specific condition is met. Name it before doing anything else."],
+      ["Apply the rule", "Does the subject in the question match the trigger? If yes, the consequence must follow."],
+      ["Check the contrapositive", "If not-consequence, then not-trigger. This is always valid and often tested in reverse."],
+      ["Test each option", "Work through options one at a time. Eliminate by pointing to the rule that rules it out."],
+    ],
+    concepts: [
+      { label: "If A then B", symbol: "A → B", detail: "A is the trigger. B must follow when A is true. The rule says nothing about non-A cases." },
+      { label: "Contrapositive", symbol: "¬B → ¬A", detail: "Logically identical to A → B. If the consequence is absent, the trigger must also be absent." },
+      { label: "OR condition", symbol: "A or B", detail: "Only one condition needs to be true. If either fires, the rule is satisfied." },
+      { label: "AND condition", symbol: "A and B", detail: "Both conditions must be true simultaneously. One missing = rule doesn't apply." },
+    ],
+    example: {
+      title: "Hospital rules — what must be true?",
+      stimulus: [
+        "All patients admitted before 08:00 are assessed by Team A.",
+        "Patients assessed by Team A who require imaging are transferred to Unit 3.",
+        "No patient in Unit 3 is discharged before imaging is completed.",
+        "Maya was admitted at 07:45 and discharged at 11:30.",
+      ],
+      q: "Which statement must be true? A) Maya required imaging  B) Maya was assessed by Team A  C) Maya was transferred to Unit 3  D) Maya's imaging was completed before 11:30",
+      steps: [
+        "Rule 1 trigger: admitted before 08:00. Maya = 07:45 ✓. Consequence: assessed by Team A. → Option B is forced.",
+        "Rule 2 trigger: Team A AND requires imaging. Maya is in Team A. But imaging is not confirmed. Rule 2 does not fire.",
+        "Rule 3 trigger: in Unit 3. Since Rule 2 didn't fire, Unit 3 is not confirmed. Rule 3 does not fire.",
+        "Options A, C, D all depend on imaging being required — which the stimulus never states.",
+        "Only B is guaranteed. Every other option adds an assumption the rules don't support.",
+      ],
+      answer: "B — Maya was assessed by Team A",
+    },
+    rules: [
+      ["A → B ≠ B → A", "The converse is invalid. The rule fires when A is true — not when B is true."],
+      ["OR = at least one", "An OR rule fires when either condition is met. Both is fine too, but not required."],
+      ["AND = both required", "An AND rule fires only when every condition is simultaneously met. One missing → rule doesn't apply."],
+      ["'Must' needs a forced rule", "Choose an option only when you can point to an exact rule that forces it. Plausible is not enough."],
+      ["Contrapositive is always valid", "Not-B → Not-A is a free deduction from A → B. Use it when the question tests the reverse direction."],
+    ],
+  },
+
+  "arguments-assumptions": {
+    idea: "Every argument has a hidden link — find the gap between the evidence and the conclusion and you have found the assumption.",
+    method: [
+      ["State the proposal", "What is the argument trying to justify or prove?"],
+      ["Find the evidence", "What reason or data does it offer?"],
+      ["Spot the gap", "What unstated step must be true for the evidence to support the conclusion?"],
+      ["Use the negation test", "Negate each candidate. If the argument collapses when you negate it, that's the assumption."],
+      ["For strengthen / weaken", "Ask: does this close the gap further (strengthen) or offer an alternative explanation (weaken)?"],
+    ],
+    concepts: [
+      { label: "Assumption", symbol: "Gap", detail: "A hidden premise the argument silently relies on. Negate it — if the conclusion breaks, it's required." },
+      { label: "Strengthen", symbol: "+ Link", detail: "Evidence that closes the gap between the reason and the conclusion more tightly." },
+      { label: "Weaken", symbol: "Alt", detail: "An alternative cause — or evidence that the link between reason and conclusion can break." },
+      { label: "Negation test", symbol: "¬A → fails?", detail: "Negate the assumption. If the argument now fails to hold, the assumption is required." },
+    ],
+    example: {
+      title: "Congestion charge — what does the argument assume?",
+      stimulus: [
+        "A city is considering introducing a congestion charge in its centre.",
+        "Supporters argue: the charge should be introduced because it will reduce traffic.",
+      ],
+      q: "Which assumption is required? A) Everyone can afford the charge  B) At least some drivers would alter their behaviour  C) Public transport is cheaper  D) Congestion is caused exclusively by cars",
+      steps: [
+        "Proposal: introduce a congestion charge.",
+        "Evidence: it will reduce traffic.",
+        "Gap: what is the mechanism by which a charge reduces traffic? Drivers must change what they do — fewer trips, different routes, or different modes.",
+        "Negate B: 'No drivers alter their behaviour.' → The charge has no mechanism to reduce traffic. The argument collapses. B is required.",
+        "Negate A: 'Not everyone can afford it.' → The argument can still work if some drivers change — it doesn't need everyone. Not required.",
+        "C and D add facts the argument doesn't need. Weaken the claim if anything.",
+      ],
+      answer: "B — At least some drivers would alter their behaviour because of the charge",
+    },
+    rules: [
+      ["Relevant, not just true", "A true statement that doesn't affect the argument's core link is never the right answer."],
+      ["Alternative cause weakens", "If something else could explain the evidence, the evidence supports the conclusion less."],
+      ["Negation test for assumptions", "Negate the candidate. If the conclusion breaks, the assumption is required."],
+      ["Strengthen = closes the gap", "The best strengthener directly confirms the link between evidence and conclusion."],
+      ["Weaken = opens a gap", "The best weakener shows the evidence could exist even if the conclusion were false."],
+    ],
+  },
+
+  "logic-puzzles": {
+    idea: "Work from certainty outward — fixed rules first, then chain linked constraints, and branch only when stuck.",
+    method: [
+      ["Choose a grid or slots", "Ordering → a row of slots. Room/day assignment → a grid with rows and columns. Grouping → labelled columns."],
+      ["Place fixed rules first", "Direct statements ('N is on Thursday') go straight into the grid before you touch anything else."],
+      ["Chain linked rules", "'K immediately after L' + 'J before L' → treat L-K as a fixed block, then place J before it."],
+      ["Branch the most restrictive rule", "If a rule limits a slot to two options, try each branch and eliminate the one that breaks another rule."],
+      ["Eliminate with options", "Test each answer option against every rule. The first one to break a rule is wrong."],
+    ],
+    concepts: [
+      { label: "Before / After", symbol: "A < B", detail: "A comes somewhere before B. They don't need to be adjacent — any gap is fine." },
+      { label: "Immediately before", symbol: "[A–B]", detail: "A and B are adjacent with no gap. Treat them as a block that must move together." },
+      { label: "At one end", symbol: "pos 1 or last", detail: "The person or item must be in the very first or very last position." },
+      { label: "Not adjacent", symbol: "A ✕✕ B", detail: "A and B cannot occupy neighbouring positions — at least one slot must separate them." },
+    ],
+    example: {
+      title: "Five presentations Mon–Fri",
+      stimulus: [
+        "Five presentations — J, K, L, M, N — occur Monday to Friday, one per day.",
+        "J occurs before L.  |  K occurs immediately after L.  |  N on Thursday.  |  M on Friday.",
+      ],
+      q: "Which presentation must occur on Monday? A) J  B) K  C) L  D) N",
+      steps: [
+        "Fixed facts first: Thursday = N, Friday = M. Three slots remain: Mon, Tue, Wed for J, L, K.",
+        "K immediately after L → L-K is a block. Block can only fit Mon-Tue or Tue-Wed.",
+        "J must come before L. If L = Monday there is no slot left for J. So L ≠ Monday.",
+        "Therefore the L-K block must be Tue-Wed, which forces J = Monday.",
+        "Final: Mon=J, Tue=L, Wed=K, Thu=N, Fri=M. Answer is A.",
+      ],
+      answer: "A — J must occur on Monday",
+    },
+    rules: [
+      ["Fixed facts first", "Always fill in directly stated positions before working out constrained ones."],
+      ["Block rules", "Treat 'immediately before/after' pairs as a single block. Blocks cut down the number of valid positions."],
+      ["Before ≠ immediately before", "'J before L' allows any gap. 'K immediately after L' means zero gap. Don't conflate them."],
+      ["Eliminate answer options actively", "Don't try to prove the right answer — disprove all the wrong ones by finding a rule they break."],
+      ["One contradiction = invalid", "If a proposed arrangement breaks any single rule, the whole arrangement is ruled out."],
+    ],
+  },
+
+  "venn-diagrams": {
+    idea: "Fill regions from the centre outward — place the most certain facts first, then use totals to find what's left.",
+    method: [
+      ["Draw the circles", "Two sets = two overlapping circles. Three sets = three circles, each pair overlapping."],
+      ["Place universal facts", "'All A are B' → A sits inside B. 'No A are B' → circles are completely separate."],
+      ["Place existential facts", "'Some A are B' → at least one person sits in the A∩B region. Mark it, but don't invent a number."],
+      ["Fill the centre region first", "In three-set counting problems, always place A∩B∩C before working on pairwise overlaps."],
+      ["Subtract outward", "Each pairwise overlap given includes the centre. Subtract A∩B∩C to find the A∩B-only region."],
+    ],
+    concepts: [
+      { label: "Two-set union", symbol: "|A∪B| = |A|+|B|−|A∩B|", detail: "The union counts everyone in at least one set. Subtract the overlap to avoid double-counting." },
+      { label: "Neither region", symbol: "Total − |A∪B|", detail: "People in neither set = Total minus everyone in the union." },
+      { label: "A-only region", symbol: "|A only| = |A| − |A∩B|", detail: "Subtract from A everyone who is also in B." },
+      { label: "Three-set formula", symbol: "|A∪B∪C| = Σ|single| − Σ|pairs| + |all three|", detail: "Add all three set sizes, subtract all pairwise overlaps, add back the triple overlap once." },
+    ],
+    example: {
+      title: "Symptoms X and Y — how many have both?",
+      stimulus: [
+        "Of 100 patients: 62 have symptom X, 51 have symptom Y, 23 have neither symptom.",
+      ],
+      q: "How many patients have both X and Y? A) 13  B) 28  C) 36  D) 49",
+      steps: [
+        "Find the union first: patients with at least one symptom = 100 − 23 = 77.",
+        "Apply the formula: |X∪Y| = |X| + |Y| − |X∩Y|.",
+        "Substitute: 77 = 62 + 51 − both.",
+        "Rearrange: both = 113 − 77 = 36.",
+        "Check: X-only = 62−36 = 26. Y-only = 51−36 = 15. Total = 26 + 36 + 15 + 23 = 100. ✓",
+      ],
+      answer: "C — 36 patients have both X and Y",
+    },
+    rules: [
+      ["Circle size is irrelevant", "Unless numbers are given, a larger drawn circle does not represent a larger group."],
+      ["'Some' guarantees a shared region", "'Some A are B' means at least one person sits in A∩B — but gives no count."],
+      ["Work centre-outward for counts", "In three-set problems: find A∩B∩C first, then pairwise-only, then exclusive regions."],
+      ["Double-subtraction trap", "The A∩B figure given usually includes A∩B∩C. Subtract the triple overlap to get A∩B-only."],
+      ["Rearrange the union formula", "|A∩B| = |A| + |B| − |A∪B|. You can find any term if you know the other three."],
+    ],
+  },
+
+  "probability": {
+    idea: "Set up a frequency table or probability tree before calculating — never run numbers blind.",
+    method: [
+      ["Name the type", "Single event, combined AND/OR, without replacement, conditional (given that), or binomial (exactly k from n)?"],
+      ["Use a concrete base", "Convert percentages to frequencies using 100, 1 000 or 10 000. Whole numbers are far easier to work with."],
+      ["Build a table or tree", "Tables work for two conditions. Trees work for sequential events where the denominator changes."],
+      ["Track denominators", "With replacement: denominator stays fixed. Without replacement: subtract one after every draw."],
+      ["Restrict for conditional", "'Given that it is defective' means work only within the defective sub-group — not the full sample."],
+    ],
+    concepts: [
+      { label: "AND — both happen", symbol: "P(A∩B) = P(A) × P(B|A)", detail: "Multiply probabilities along the same path. If events are independent: P(A) × P(B)." },
+      { label: "OR — either happens", symbol: "P(A∪B) = P(A)+P(B)−P(A∩B)", detail: "Add the probabilities, then subtract any overlap to avoid double-counting." },
+      { label: "Without replacement", symbol: "2nd draw: n−1", detail: "After the first draw, one item is gone. The second fraction has one fewer item in the denominator." },
+      { label: "At least one", symbol: "1 − P(none)", detail: "Calculate P(none of the event), then subtract from 1. Almost always the faster route." },
+    ],
+    example: {
+      title: "Defective components — Bayes' reasoning",
+      stimulus: [
+        "Machine A makes 60% of components; 2% are defective.",
+        "Machine B makes 40% of components; 5% are defective.",
+        "A randomly selected component is known to be defective.",
+      ],
+      q: "What is the probability the defective component came from Machine B? A) 40%  B) 50%  C) 62.5%  D) 71.4%",
+      steps: [
+        "Use 10,000 components as a base.",
+        "Machine A: 6,000 × 2% = 120 defective.",
+        "Machine B: 4,000 × 5% = 200 defective.",
+        "Total defective = 320.",
+        "We already know the component is defective → restrict to those 320.",
+        "Of those 320, exactly 200 came from Machine B.",
+        "P(B | defective) = 200 ÷ 320 = 0.625 = 62.5%.",
+      ],
+      answer: "C — 62.5% probability it came from Machine B",
+    },
+    rules: [
+      ["Set up before calculating", "Write out the table or tree with labels before touching any numbers."],
+      ["Without replacement: −1 each draw", "Second draw from 12 items has denominator 11, not 12."],
+      ["Conditional: restrict your sample", "'Given that it is defective' means ignore non-defective components entirely."],
+      ["At-least-one: use the complement", "P(at least one) = 1 − P(none). It is almost always the faster route."],
+      ["Binomial: C(n,k) × pᵏ × (1−p)ⁿ⁻ᵏ", "Exactly k successes from n independent trials. C(n,k) counts the arrangements."],
+    ],
+  },
+};
+
+// ─── DM lesson page (all 5 non-syllogism DM topics) ─────────────────────────
+
+function DMLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
+  section: GuideSection;
+  topic: NonNullable<ReturnType<typeof findTopic>>;
+  pageId: string;
+  onNavigate: (id: string) => void;
+  onPractice: () => void;
+}) {
+  const c = section.color, t = section.tint, d = section.deep;
+  const lesson = DM_LESSONS[topic.id];
+  if (!lesson) return null;
+
+  const row = (i: number, name: string, desc: string) => (
+    <div key={name} style={{ display: "grid", gridTemplateColumns: "200px 1fr", borderTop: i > 0 ? "1px solid var(--line)" : undefined, background: "white" }}>
+      <div style={{ padding: "11px 14px", background: t, borderRight: "1px solid var(--line)" }}>
+        <strong style={{ fontSize: 11, fontWeight: 800, color: c, fontFamily: "monospace" }}>{name}</strong>
+      </div>
+      <p style={{ margin: 0, padding: "11px 14px", fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>{desc}</p>
+    </div>
+  );
+
+  return (
+    <>
+      <GuidePageHeader section={section} pageId={pageId} title={topic.title} eyebrow="DM topic guide" subtitle={topic.description} />
+
+      {/* Core idea */}
+      <p style={{ fontSize: 14, lineHeight: 1.8, color: "var(--ink)", borderLeft: `3px solid ${c}`, background: t, padding: "13px 18px", borderRadius: "0 12px 12px 0", margin: "0 0 26px" }}>
+        {lesson.idea}
+      </p>
+
+      {/* Method */}
+      <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>The method — step by step</h2>
+      <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 12, overflow: "hidden", border: "1px solid var(--line)", marginBottom: 28 }}>
+        {lesson.method.map(([title, detail], i) => (
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "32px 1fr", background: "white", borderTop: i > 0 ? "1px solid var(--line)" : undefined }}>
+            <div style={{ display: "grid", placeItems: "center", background: t, borderRight: "1px solid var(--line)" }}>
+              <strong style={{ fontSize: 13, fontWeight: 900, color: c }}>{i + 1}</strong>
+            </div>
+            <div style={{ padding: "11px 14px" }}>
+              <strong style={{ fontSize: 12, fontWeight: 800, color: d, display: "block", marginBottom: 2 }}>{title}</strong>
+              <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: "var(--ink-soft)" }}>{detail}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Key concepts */}
+      <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>Key concepts</h2>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 28 }}>
+        {lesson.concepts.map(({ label, symbol, detail }) => (
+          <div key={label} style={{ borderRadius: 12, border: `1px solid ${c}`, background: "white", padding: "14px 16px" }}>
+            <p style={{ margin: "0 0 4px", fontSize: 9, fontWeight: 800, color: c, letterSpacing: ".1em", textTransform: "uppercase" as const }}>Key concept</p>
+            <code style={{ fontSize: 18, fontWeight: 900, color: d, display: "block", marginBottom: 6 }}>{symbol}</code>
+            <strong style={{ fontSize: 11, fontWeight: 800, color: "var(--ink)", display: "block", marginBottom: 3 }}>{label}</strong>
+            <p style={{ margin: 0, fontSize: 11, lineHeight: 1.6, color: "var(--ink-soft)" }}>{detail}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Worked example */}
+      <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>Worked example</h2>
+      <div style={{ borderRadius: 14, border: "1px solid var(--line)", background: "white", overflow: "hidden", marginBottom: 28 }}>
+        <div style={{ padding: "10px 16px", background: t, borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 10 }}>
+          <strong style={{ fontSize: 11, color: c, fontWeight: 800, letterSpacing: ".04em" }}>EXAMPLE</strong>
+          <span style={{ fontSize: 12, color: "var(--ink)", fontWeight: 600 }}>{lesson.example.title}</span>
+        </div>
+        <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
+          <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Given</p>
+          {lesson.example.stimulus.map((s, i) => (
+            <div key={i} style={{ padding: "6px 12px", borderRadius: 7, background: t, marginBottom: 5, fontSize: 13, color: "var(--ink)", fontStyle: "italic" }}>{s}</div>
+          ))}
+        </div>
+        <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--line)", background: "#fafafa" }}>
+          <p style={{ margin: "0 0 3px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Question</p>
+          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{lesson.example.q}</p>
+        </div>
+        <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
+          <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Working</p>
+          {lesson.example.steps.map((s, i) => (
+            <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 7 }}>
+              <span style={{ width: 20, height: 20, borderRadius: 6, background: t, color: c, fontSize: 10, fontWeight: 800, display: "grid", placeItems: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
+              <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>{s}</p>
+            </div>
+          ))}
+        </div>
+        <div style={{ padding: "10px 16px", background: "#edfbf3", display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: "#259650", color: "white" }}>Answer</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "#259650" }}>{lesson.example.answer}</span>
+        </div>
+      </div>
+
+      {/* Rules */}
+      <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>Rules to remember</h2>
+      <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 12, overflow: "hidden", border: "1px solid var(--line)", marginBottom: 28 }}>
+        {lesson.rules.map(([name, desc], i) => row(i, name, desc))}
+      </div>
+
+      <section className="vrg-bottom-practice">
+        <div>
+          <strong>Ready to practise {topic.title}?</strong>
+          <p>We'll take you to the practice setup so you can choose your session and timing.</p>
+        </div>
+        <button className="vrg-practice-cta" onClick={onPractice} type="button">Set up practice →</button>
+      </section>
+      <GuidePageActions section={section} pageId={pageId} onNavigate={onNavigate} />
+    </>
+  );
+}
+
 // ─── Syllogisms deep page ────────────────────────────────────────────────────
 
 function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
@@ -759,9 +1084,9 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
             chain: (
               <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
                 <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>Nurses</span>
-                <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>══⇒══►</span>
+                <span style={{ color: c, fontWeight: 900, fontSize: 18 }}>⇒</span>
                 <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>Healthcare</span>
-                <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>══⇒══►</span>
+                <span style={{ color: c, fontWeight: 900, fontSize: 18 }}>⇒</span>
                 <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>DBS checks</span>
               </div>
             ),
@@ -773,9 +1098,9 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
             chain: (
               <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
                 <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>Cats</span>
-                <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>══⇒══►</span>
+                <span style={{ color: c, fontWeight: 900, fontSize: 18 }}>⇒</span>
                 <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>Mammals</span>
-                <span style={{ color: "#d94b3e", fontWeight: 900, fontSize: 13 }}>──✕──</span>
+                <span style={{ color: "#d94b3e", fontWeight: 900, fontSize: 18 }}>✕</span>
                 <span style={{ padding: "4px 10px", background: "white", border: "1px solid #d94b3e", borderRadius: 7, fontSize: 12, fontWeight: 700, color: "#d94b3e" }}>Fish</span>
               </div>
             ),
@@ -787,9 +1112,9 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
             chain: (
               <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
                 <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>Doctors</span>
-                <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>──→──►</span>
+                <span style={{ color: c, fontWeight: 900, fontSize: 18 }}>→</span>
                 <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>Researchers</span>
-                <span style={{ color: c, fontWeight: 900, fontSize: 13 }}>══⇒══►</span>
+                <span style={{ color: c, fontWeight: 900, fontSize: 18 }}>⇒</span>
                 <span style={{ padding: "4px 10px", background: "white", border: `1px solid ${c}`, borderRadius: 7, fontSize: 12, fontWeight: 700, color: d }}>PhDs</span>
               </div>
             ),
@@ -801,7 +1126,7 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
             chain: (
               <div style={{ display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" }}>
                 <span style={{ padding: "4px 10px", background: "white", border: "1px solid #d94b3e", borderRadius: 7, fontSize: 12, fontWeight: 700, color: "#d94b3e" }}>Accountants</span>
-                <span style={{ color: "#d94b3e", fontWeight: 900, fontSize: 13 }}>══⇒══►</span>
+                <span style={{ color: "#d94b3e", fontWeight: 900, fontSize: 18 }}>⇒</span>
                 <span style={{ padding: "4px 10px", background: "white", border: "1px solid #d94b3e", borderRadius: 7, fontSize: 12, fontWeight: 700, color: "#d94b3e" }}>Graduates</span>
                 <span style={{ color: "var(--ink-soft)", fontWeight: 800, fontSize: 12 }}>← Sara is here, but...</span>
               </div>
@@ -1169,6 +1494,8 @@ export default function StudyGuidePage() {
             {foundation && <FoundationPage section={section} page={foundation} pageId={pageId} onNavigate={goToPage} />}
             {topic && topic.id === "syllogisms"
               ? <SyllogismsPage section={section} topic={topic} pageId={pageId} onNavigate={goToPage} onPractice={() => router.push(`/practice/${sectionKey}`)} />
+              : topic && sectionKey === "dm" && DM_LESSONS[topic.id]
+              ? <DMLessonPage section={section} topic={topic} pageId={pageId} onNavigate={goToPage} onPractice={() => router.push(`/practice/${sectionKey}`)} />
               : topic && <TopicPage section={section} topic={topic} pageId={pageId} onNavigate={goToPage} onPractice={() => router.push(`/practice/${sectionKey}`)} />}
           </main>
         </div>
