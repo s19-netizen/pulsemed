@@ -44,32 +44,37 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Build question list — include full YN-5 sets or individual MCQ questions
-  const questions: object[] = [];
-  let remaining = count;
-
-  for (const [, setQs] of setMap) {
-    if (remaining <= 0) break;
-    const sorted = setQs.sort((a, b) => a.id.localeCompare(b.id));
-    // Always include the full set — never cut mid-way
-    for (const q of sorted) questions.push(formatQuestion(q));
-    remaining--;
-  }
-
-  for (const q of mcqPool) {
-    if (remaining <= 0) break;
-    questions.push(formatQuestion(q));
-    remaining--;
-  }
-
-  // Also include admin-imported DM questions
+  // Fetch admin MCQ questions in parallel
   const { data: adminQs } = await supabase
     .from("admin_qs")
     .select("id, question_text, options, correct, explanations, subtype, difficulty, passage_id, admin_passages(content, chart)")
     .eq("section", "dm")
-    .limit(count);
+    .in("difficulty", difficulties);
 
-  for (const aq of adminQs ?? []) {
+  // Split count: ~60% YN-5 sets, ~40% admin MCQ
+  const mcqTarget = Math.round(count * 0.4);
+  const yn5Target = count - mcqTarget;
+
+  // Build question list — include full YN-5 sets or individual MCQ questions
+  const questions: object[] = [];
+  let yn5Remaining = yn5Target;
+
+  for (const [, setQs] of setMap) {
+    if (yn5Remaining <= 0) break;
+    const sorted = setQs.sort((a, b) => a.id.localeCompare(b.id));
+    // Always include the full set — never cut mid-way
+    for (const q of sorted) questions.push(formatQuestion(q));
+    yn5Remaining--;
+  }
+
+  for (const q of mcqPool) {
+    if (yn5Remaining <= 0) break;
+    questions.push(formatQuestion(q));
+    yn5Remaining--;
+  }
+
+  // Add shuffled admin MCQ questions for the remaining slots
+  for (const aq of shuffle(adminQs ?? []).slice(0, mcqTarget)) {
     const context: string = (aq.admin_passages as any)?.content ?? "";
     const chartFigure = (aq.admin_passages as any)?.chart ?? null;
     const opts: string[] = Array.isArray(aq.options) ? aq.options : ["Yes", "No"];
@@ -81,7 +86,9 @@ export async function GET(req: NextRequest) {
 
     const expObj: Record<string, string> = (aq.explanations as any) ?? {};
     const correctLabel = opts[correctIdx] ?? "";
+    const correctLetter = "ABCDE"[correctIdx] ?? "";
     const explanation =
+      expObj[correctLetter] ??
       expObj[correctLabel] ??
       Object.entries(expObj).find(([k]) => k.toLowerCase() === correctLabel.toLowerCase())?.[1] ??
       Object.values(expObj)[0] ??
