@@ -993,7 +993,7 @@ const DM_LESSONS: Record<string, {
         "No patient in Unit 3 is discharged before imaging is completed.",
         "Maya was admitted at 07:45 and discharged at 11:30.",
       ],
-      q: "Which statement must be true? A) Maya required imaging  B) Maya was assessed by Team A  C) Maya was transferred to Unit 3  D) Maya's imaging was completed before 11:30",
+      q: "Maya was admitted at 07:45 and her triage score was 3. Which statement about Maya must be true based on the rules?",
       steps: [
         "Rule 1 trigger: admitted before 08:00. Maya = 07:45 ✓. Consequence: assessed by Team A. → Option B is forced.",
         "Rule 2 trigger: Team A AND requires imaging. Maya is in Team A. But imaging is not confirmed. Rule 2 does not fire.",
@@ -1033,7 +1033,7 @@ const DM_LESSONS: Record<string, {
         "A city is considering introducing a congestion charge in its centre.",
         "Supporters argue: the charge should be introduced because it will reduce traffic.",
       ],
-      q: "Which assumption is required? A) Everyone can afford the charge  B) At least some drivers would alter their behaviour  C) Public transport is cheaper  D) Congestion is caused exclusively by cars",
+      q: "The argument concludes that charging drivers will reduce congestion. What must the author be assuming for this conclusion to hold?",
       steps: [
         "Proposal: introduce a congestion charge.",
         "Evidence: it will reduce traffic.",
@@ -1074,7 +1074,7 @@ const DM_LESSONS: Record<string, {
         "Five presentations — J, K, L, M, N — occur Monday to Friday, one per day.",
         "J occurs before L.  |  K occurs immediately after L.  |  N on Thursday.  |  M on Friday.",
       ],
-      q: "Which presentation must occur on Monday? A) J  B) K  C) L  D) N",
+      q: "Using the constraints above, which presentation is forced onto Monday?",
       steps: [
         "Fixed facts first: Thursday = N, Friday = M. Three slots remain: Mon, Tue, Wed for J, L, K.",
         "K immediately after L → L-K is a block. Block can only fit Mon-Tue or Tue-Wed.",
@@ -1113,7 +1113,7 @@ const DM_LESSONS: Record<string, {
       stimulus: [
         "Of 100 patients: 62 have symptom X, 51 have symptom Y, 23 have neither symptom.",
       ],
-      q: "How many patients have both X and Y? A) 13  B) 28  C) 36  D) 49",
+      q: "How many of the 100 patients have both symptom X and symptom Y?",
       steps: [
         "Find the union first: patients with at least one symptom = 100 − 23 = 77.",
         "Apply the formula: |X∪Y| = |X| + |Y| − |X∩Y|.",
@@ -1154,7 +1154,7 @@ const DM_LESSONS: Record<string, {
         "Machine B makes 40% of components; 5% are defective.",
         "A randomly selected component is known to be defective.",
       ],
-      q: "What is the probability the defective component came from Machine B? A) 40%  B) 50%  C) 62.5%  D) 71.4%",
+      q: "A randomly selected component turns out to be defective. What is the chance it was made by Machine B?",
       steps: [
         "Use 10,000 components as a base.",
         "Machine A: 6,000 × 2% = 120 defective.",
