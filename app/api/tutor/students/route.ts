@@ -124,13 +124,24 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Auto-insert into users + user_profile so existing app queries work
-  await Promise.all([
-    serviceSupabase.from("users").upsert({ id: student.id, name: student.name, email: `student::${student.username}` }, { onConflict: "id", ignoreDuplicates: true }),
-    serviceSupabase.from("user_profile").upsert({ user_id: student.id, onboarding_complete: true, test_date: exam_date ?? null }, { onConflict: "user_id", ignoreDuplicates: true }),
-  ]);
+  // Best-effort: insert into users + user_profile so existing app queries work.
+  // Failures here don't block the student from being created.
+  try {
+    await Promise.all([
+      serviceSupabase.from("users").upsert(
+        { id: student.id, name: student.name, email: `student::${student.username}` },
+        { onConflict: "id", ignoreDuplicates: true }
+      ),
+      serviceSupabase.from("user_profile").upsert(
+        { user_id: student.id, onboarding_complete: true, test_date: exam_date ?? null },
+        { onConflict: "user_id", ignoreDuplicates: true }
+      ),
+    ]);
+  } catch (_) {}
 
-  return NextResponse.json({ student: { ...student, sessions: 0, avg_score: null, last_active: null, avg_time_s: null } });
+  return NextResponse.json({
+    student: { ...student, sessions: 0, avg_score: null, last_active: null, avg_time_s: null, section_bests: {} },
+  });
 }
 
 // DELETE /api/tutor/students?id=xxx — remove a student

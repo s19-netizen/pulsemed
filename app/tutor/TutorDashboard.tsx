@@ -230,15 +230,20 @@ function AddStudentModal({ onClose, onAdded }: { onClose: () => void; onAdded: (
     e.preventDefault();
     setError("");
     setLoading(true);
-    const res = await fetch("/api/tutor/students", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name.trim(), username: username.trim(), password, exam_date: examDate || null }),
-    });
-    const data = await res.json();
-    setLoading(false);
-    if (!res.ok) { setError(data.error ?? "Failed to create student."); return; }
-    onAdded(data.student);
+    try {
+      const res  = await fetch("/api/tutor/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), username: username.trim(), password, exam_date: examDate || null }),
+      });
+      const data = await res.json();
+      setLoading(false);
+      if (!res.ok) { setError(data.error ?? "Failed to create student."); return; }
+      onAdded(data.student);
+    } catch (err: any) {
+      setLoading(false);
+      setError(err?.message ?? "Network error — please try again.");
+    }
   }
 
   const inputStyle: React.CSSProperties = { border: "1.5px solid #e0e6ef", borderRadius: 10, padding: "10px 13px", fontSize: 13, outline: "none", fontFamily: "inherit", width: "100%", boxSizing: "border-box" };
