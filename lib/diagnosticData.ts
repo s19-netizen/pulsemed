@@ -833,6 +833,7 @@ export const DIAGNOSTIC_QUESTIONS: DiagQuestion[] = [
   {
     id: "DIAG-QR-001", qNum: 39, section: "qr", format: "mcq",
     subtype: "3D Geometry — integer fitting", difficulty: "Diamond", dataSetId: "qr-ds1",
+    preamble: "LSMs must remain upright at all times — they cannot be rotated onto their sides.",
     stem: "What is the maximum number of LSMs that can be packed into the cargo bay?",
     options: ["180", "195", "200", "210"],
     correct: 3,

@@ -517,76 +517,103 @@ export interface CargoData {
 
 export function CargoDataCard({ data }: { data: CargoData }) {
   const { bay, shielding, lsm, massKg } = data;
-  const uw = bay.widthM  * 100 - shielding.sidewall * 2;  // 264
-  const ul = bay.lengthM * 100 - shielding.endwall  * 2;  // 342
-  const uh = bay.heightM * 100 - shielding.floor - shielding.ceiling; // 220
+  const uw = bay.widthM  * 100 - shielding.sidewall * 2;  // 264 cm
+  const ul = bay.lengthM * 100 - shielding.endwall  * 2;  // 342 cm
+  const uh = bay.heightM * 100 - shielding.floor - shielding.ceiling; // 220 cm
 
-  // Bay plan-view SVG dimensions (scale so it fits nicely)
-  const sc = 0.42;
-  const bW = Math.round(uw * sc); // 111
-  const bL = Math.round(ul * sc); // 144
-  const lmW = Math.round(lsm.footprintA * sc); // 23
-  const lmL = Math.round(lsm.footprintB * sc); // 15
+  // ── Cargo bay oblique-projection box ──────────────────────────────────────────
+  // Front face: width(264cm)=88px × height(220cm)=72px
+  // Depth projection: length(342cm) → dx=36px, dy=22px
+  //
+  // Front face corners (origin with ML=50 left margin, MT=26 top margin):
+  //   FTL(86,26)  FTR(174,26)
+  //   FBL(86,98)  FBR(174,98)
+  // Back corners (depth offset):
+  //   BTL(50,48)  BTR(138,48)  BBR(138,120)
+  //
+  // Dimension lines drawn OUTSIDE each face.
+
+  // ── LSM oblique-projection box ────────────────────────────────────────────────
+  // Front face: width(54cm)=42px × height(40cm)=31px
+  // Depth projection: depth(36cm) → dx=20px, dy=13px
+  //
+  // Front face corners (ML=38, MT=22):
+  //   FTL(58,22)  FTR(100,22)
+  //   FBL(58,53)  FBR(100,53)
+  // Back corners:
+  //   BTL(38,35)  BTR(80,35)  BBR(80,66)
 
   return (
     <div style={{ background: "#f8fafc", borderRadius: 10, border: "1px solid var(--line)", padding: "14px 12px" }}>
-      <p style={{ textAlign: "center", fontSize: 12, fontWeight: 800, color: "var(--ink)", margin: "0 0 12px", letterSpacing: ".04em", textTransform: "uppercase" }}>Cargo Bay &amp; Module</p>
+      <p style={{ textAlign: "center", fontSize: 12, fontWeight: 800, color: "var(--ink)", margin: "0 0 12px", letterSpacing: ".04em", textTransform: "uppercase" as const }}>Cargo Bay &amp; Module</p>
 
-      <div style={{ display: "flex", gap: 18, alignItems: "flex-start", flexWrap: "wrap" as const, justifyContent: "center" }}>
+      <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" as const, justifyContent: "center" }}>
 
-        {/* ── Bay: plan view ── */}
-        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 4 }}>
-          <span style={{ fontSize: 9, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".08em" }}>Cargo bay (top view)</span>
-          <svg viewBox={`0 0 ${bW + 60} ${bL + 60}`} style={{ width: "100%", maxWidth: bW + 60 }}>
-            {/* bay floor */}
-            <rect x={30} y={10} width={bW} height={bL} fill="#dbeafe" stroke="#2d7ff9" strokeWidth="2" rx="4"/>
-            {/* sample LSM tiles */}
-            {[0,1,2,3,4,5,6].map(c => [0,1,2,3,4,5,6,7,8].map(r => (
-              (c * lmW + lmW + 4 <= bW && r * lmL + lmL + 4 <= bL) &&
-              <rect key={`${c}-${r}`} x={30 + 2 + c*(lmW+2)} y={10 + 2 + r*(lmL+2)} width={lmW} height={lmL} fill="#2d7ff9" fillOpacity="0.22" rx="1"/>
-            )))}
-            {/* width label */}
-            <line x1={30} y1={bL+22} x2={30+bW} y2={bL+22} stroke="#2d7ff9" strokeWidth="1.5"/>
-            <line x1={30} y1={bL+17} x2={30} y2={bL+27} stroke="#2d7ff9" strokeWidth="1.5"/>
-            <line x1={30+bW} y1={bL+17} x2={30+bW} y2={bL+27} stroke="#2d7ff9" strokeWidth="1.5"/>
-            <text x={30+bW/2} y={bL+36} textAnchor="middle" fontSize="10" fontWeight="800" fill="#2d7ff9">{uw} cm</text>
-            {/* length label */}
-            <line x1={30+bW+12} y1={10} x2={30+bW+12} y2={10+bL} stroke="#2d7ff9" strokeWidth="1.5"/>
-            <line x1={30+bW+7} y1={10} x2={30+bW+17} y2={10} stroke="#2d7ff9" strokeWidth="1.5"/>
-            <line x1={30+bW+7} y1={10+bL} x2={30+bW+17} y2={10+bL} stroke="#2d7ff9" strokeWidth="1.5"/>
-            <text x={30+bW+28} y={10+bL/2+4} textAnchor="middle" fontSize="10" fontWeight="800" fill="#2d7ff9" transform={`rotate(-90,${30+bW+28},${10+bL/2})`}>{ul} cm</text>
-            {/* height callout inside */}
-            <text x={30+bW/2} y={10+bL/2-4} textAnchor="middle" fontSize="9" fill="#1a5fd0" fontWeight="700">height</text>
-            <text x={30+bW/2} y={10+bL/2+10} textAnchor="middle" fontSize="12" fill="#1a5fd0" fontWeight="900">{uh} cm</text>
+        {/* ── Cargo Bay 3D box ── */}
+        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 4, flex: "2 1 200px" }}>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".08em" }}>Available cargo space</span>
+          <svg viewBox="0 0 238 152" style={{ width: "100%", maxWidth: 238 }}>
+            {/* Right face (darkest) */}
+            <polygon points="174,26 138,48 138,120 174,98" fill="#93c5fd" stroke="#2d7ff9" strokeWidth="1.8"/>
+            {/* Top face */}
+            <polygon points="50,48 138,48 174,26 86,26" fill="#bfdbfe" stroke="#2d7ff9" strokeWidth="1.8"/>
+            {/* Front face (lightest) */}
+            <polygon points="86,26 174,26 174,98 86,98" fill="#dbeafe" stroke="#2d7ff9" strokeWidth="1.8"/>
+
+            {/* Depth edge bottom-right — visible spine */}
+            <line x1="174" y1="98" x2="138" y2="120" stroke="#2d7ff9" strokeWidth="1.8"/>
+
+            {/* ── Width label (264 cm) — below front bottom edge ── */}
+            <line x1="86" y1="108" x2="174" y2="108" stroke="#1a5fd0" strokeWidth="1.2"/>
+            <line x1="86"  y1="104" x2="86"  y2="112" stroke="#1a5fd0" strokeWidth="1.2"/>
+            <line x1="174" y1="104" x2="174" y2="112" stroke="#1a5fd0" strokeWidth="1.2"/>
+            <text x="130" y="124" textAnchor="middle" fontSize="11" fontWeight="800" fill="#1a5fd0">{uw} cm</text>
+
+            {/* ── Height label (220 cm) — right of front right edge ── */}
+            <line x1="183" y1="26" x2="183" y2="98" stroke="#1a5fd0" strokeWidth="1.2"/>
+            <line x1="179" y1="26" x2="187" y2="26" stroke="#1a5fd0" strokeWidth="1.2"/>
+            <line x1="179" y1="98" x2="187" y2="98" stroke="#1a5fd0" strokeWidth="1.2"/>
+            <text x="204" y="66" textAnchor="middle" fontSize="11" fontWeight="800" fill="#1a5fd0" transform="rotate(-90,204,66)">{uh} cm</text>
+
+            {/* ── Length label (342 cm) — along top-left depth edge, outside box ── */}
+            {/* Edge: FTL(86,26)→BTL(50,48) · angle ≈ −31° · label offset above/left */}
+            <line x1="86" y1="26" x2="50" y2="48" stroke="#1a5fd0" strokeWidth="1.2"/>
+            <text x="58" y="22" textAnchor="middle" fontSize="11" fontWeight="800" fill="#1a5fd0" transform="rotate(-31,58,22)">{ul} cm</text>
           </svg>
         </div>
 
-        {/* ── LSM ── */}
-        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 4 }}>
-          <span style={{ fontSize: 9, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".08em" }}>Life-Support Module (LSM)</span>
-          <svg viewBox="0 0 130 170" style={{ width: "100%", maxWidth: 130 }}>
-            {/* footprint rectangle */}
-            <rect x={15} y={8} width={70} height={48} fill="#d1fae5" stroke="#259650" strokeWidth="2" rx="4"/>
-            <text x={50} y={28} textAnchor="middle" fontSize="10" fontWeight="800" fill="#259650">{lsm.footprintA} cm</text>
-            <text x={50} y={43} textAnchor="middle" fontSize="10" fontWeight="800" fill="#259650">× {lsm.footprintB} cm</text>
-            <text x={50} y={62} textAnchor="middle" fontSize="8" fill="#259650" fontWeight="600">footprint</text>
+        {/* ── LSM 3D box ── */}
+        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 4, flex: "1 1 130px" }}>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".08em" }}>Life-Support Module</span>
+          <svg viewBox="0 0 148 120" style={{ width: "100%", maxWidth: 148 }}>
+            {/* Right face */}
+            <polygon points="100,22 80,35 80,66 100,53" fill="#6ee7b7" stroke="#259650" strokeWidth="1.8"/>
+            {/* Top face */}
+            <polygon points="38,35 80,35 100,22 58,22" fill="#a7f3d0" stroke="#259650" strokeWidth="1.8"/>
+            {/* Front face */}
+            <polygon points="58,22 100,22 100,53 58,53" fill="#d1fae5" stroke="#259650" strokeWidth="1.8"/>
+            {/* Bottom-right depth spine */}
+            <line x1="100" y1="53" x2="80" y2="66" stroke="#259650" strokeWidth="1.8"/>
 
-            {/* height bar */}
-            <rect x={100} y={8} width={18} height={48} fill="#a7f3d0" stroke="#259650" strokeWidth="1.5" rx="3"/>
-            <text x={109} y={30} textAnchor="middle" fontSize="9" fontWeight="800" fill="#259650" transform="rotate(-90,109,30)">{lsm.height} cm</text>
-            <text x={109} y={65} textAnchor="middle" fontSize="8" fill="#259650" fontWeight="600">tall</text>
+            {/* ── Width label (54 cm) — below front bottom ── */}
+            <line x1="58" y1="62" x2="100" y2="62" stroke="#259650" strokeWidth="1.2"/>
+            <line x1="58"  y1="58" x2="58"  y2="66" stroke="#259650" strokeWidth="1.2"/>
+            <line x1="100" y1="58" x2="100" y2="66" stroke="#259650" strokeWidth="1.2"/>
+            <text x="79" y="77" textAnchor="middle" fontSize="10" fontWeight="800" fill="#259650">{lsm.footprintA} cm</text>
 
-            {/* divider */}
-            <line x1={10} y1={78} x2={120} y2={78} stroke="#e2e8f0" strokeWidth="1"/>
+            {/* ── Height label (40 cm) — right of front right edge ── */}
+            <line x1="109" y1="22" x2="109" y2="53" stroke="#259650" strokeWidth="1.2"/>
+            <line x1="105" y1="22" x2="113" y2="22" stroke="#259650" strokeWidth="1.2"/>
+            <line x1="105" y1="53" x2="113" y2="53" stroke="#259650" strokeWidth="1.2"/>
+            <text x="128" y="40" textAnchor="middle" fontSize="10" fontWeight="800" fill="#259650" transform="rotate(-90,128,40)">{lsm.height} cm</text>
 
-            {/* mass */}
-            <text x={65} y={100} textAnchor="middle" fontSize="12" fontWeight="900" fill="var(--ink)">{massKg} kg</text>
-            <text x={65} y={115} textAnchor="middle" fontSize="9" fontWeight="600" fill="var(--ink-soft)">per module</text>
+            {/* ── Depth label (36 cm) — along top-left depth edge, outside box ── */}
+            <line x1="58" y1="22" x2="38" y2="35" stroke="#259650" strokeWidth="1.2"/>
+            <text x="36" y="17" textAnchor="middle" fontSize="10" fontWeight="800" fill="#259650" transform="rotate(-33,36,17)">{lsm.footprintB} cm</text>
 
-            {/* upright rule */}
-            <rect x={10} y={126} width={110} height={34} rx="6" fill="#fff8e1" stroke="#f59e0b" strokeWidth="1.5"/>
-            <text x={65} y={141} textAnchor="middle" fontSize="9" fontWeight="700" fill="#7c5a00">Must stay upright —</text>
-            <text x={65} y={154} textAnchor="middle" fontSize="9" fontWeight="700" fill="#7c5a00">cannot be laid on side</text>
+            {/* ── Mass ── */}
+            <text x="79" y="96" textAnchor="middle" fontSize="13" fontWeight="900" fill="#1e293b">{massKg} kg</text>
+            <text x="79" y="110" textAnchor="middle" fontSize="9" fontWeight="600" fill="#64748b">per module</text>
           </svg>
         </div>
 
