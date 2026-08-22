@@ -26,6 +26,21 @@ export default function SignInPage() {
           </svg>
           Continue with Google
         </button>
+
+        <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+          <Link
+            href="/auth/student"
+            style={{ flex: 1, display: "block", textAlign: "center", border: "1.5px solid #e0e6ef", borderRadius: 11, padding: "11px", fontSize: 13, fontWeight: 700, color: "#1a2a3a", textDecoration: "none", background: "#f8fafd" }}
+          >
+            Student Login
+          </Link>
+          <Link
+            href="/auth/tutor"
+            style={{ flex: 1, display: "block", textAlign: "center", border: "1.5px solid #e0e6ef", borderRadius: 11, padding: "11px", fontSize: 13, fontWeight: 700, color: "#1a2a3a", textDecoration: "none", background: "#f8fafd" }}
+          >
+            Tutor Login
+          </Link>
+        </div>
       </div>
     </div>
   );

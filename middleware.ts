@@ -6,5 +6,7 @@ export const config = {
     "/settings/:path*",
     "/diagnostic/:path*",
     "/diagnostic",
+    "/tutor/:path*",
+    "/tutor",
   ],
 };
