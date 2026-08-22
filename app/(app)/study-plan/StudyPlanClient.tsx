@@ -113,6 +113,47 @@ function SetupChecklist({ hasExamDate, hasDiagnostic }: { hasExamDate: boolean; 
   );
 }
 
+// ── Synthetic plan builder (used when Groq data is missing) ────────────────
+
+function buildSyntheticPlan(report: any): { analysis: any; weeks: any[] } {
+  const scores: Record<string, number> = { vr: report.vr_score, dm: report.dm_score, qr: report.qr_score };
+  const toLabel: Record<string, string> = { vr: "Verbal Reasoning", dm: "Decision Making", qr: "Quantitative Reasoning", sjt: "Situational Judgement" };
+
+  const sectionVerdicts: Record<string, { verdict: string }> = {};
+  for (const [sec, score] of Object.entries(scores)) {
+    if (!score) continue;
+    const hi = score >= 600;
+    sectionVerdicts[sec] = {
+      verdict: hi
+        ? `You scored ${score}/900 — a solid baseline. Keep practising to push this higher.`
+        : `You scored ${score}/900. This is a priority area — targeted practice here will have the biggest impact on your total.`,
+    };
+  }
+  sectionVerdicts.sjt = {
+    verdict: report.sjt_band <= 2
+      ? `Band ${report.sjt_band} — a strong result. Focus on maintaining your judgement accuracy.`
+      : `Band ${report.sjt_band} — meaningful room to improve. Practise SJT scenarios and review the reasoning behind each rating.`,
+  };
+
+  const ranked = Object.entries(scores).sort((a, b) => a[1] - b[1]).map(([s]) => s);
+  if (report.sjt_band >= 3) ranked.push("sjt"); else ranked.unshift("sjt");
+
+  const TASK: Record<string, string> = {
+    vr:  "VR — Work through VR passages and practise identifying what the text explicitly says vs. what you can infer.",
+    dm:  "DM — Drill syllogisms and logical puzzles, focusing on eliminating wrong options quickly.",
+    qr:  "QR — Practise reading data sets quickly and applying percentage / ratio formulas under time pressure.",
+    sjt: "SJT — Read through worked SJT scenarios and understand the reasoning behind each appropriateness rating.",
+  };
+
+  const weeks = [{
+    title: "Week 1 — Foundation",
+    focus: `Start with your weakest section (${(ranked[0] ?? "vr").toUpperCase()}) and work through all four sections this week.`,
+    tasks: ranked.slice(0, 4).map(s => TASK[s]).filter(Boolean).slice(0, 3),
+  }];
+
+  return { analysis: { sections: sectionVerdicts, overallVerdict: null }, weeks };
+}
+
 // ── State B: Diagnostic done, limited practice ──────────────────────────────
 
 function DiagnosticPlan({ report, practiceCount }: { report: any; practiceCount: number }) {
@@ -120,6 +161,13 @@ function DiagnosticPlan({ report, practiceCount }: { report: any; practiceCount:
   let weeks: any[] = [];
   try { analysis = JSON.parse(report.groq_analysis ?? "{}"); } catch { /* */ }
   try { weeks = JSON.parse(report.groq_study_plan ?? "[]"); } catch { /* */ }
+
+  // AI data missing or empty — build from raw scores so the page is never blank
+  if (!analysis?.sections || !weeks.length) {
+    const synthetic = buildSyntheticPlan(report);
+    if (!analysis?.sections) analysis = synthetic.analysis;
+    if (!weeks.length) weeks = synthetic.weeks;
+  }
 
   const thisWeek = weeks[0];
 
