@@ -6,6 +6,8 @@ import {
   DIAGNOSTIC_QUESTIONS, VR_PASSAGES, QR_DATASETS, SJT_SCENARIOS,
   APPROP_OPTIONS, IMPORT_OPTIONS, TFCT_OPTIONS,
 } from "@/lib/diagnosticData";
+import { GroupedBarChart, LineGraph, PieChartPair, TheatreTable, RoomDataCard, CargoDataCard } from "../DiagCharts";
+import { DiagVenn3 } from "../DiagVenn";
 
 const COLORS: Record<string, string> = { vr: "#2D7FF9", dm: "#8B6BFF", qr: "#3DBE6C", sjt: "#FF6B5C" };
 const TINTS: Record<string, string>  = { vr: "#EAF2FF", dm: "#F1ECFF", qr: "#EDFBF3", sjt: "#FFEDEA" };
@@ -428,6 +430,215 @@ function PassageBox({ title, text }: { title: string; text: string }) {
   );
 }
 
+// ─── Review: figure renderer ─────────────────────────────────────────────────
+
+function ReviewFigure({ q }: { q: typeof DIAGNOSTIC_QUESTIONS[0] }) {
+  const ds = q.dataSetId ? QR_DATASETS[q.dataSetId] : null;
+  if (!ds) return null;
+  if (ds.figureType === "grouped-bar") return <GroupedBarChart data={ds.figureData as any} />;
+  if (ds.figureType === "line")        return <LineGraph       data={ds.figureData as any} />;
+  if (ds.figureType === "pie-pair")    return <PieChartPair    data={ds.figureData as any} />;
+  if (ds.figureType === "table")       return <TheatreTable    data={ds.figureData as any} />;
+  if (ds.figureType === "room")        return <RoomDataCard    data={ds.figureData as any} />;
+  if (ds.figureType === "cargo")       return <CargoDataCard   data={ds.figureData as any} />;
+  return null;
+}
+
+// ─── Review: exam-style two-column question view ──────────────────────────────
+
+function ReviewExam({ section, qIdx, onQIdxChange, responseMap }: {
+  section: string;
+  qIdx: number;
+  onQIdxChange: (i: number) => void;
+  responseMap: Map<number, ResponseRow>;
+}) {
+  const qs = DIAGNOSTIC_QUESTIONS.filter(q => q.section === section);
+  const q  = qs[qIdx];
+  if (!q) return null;
+
+  const row      = responseMap.get(q.qNum - 1);
+  const color    = COLORS[section] ?? "#2D7FF9";
+  const tint     = TINTS[section]  ?? "#EAF2FF";
+
+  // ── Left panel ──
+  let leftLabel = "";
+  let leftContent: React.ReactNode = null;
+
+  if (section === "vr") {
+    const passage = q.passageId ? VR_PASSAGES[q.passageId] : null;
+    const allIds  = [...new Set(qs.map(x => x.passageId).filter(Boolean))];
+    const num     = q.passageId ? allIds.indexOf(q.passageId) + 1 : 1;
+    leftLabel   = `PASSAGE ${num} OF ${allIds.length}${passage ? ` — ${passage.title}` : ""}`;
+    leftContent = <div style={{ whiteSpace: "pre-wrap" }}>{passage?.text}</div>;
+  } else if (section === "qr") {
+    const ds     = q.dataSetId ? QR_DATASETS[q.dataSetId] : null;
+    const allIds = [...new Set(qs.map(x => x.dataSetId).filter(Boolean))];
+    const num    = q.dataSetId ? allIds.indexOf(q.dataSetId) + 1 : 1;
+    leftLabel   = `DATA SET ${num} OF ${allIds.length}${ds ? ` — ${ds.title.toUpperCase()}` : ""}`;
+    leftContent = (
+      <div style={{ fontFamily: "var(--font-inter), sans-serif", fontSize: 13 }}>
+        {ds?.description && <p style={{ color: "var(--ink-soft)", marginBottom: 14, lineHeight: 1.5 }}>{ds.description}</p>}
+        <ReviewFigure q={q} />
+      </div>
+    );
+  } else if (section === "sjt") {
+    const scenario = q.scenarioId ? SJT_SCENARIOS[q.scenarioId] : null;
+    const allIds   = [...new Set(qs.map(x => x.scenarioId).filter(Boolean))];
+    const num      = q.scenarioId ? allIds.indexOf(q.scenarioId) + 1 : 1;
+    leftLabel   = `SCENARIO ${num} OF ${allIds.length}${scenario ? ` — ${scenario.title.toUpperCase()}` : ""}`;
+    leftContent = <div style={{ whiteSpace: "pre-wrap" }}>{scenario?.text}</div>;
+  } else {
+    leftLabel   = "INFO";
+    leftContent = (
+      <>
+        {q.preamble && <div style={{ whiteSpace: "pre-wrap" }}>{q.preamble}</div>}
+        {q.vennFigure && <DiagVenn3 fig={q.vennFigure} />}
+      </>
+    );
+  }
+
+  // ── Answer state ──
+  const userIdx = (() => { if (!row) return null; const n = parseInt(row.selected_answer, 10); return isNaN(n) ? null : n; })();
+  const userML: { most: number | null; least: number | null } | null = (() => {
+    if (!row || q.format !== "mostleast") return null;
+    try { return JSON.parse(row.selected_answer); } catch { return null; }
+  })();
+  const userSel: boolean[] | null = (() => {
+    if (!row || q.format !== "multi") return null;
+    try { return JSON.parse(row.selected_answer); } catch { return null; }
+  })();
+  const correctIdx = q.correct ?? 0;
+  const opts = q.format === "tfct" ? TFCT_OPTIONS : q.format === "approp" ? APPROP_OPTIONS : q.format === "import" ? IMPORT_OPTIONS : (q.options ?? []);
+  const gridCols   = section === "vr" ? "1.75fr 1fr" : section === "sjt" ? "1fr 1.2fr" : "1.75fr 1fr";
+
+  return (
+    <div style={{ marginTop: 12 }}>
+      <div className="question-columns" style={{ gridTemplateColumns: gridCols }}>
+
+        {/* ── Left: passage / data / scenario / preamble ── */}
+        <div className="question-context" style={{ maxHeight: "calc(100vh - 270px)", overflowY: "auto" }}>
+          <p style={{ color }}>{leftLabel}</p>
+          {leftContent}
+        </div>
+
+        {/* ── Right: question + revealed answers + walkthrough ── */}
+        <div className="question-answer" style={{ display: "flex", flexDirection: "column", maxHeight: "calc(100vh - 270px)", overflowY: "auto" }}>
+          <p style={{ color }}>QUESTION</p>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <span style={{ fontSize: 11, fontWeight: 900, color, background: tint, padding: "3px 10px", borderRadius: 4 }}>{q.qNum}</span>
+            {row  && <span style={{ fontSize: 11, fontWeight: 700, color: row.is_correct ? "#3DBE6C" : "#FF6B5C" }}>{row.is_correct ? "✓ Correct" : "✗ Wrong"}</span>}
+            {!row && <span style={{ fontSize: 11, color: "var(--ink-soft)", fontStyle: "italic" }}>Not answered</span>}
+          </div>
+
+          {q.preamble && section !== "dm" && (
+            <div style={{ background: "#f8f9fb", borderRadius: 8, padding: "10px 13px", marginBottom: 10, fontSize: 13, lineHeight: 1.65, color: "var(--ink)", whiteSpace: "pre-line" }}>
+              {q.preamble}
+            </div>
+          )}
+
+          <h2 style={{ fontFamily: "var(--font-inter), sans-serif", fontSize: 15, lineHeight: 1.55, margin: "0 0 14px", fontWeight: 700 }}>{q.stem}</h2>
+
+          {/* MCQ / TFCT / Approp / Import */}
+          {(q.format === "mcq" || q.format === "tfct" || q.format === "approp" || q.format === "import") && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+              {opts.map((opt, i) => {
+                const isCorrect  = i === correctIdx;
+                const isSelected = row && userIdx === i;
+                const wrong      = isSelected && !isCorrect;
+                return (
+                  <div key={i} style={{
+                    display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 13px", borderRadius: 10,
+                    background: isCorrect ? "#EDFBF3" : wrong ? "#FFEDEA" : "#f8f9fb",
+                    border: `1.5px solid ${isCorrect ? "#3DBE6C" : wrong ? "#FF6B5C" : "#edf1f6"}`,
+                  }}>
+                    <span style={{ width: 22, height: 22, borderRadius: 6, fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, background: isCorrect ? "#3DBE6C" : wrong ? "#FF6B5C" : "#edf1f6", color: (isCorrect || wrong) ? "white" : "var(--ink-soft)" }}>
+                      {String.fromCharCode(65 + i)}
+                    </span>
+                    <span style={{ fontSize: 13, lineHeight: 1.55, flex: 1 }}>{opt}</span>
+                    {isCorrect && <span style={{ fontSize: 10, fontWeight: 700, color: "#3DBE6C", flexShrink: 0 }}>✓ correct</span>}
+                    {wrong      && <span style={{ fontSize: 10, fontWeight: 700, color: "#FF6B5C", flexShrink: 0 }}>✗ your answer</span>}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Multi Yes/No */}
+          {q.format === "multi" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {(q.statements ?? []).map((stmt, i) => {
+                const correctAns = q.correctStatements?.[i] ?? false;
+                const userAns    = userSel ? userSel[i] : null;
+                const isRight    = row ? userAns === correctAns : null;
+                return (
+                  <div key={i} style={{ background: isRight === null ? "#f8f9fb" : isRight ? "#EDFBF3" : "#FFEDEA", border: `1px solid ${isRight === null ? "var(--line)" : isRight ? "#3DBE6C40" : "#FF6B5C40"}`, borderRadius: 8, padding: "8px 12px" }}>
+                    <p style={{ margin: "0 0 6px", fontSize: 13 }}>{i + 1}. {stmt}</p>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {["Yes", "No"].map((opt, j) => {
+                        const jBool     = j === 0;
+                        const isCor     = jBool === correctAns;
+                        const isSel     = row && userSel !== null && userSel[i] === jBool;
+                        return <span key={j} style={{ fontSize: 11, fontWeight: 700, padding: "2px 12px", borderRadius: 6, background: isCor ? "#3DBE6C" : (isSel && !isCor) ? "#FF6B5C" : "#edf1f6", color: (isCor || (isSel && !isCor)) ? "white" : "var(--ink-soft)" }}>{opt}</span>;
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Most / Least */}
+          {q.format === "mostleast" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {(q.factors ?? []).map((factor, i) => {
+                const isMost  = i === q.correctMost;
+                const isLeast = i === q.correctLeast;
+                return (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, background: (isMost || isLeast) ? "#EDFBF3" : "#f8f9fb", border: `1px solid ${(isMost || isLeast) ? "#3DBE6C40" : "var(--line)"}`, borderRadius: 8, padding: "9px 12px" }}>
+                    <span style={{ fontWeight: 800, fontSize: 11, color: "var(--ink-soft)", minWidth: 18 }}>{String.fromCharCode(65 + i)}.</span>
+                    <span style={{ flex: 1, fontSize: 13 }}>{factor}</span>
+                    <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                      {isMost  && <span style={{ fontSize: 10, fontWeight: 700, background: "#3DBE6C", color: "white",    borderRadius: 4, padding: "2px 7px" }}>MOST ✓</span>}
+                      {isLeast && <span style={{ fontSize: 10, fontWeight: 700, background: "#2D7FF9", color: "white",    borderRadius: 4, padding: "2px 7px" }}>LEAST ✓</span>}
+                      {row && userML?.most  === i && !isMost  && <span style={{ fontSize: 10, fontWeight: 700, background: "#FF6B5C",   color: "white",   borderRadius: 4, padding: "2px 7px" }}>your MOST ✗</span>}
+                      {row && userML?.least === i && !isLeast && <span style={{ fontSize: 10, fontWeight: 700, background: "#FF6B5C28", color: "#FF6B5C", borderRadius: 4, padding: "2px 7px" }}>your LEAST ✗</span>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Walkthrough */}
+          {q.explanation && (
+            <div style={{ marginTop: 14, padding: "12px 14px", background: "#f0f4ff", borderRadius: 10, borderLeft: `3px solid ${color}` }}>
+              <p style={{ fontSize: 10, fontWeight: 800, color, margin: "0 0 5px", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>Walkthrough</p>
+              <p style={{ fontSize: 13, lineHeight: 1.75, color: "var(--ink)", margin: 0 }}>{q.explanation}</p>
+            </div>
+          )}
+
+          <div style={{ flex: 1 }} />
+
+          {/* Prev / Next */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
+            <button
+              onClick={() => onQIdxChange(qIdx - 1)} disabled={qIdx === 0}
+              style={{ minHeight: 40, padding: "0 20px", borderRadius: 10, border: "1.5px solid var(--line)", background: "white", fontWeight: 700, fontSize: 13, cursor: qIdx === 0 ? "not-allowed" : "pointer", opacity: qIdx === 0 ? 0.4 : 1 }}
+            >← Back</button>
+            <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>Q{qIdx + 1} of {qs.length}</span>
+            <button
+              onClick={() => onQIdxChange(qIdx + 1)} disabled={qIdx === qs.length - 1}
+              style={{ minHeight: 40, padding: "0 20px", borderRadius: 10, border: 0, background: color, color: "white", fontWeight: 700, fontSize: 13, cursor: qIdx === qs.length - 1 ? "not-allowed" : "pointer", opacity: qIdx === qs.length - 1 ? 0.4 : 1 }}
+            >Next →</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function DiagnosticResults({ report, responses }: { report: Report; responses: ResponseRow[] }) {
@@ -435,6 +646,7 @@ export default function DiagnosticResults({ report, responses }: { report: Repor
   const [resetting, setResetting] = useState(false);
   const [activeTab, setActiveTab] = useState<"results" | "review">("results");
   const [reviewSection, setReviewSection] = useState<string>("vr");
+  const [reviewQIdx, setReviewQIdx] = useState(0);
 
   async function handleRetake() {
     setResetting(true);
@@ -515,7 +727,7 @@ export default function DiagnosticResults({ report, responses }: { report: Repor
   const sjtMax = bySection.sjt.reduce((s, [, v]) => s + v.maxPts, 0);
 
   return (
-    <div style={{ maxWidth: 840, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
+    <div style={{ maxWidth: activeTab === "review" ? "none" : 840, margin: "0 auto", display: "flex", flexDirection: "column", gap: 14 }}>
 
       {/* ── Tab switcher ── */}
       <div style={{ display: "flex", gap: 0, background: "#f0f2f5", borderRadius: 12, padding: 3, width: "fit-content" }}>
@@ -816,62 +1028,38 @@ export default function DiagnosticResults({ report, responses }: { report: Repor
         <div>
           {/* ── Sticky navigator ── */}
           <div style={{ position: "sticky", top: 0, zIndex: 20, background: "var(--bg, #f5f7fa)", paddingTop: 4, paddingBottom: 10 }}>
-            {/* Section tabs */}
             <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" as const }}>
               {(["vr", "dm", "qr", "sjt"] as const).map(sec => {
-                const secQs = DIAGNOSTIC_QUESTIONS.filter(q => q.section === sec);
+                const secQs  = DIAGNOSTIC_QUESTIONS.filter(q => q.section === sec);
                 const correct = secQs.filter(q => responseMap.get(q.qNum - 1)?.is_correct).length;
-                const color = COLORS[sec];
+                const color  = COLORS[sec];
                 return (
-                  <button
-                    key={sec}
-                    type="button"
-                    onClick={() => setReviewSection(sec)}
-                    style={{
-                      padding: "7px 16px", borderRadius: 10, border: "1.5px solid",
-                      borderColor: reviewSection === sec ? color : "var(--line)",
-                      background: reviewSection === sec ? color + "12" : "white",
-                      color: reviewSection === sec ? color : "var(--ink-soft)",
-                      fontWeight: 700, fontSize: 12, cursor: "pointer",
-                    }}
+                  <button key={sec} type="button"
+                    onClick={() => { setReviewSection(sec); setReviewQIdx(0); }}
+                    style={{ padding: "7px 16px", borderRadius: 10, border: "1.5px solid", borderColor: reviewSection === sec ? color : "var(--line)", background: reviewSection === sec ? color + "12" : "white", color: reviewSection === sec ? color : "var(--ink-soft)", fontWeight: 700, fontSize: 12, cursor: "pointer" }}
                   >
                     {sec.toUpperCase()} · {correct}/{secQs.length}
                   </button>
                 );
               })}
             </div>
-
-            {/* Question colour grid */}
             <div style={{ background: "white", borderRadius: 10, border: "1px solid var(--line)", padding: "10px 12px" }}>
               <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 5 }}>
-                {DIAGNOSTIC_QUESTIONS.filter(q => q.section === reviewSection).map(q => {
-                  const row = responseMap.get(q.qNum - 1);
-                  const bg   = !row ? "#e2e8f0" : row.is_correct ? "#3DBE6C" : "#FF6B5C";
-                  const fg   = !row ? "#64748b" : "white";
+                {DIAGNOSTIC_QUESTIONS.filter(q => q.section === reviewSection).map((q, idx) => {
+                  const row    = responseMap.get(q.qNum - 1);
+                  const bg     = !row ? "#e2e8f0" : row.is_correct ? "#3DBE6C" : "#FF6B5C";
+                  const fg     = !row ? "#64748b" : "white";
+                  const active = idx === reviewQIdx;
                   return (
-                    <button
-                      key={q.id}
-                      type="button"
-                      title={`Q${q.qNum}`}
-                      onClick={() => {
-                        document.getElementById(`review-q-${q.qNum}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-                      }}
-                      style={{
-                        width: 28, height: 28, borderRadius: 6,
-                        background: bg, border: 0,
-                        fontSize: 9, fontWeight: 800, color: fg,
-                        cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                        flexShrink: 0,
-                      }}
-                    >
-                      {q.qNum}
-                    </button>
+                    <button key={q.id} type="button"
+                      onClick={() => setReviewQIdx(idx)}
+                      style={{ width: 28, height: 28, borderRadius: 6, background: bg, border: active ? "2.5px solid #1a2535" : "2px solid transparent", fontSize: 9, fontWeight: 800, color: fg, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+                    >{q.qNum}</button>
                   );
                 })}
               </div>
-              {/* Legend */}
               <div style={{ display: "flex", gap: 12, marginTop: 8, paddingTop: 8, borderTop: "1px solid #f0f2f5" }}>
-                {[["#3DBE6C", "Correct"], ["#FF6B5C", "Wrong"], ["#e2e8f0", "Not answered"]] .map(([c, l]) => (
+                {[["#3DBE6C","Correct"],["#FF6B5C","Wrong"],["#e2e8f0","Not answered"]].map(([c,l]) => (
                   <span key={l} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10, color: "var(--ink-soft)", fontWeight: 600 }}>
                     <span style={{ width: 10, height: 10, borderRadius: 3, background: c, display: "inline-block" }} />{l}
                   </span>
@@ -880,7 +1068,7 @@ export default function DiagnosticResults({ report, responses }: { report: Repor
             </div>
           </div>
 
-          <ReviewSection section={reviewSection} responseMap={responseMap} />
+          <ReviewExam section={reviewSection} qIdx={reviewQIdx} onQIdxChange={setReviewQIdx} responseMap={responseMap} />
         </div>
       )}
     </div>
