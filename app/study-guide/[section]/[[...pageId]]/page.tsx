@@ -1073,7 +1073,10 @@ const DM_LESSONS: Record<string, {
       title: "Five presentations Mon–Fri",
       stimulus: [
         "A conference runs from Monday to Friday. Five speakers — J, K, L, M, and N — each present on a different day. The schedule must follow these rules:",
-        "J presents before L.  |  K presents immediately after L, with no gap between them.  |  N presents on Thursday.  |  M presents on Friday.",
+        "J presents before L.",
+        "K presents immediately after L, with no gap between them.",
+        "N presents on Thursday.",
+        "M presents on Friday.",
       ],
       q: "Which speaker must present on Monday?",
       steps: [
@@ -1113,7 +1116,9 @@ const DM_LESSONS: Record<string, {
       title: "Symptoms X and Y — how many have both?",
       stimulus: [
         "A respiratory clinic reviewed 100 patients admitted over one week. Doctors recorded which patients presented with symptom X (a persistent cough) and which presented with symptom Y (shortness of breath).",
-        "62 patients had symptom X.  |  51 patients had symptom Y.  |  23 patients had neither symptom.",
+        "62 patients had symptom X.",
+        "51 patients had symptom Y.",
+        "23 patients had neither symptom.",
       ],
       q: "How many patients had both symptom X and symptom Y?",
       steps: [
@@ -1362,7 +1367,7 @@ function TopicVisual({ topicId, color: c, tint: t, deep: d }: { topicId: string;
 function VennWorkedExample({ c, t, d }: { c: string; t: string; d: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <svg viewBox="0 0 320 165" style={{ width: "100%" }} aria-label="Two-circle Venn diagram with regions filled">
+      <svg viewBox="0 0 320 165" style={{ width: "100%", maxWidth: 280 }} aria-label="Two-circle Venn diagram with regions filled">
         <rect x="4" y="4" width="312" height="154" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5"/>
         <text x="24" y="22" fontSize="8" fontWeight="700" fill="#64748b">NEITHER</text>
         <text x="24" y="40" fontSize="16" fontWeight="900" fill="#64748b">23</text>
