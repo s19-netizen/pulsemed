@@ -593,7 +593,8 @@ const SHAPE_HINTS = ["Safety first", "Honesty always", "Act within your role", "
 
 // ─── QR lesson data ──────────────────────────────────────────────────────────
 
-type QRFormula = { title: string; formula: string; example: string };
+type FPart    = string | { top: string; bottom: string };
+type QRFormula = { title: string; parts: FPart[]; example: string };
 type QRStep    = { label: string; calc: string; result: string };
 type QRWorked  = { title: string; passage: string; question: string; steps: QRStep[]; answer: string; trap?: string };
 type QRLesson  = {
@@ -619,27 +620,27 @@ const QR_LESSONS: Record<string, QRLesson> = {
     formulas: [
       {
         title: "One part of a ratio",
-        formula: "One part  =  Total  ÷  Sum of all ratio parts",
+        parts: ["One part  =  ", { top: "Total", bottom: "Sum of all ratio parts" }],
         example: "Ratio 3 : 5  →  sum = 8.  Total = 480.  One part = 480 ÷ 8 = 60.",
       },
       {
         title: "Your share of a ratio",
-        formula: "Share  =  One part  ×  Your ratio number",
+        parts: ["Share  =  One part  ×  Your ratio number"],
         example: "The '3' share = 60 × 3 = 180.  The '5' share = 60 × 5 = 300.",
       },
       {
         title: "Direct proportion (scale up/down)",
-        formula: "New amount  =  (Target quantity  ÷  Base quantity)  ×  Original amount",
+        parts: ["New amount  =  ", { top: "Target quantity", bottom: "Base quantity" }, "  ×  Original amount"],
         example: "Recipe for 8 needs 320 g flour. For 14: (14 ÷ 8) × 320 = 560 g.",
       },
       {
         title: "Inverse proportion (rate × time = constant)",
-        formula: "Rate₁ × Time₁  =  Rate₂ × Time₂",
+        parts: ["Rate₁ × Time₁  =  Rate₂ × Time₂"],
         example: "4 pumps × 9 h = 6 pumps × T₂.  T₂ = 36 ÷ 6 = 6 hours.",
       },
       {
         title: "Reverse a processing loss",
-        formula: "Raw input  =  Usable output  ÷  Survival rate",
+        parts: ["Raw input  =  ", { top: "Usable output", bottom: "Survival rate" }],
         example: "Need 186 L usable. 7% lost → survival = 0.93.  Raw = 186 ÷ 0.93 = 200 L.",
       },
     ],
@@ -735,27 +736,27 @@ const QR_LESSONS: Record<string, QRLesson> = {
     formulas: [
       {
         title: "Reading a bar or line chart",
-        formula: "Value  =  Scale value at the top of the bar (or point on the line)",
+        parts: ["Value  =  Scale value at the top of the bar (or point on the line)"],
         example: "Bar reaches 7.5 on a 0–10 axis with gridlines every 2.5 → value = 7.5.",
       },
       {
         title: "Pie chart — value from angle",
-        formula: "Value  =  (Angle ÷ 360)  ×  Total",
+        parts: ["Value  =  ", { top: "Angle", bottom: "360" }, "  ×  Total"],
         example: "Sector angle = 72°. Total = £500,000.  Value = (72 ÷ 360) × 500,000 = £100,000.",
       },
       {
         title: "Pie chart — angle from percentage",
-        formula: "Angle  =  Percentage  ×  3.6",
+        parts: ["Angle  =  Percentage  ×  3.6"],
         example: "35% sector: 35 × 3.6 = 126°.",
       },
       {
         title: "Stacked bar — reading a segment",
-        formula: "Segment value  =  Top of segment  −  Bottom of segment",
+        parts: ["Segment value  =  Top of segment  −  Bottom of segment"],
         example: "Top of middle segment = 80. Bottom of middle segment = 50.  Segment = 30.",
       },
       {
         title: "Percentage change from a chart",
-        formula: "% change  =  ((New − Old)  ÷  Old)  ×  100",
+        parts: ["% change  =  ", { top: "New − Old", bottom: "Old" }, "  ×  100"],
         example: "Bar rises from 40 to 52.  Change = 12. % change = (12 ÷ 40) × 100 = 30%.",
       },
     ],
@@ -842,27 +843,27 @@ const QR_LESSONS: Record<string, QRLesson> = {
     formulas: [
       {
         title: "Percentage of an amount",
-        formula: "Amount  =  Percentage  ÷  100  ×  Total",
+        parts: ["Amount  =  ", { top: "Percentage", bottom: "100" }, "  ×  Total"],
         example: "35% of £18,000 = 0.35 × 18,000 = £6,300.",
       },
       {
         title: "Percentage change",
-        formula: "% change  =  (Change  ÷  Original)  ×  100",
+        parts: ["% change  =  ", { top: "Change", bottom: "Original" }, "  ×  100"],
         example: "Price rises from £80 to £92. Change = 12. % change = (12 ÷ 80) × 100 = 15%.",
       },
       {
         title: "Multiplier for a change",
-        formula: "Increase by r% → multiply by (1 + r/100).   Decrease by r% → multiply by (1 − r/100)",
+        parts: ["Increase by r%  →  multiply by  (1 + ", { top: "r", bottom: "100" }, ")     Decrease by r%  →  multiply by  (1 − ", { top: "r", bottom: "100" }, ")"],
         example: "15% discount: multiply by 0.85.  20% rise: multiply by 1.20.",
       },
       {
         title: "Reverse a percentage (find the original)",
-        formula: "Original  =  Known value  ÷  Multiplier",
+        parts: ["Original  =  ", { top: "Known value", bottom: "Multiplier" }],
         example: "After 15% off, price is £68. Original = £68 ÷ 0.85 = £80.",
       },
       {
         title: "Repeated percentage changes",
-        formula: "Final  =  Original  ×  Multiplier₁  ×  Multiplier₂  × …",
+        parts: ["Final  =  Original  ×  Multiplier₁  ×  Multiplier₂  × …"],
         example: "−20% then +20%: 1.00 × 0.80 × 1.20 = 0.96 → net −4%. They do NOT cancel.",
       },
     ],
@@ -920,12 +921,12 @@ const QR_LESSONS: Record<string, QRLesson> = {
     formulas: [
       {
         title: "Absolute value from a percentage column",
-        formula: "Absolute amount  =  Row total  ×  (Percentage  ÷  100)",
+        parts: ["Absolute amount  =  Row total  ×  ", { top: "Percentage", bottom: "100" }],
         example: "Row total = 18,000. Follow-up % = 35%.  Follow-ups = 18,000 × 0.35 = 6,300.",
       },
       {
         title: "Combining two rows",
-        formula: "Combined total  =  Row A value  +  Row B value  (same column)",
+        parts: ["Combined total  =  Row A value  +  Row B value  (same column)"],
         example: "North Q1 = 4,200. South Q1 = 3,800. Combined = 8,000.",
       },
     ],
@@ -1495,8 +1496,16 @@ function QRLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
               <span style={{ fontSize: 11, fontWeight: 800, color: "white", letterSpacing: ".06em", textTransform: "uppercase" as const }}>{f.title}</span>
             </div>
             <div style={{ padding: "12px 16px", background: "white" }}>
-              <div style={{ fontFamily: "monospace", fontSize: 14, fontWeight: 700, color: d, background: t, borderRadius: 8, padding: "10px 14px", marginBottom: 8, letterSpacing: ".02em" }}>
-                {f.formula}
+              <div style={{ background: t, borderRadius: 8, padding: "12px 16px", marginBottom: 8, display: "flex", alignItems: "center", flexWrap: "wrap", gap: "4px 2px" }}>
+                {f.parts.map((p, pi) =>
+                  typeof p === "string"
+                    ? <span key={pi} style={{ fontFamily: "monospace", fontSize: 14, fontWeight: 700, color: d, whiteSpace: "pre" }}>{p}</span>
+                    : <span key={pi} style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", margin: "0 4px", verticalAlign: "middle" }}>
+                        <span style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 700, color: d, lineHeight: 1.2, paddingBottom: 2 }}>{p.top}</span>
+                        <span style={{ display: "block", height: 2, background: d, borderRadius: 1, width: "100%", minWidth: 20 }} />
+                        <span style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 700, color: d, lineHeight: 1.2, paddingTop: 2 }}>{p.bottom}</span>
+                      </span>
+                )}
               </div>
               <p style={{ margin: 0, fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.6 }}>
                 <strong style={{ color: "var(--ink)" }}>Example: </strong>{f.example}
@@ -1640,6 +1649,886 @@ function QRLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
         </div>
         <button className="vrg-practice-cta" onClick={onPractice} type="button">Set up practice →</button>
       </section>
+      <GuidePageActions section={section} pageId={pageId} onNavigate={onNavigate} />
+    </>
+  );
+}
+
+// ─── VR lesson data ──────────────────────────────────────────────────────────
+
+type VRWorked = {
+  title: string;
+  passage: string;
+  question: string;
+  format: "tfct" | "mcq";
+  options?: string[];
+  correctIdx?: number;
+  steps: { label: string; action: string }[];
+  highlight: string;
+  answer: string;
+  trap?: string;
+};
+
+type VRLesson = {
+  format: "tfct" | "mcq";
+  idea: string;
+  identify: string[];
+  signals: string[];
+  proveNotes: [string, string][];
+  worked: VRWorked[];
+  traps: [string, string][];
+};
+
+const VR_LESSONS: Record<string, VRLesson> = {
+  "tfct-direct": {
+    format: "tfct",
+    idea: "The answer is explicitly stated in the passage. You are matching a statement to words that are already there — not inferring anything, just finding and confirming.",
+    identify: [
+      "The statement closely paraphrases one sentence in the passage.",
+      "The question asks about a specific fact: who, what, when, where, how many.",
+      "You should be able to underline a single sentence that settles the question.",
+    ],
+    signals: ["According to the passage…", "What happened…", "Where did…", "When did…", "Who…", "Which factor…"],
+    proveNotes: [
+      ["P — Passage only", "No outside knowledge. Everything you need is in the text."],
+      ["R — Read the statement", "Break it into parts. Identify every specific claim (person, time, quantity)."],
+      ["O — One anchor", "Pick the most distinctive word or number in the statement to scan for. Names and dates work best."],
+      ["V — Verify every part", "A joined statement ('X happened and Y followed') needs both halves supported."],
+      ["E — Evidence gap", "If the passage says nothing about a claim, that is Can't Tell — not False."],
+    ],
+    worked: [
+      {
+        title: "Direct fact — location",
+        format: "tfct",
+        passage: "The first clinical trials of the new malaria vaccine began in Kenya in 2014. Researchers initially recruited 600 adults before expanding the study to include children the following year.",
+        question: "The first trials of the malaria vaccine began in Kenya.",
+        steps: [
+          { label: "Anchor", action: "Use 'first trials' — that phrase appears almost verbatim in the passage." },
+          { label: "Locate", action: "Sentence 1: 'The first clinical trials of the new malaria vaccine began in Kenya in 2014.'" },
+          { label: "Compare", action: "Statement says 'began in Kenya.' Passage says 'began in Kenya.' Exact match." },
+          { label: "Decision", action: "The passage directly and explicitly supports the statement." },
+        ],
+        highlight: "The first clinical trials of the new malaria vaccine began in Kenya in 2014.",
+        answer: "True",
+      },
+      {
+        title: "Joined statement — both parts must hold",
+        format: "tfct",
+        passage: "The bridge was completed in 1887. It was opened to pedestrians only; motor vehicles were not permitted to cross until 1924.",
+        question: "The bridge was completed in 1887 and was immediately open to all traffic.",
+        steps: [
+          { label: "Split the statement", action: "Part 1: 'completed in 1887' — Part 2: 'immediately open to all traffic'" },
+          { label: "Verify Part 1", action: "Passage says 'completed in 1887.' Supported." },
+          { label: "Verify Part 2", action: "Passage says 'pedestrians only' and motor vehicles not until 1924. 'All traffic' is contradicted." },
+          { label: "Decision", action: "One part is contradicted. The whole statement is False." },
+        ],
+        highlight: "opened to pedestrians only; motor vehicles were not permitted to cross until 1924.",
+        answer: "False",
+        trap: "Part 1 is true — students who stop after matching the first clause choose True. Always check every clause.",
+      },
+      {
+        title: "Silence is not contradiction",
+        format: "tfct",
+        passage: "The committee met three times during November. Its recommendations were submitted to the board in December.",
+        question: "The committee met more than three times in November.",
+        steps: [
+          { label: "Anchor", action: "Use 'November' and 'committee met'." },
+          { label: "Locate", action: "Passage says 'met three times during November.'" },
+          { label: "Compare", action: "Statement says 'more than three times.' Passage says exactly three." },
+          { label: "Does the passage contradict it?", action: "Yes — 'three times' directly contradicts 'more than three times.'" },
+        ],
+        highlight: "The committee met three times during November.",
+        answer: "False",
+        trap: "If the passage had said 'at least twice,' the answer would be Can't Tell — 'at least twice' doesn't rule out more meetings. Exact numbers do contradict.",
+      },
+    ],
+    traps: [
+      ["Stop after one keyword", "Matching the anchor word is step one, not the finish line. Read the whole evidence sentence."],
+      ["Half-right trap", "Both parts of a joined statement must be supported. The first clause alone is not enough."],
+      ["Missing a negative", "If the passage says 'not before 1900' and the statement says 'after 1900,' those are different claims."],
+      ["Silence = Can't Tell", "If the passage simply doesn't mention something, that is Can't Tell — not False."],
+    ],
+  },
+
+  "tfct-inference": {
+    format: "tfct",
+    idea: "The answer follows necessarily from the passage — it is not stated word for word, but it cannot be avoided given the evidence. The key question is: must this be true, not could it be true.",
+    identify: [
+      "The statement combines two or more facts from the passage.",
+      "The conclusion is one step removed from the stated text.",
+      "No single sentence settles the question alone.",
+    ],
+    signals: ["Which of the following can be inferred…", "What must follow…", "What can be concluded…", "It follows that…"],
+    proveNotes: [
+      ["P — Passage only", "Build the chain only from evidence in the passage. Do not import any real-world assumptions."],
+      ["R — Read the conclusion", "Identify what the statement is actually claiming before searching for evidence."],
+      ["O — One starting fact", "Find the first piece of evidence in the chain and anchor your reading there."],
+      ["V — Verify necessity", "Ask: is any other outcome still possible? If yes, the conclusion is possible, not certain — Can't Tell."],
+      ["E — Evidence gap", "False needs the passage to actively rule something out. Uncertainty alone is Can't Tell."],
+    ],
+    worked: [
+      {
+        title: "Two-fact chain",
+        format: "tfct",
+        passage: "For most of the year, the island's ferry service operated every two hours. During winter storms, however, crossings were frequently cancelled because the harbour became unsafe. Islanders were therefore advised to keep several days' supplies of essential goods at home between November and February.",
+        question: "Winter weather can disrupt islanders' access to the mainland.",
+        steps: [
+          { label: "Anchor", action: "Use 'winter' — this anchors to the middle sentence." },
+          { label: "Fact 1", action: "'During winter storms, crossings were frequently cancelled.'" },
+          { label: "Fact 2", action: "'Islanders were advised to keep several days' supplies at home' — implying supply chains could be interrupted." },
+          { label: "Chain", action: "Cancelled crossings → disrupted access. The conclusion must follow." },
+          { label: "Decision", action: "The passage establishes this unavoidably. True." },
+        ],
+        highlight: "During winter storms, however, crossings were frequently cancelled because the harbour became unsafe.",
+        answer: "True",
+        trap: "Don't over-infer: 'The island is completely inaccessible in winter' is False — the passage says frequently, not always.",
+      },
+      {
+        title: "Necessary vs merely possible",
+        format: "tfct",
+        passage: "All manuscripts catalogued before 1900 are stored in the off-site archive. The Alderton manuscript was catalogued in 1887.",
+        question: "The Alderton manuscript is stored in the off-site archive.",
+        steps: [
+          { label: "Rule", action: "'All manuscripts catalogued before 1900 are stored off-site.'" },
+          { label: "Fact", action: "'The Alderton manuscript was catalogued in 1887.'" },
+          { label: "Apply", action: "1887 is before 1900, so the Alderton falls under the rule. It must be stored off-site." },
+          { label: "Decision", action: "No other outcome is allowed. True." },
+        ],
+        highlight: "All manuscripts catalogued before 1900 are stored in the off-site archive.",
+        answer: "True",
+      },
+    ],
+    traps: [
+      ["Possible vs certain", "'Could be true' is not the same as 'must be true.' If any doubt remains, choose Can't Tell."],
+      ["Reversing a rule", "From 'all A are B' you cannot conclude 'all B are A.' The rule only runs one way."],
+      ["Adding a cause", "If the passage shows two things happening together, that is not evidence of one causing the other."],
+      ["Mixing groups", "Evidence about one group cannot automatically be applied to a different group in the same passage."],
+    ],
+  },
+
+  "tfct-comparisons": {
+    format: "tfct",
+    idea: "The passage gives numbers, rankings or relationships. You must check whether the comparison in the statement matches what the passage actually says — including direction, base and time period.",
+    identify: [
+      "The statement uses comparison language: more, less, higher, lower, twice, faster, earlier.",
+      "Numbers or percentages appear in the passage.",
+      "The question involves ranking, proportion or change over time.",
+    ],
+    signals: ["Which was greater…", "Compared with…", "Twice as many…", "Higher than…", "Increased by…"],
+    proveNotes: [
+      ["P — Passage only", "Use only the figures given. Do not assume a starting value or typical baseline."],
+      ["R — Name both things", "Identify what is being compared to what — the base matters as much as the figure."],
+      ["O — Anchor on numbers", "Scan for the specific number or percentage mentioned in the statement."],
+      ["V — Verify direction", "Check: is A higher than B or B higher than A? Reversals are the most common trap."],
+      ["E — Evidence gap", "If the passage doesn't give one of the values needed, that is Can't Tell."],
+    ],
+    worked: [
+      {
+        title: "Percentage comparison — watch the base",
+        format: "tfct",
+        passage: "In the trial, Group A showed a 20% improvement in test scores. Group B showed a 15% improvement over the same period. Both groups started at the same baseline score of 60 points.",
+        question: "Group A's final score was higher than Group B's final score.",
+        steps: [
+          { label: "Anchor", action: "Use 'Group A' and 'Group B' + 'score'." },
+          { label: "Extract", action: "Both start at 60. Group A: 60 × 1.20 = 72. Group B: 60 × 1.15 = 69." },
+          { label: "Compare", action: "72 > 69. Group A's final score is higher." },
+          { label: "Decision", action: "True." },
+        ],
+        highlight: "Group A showed a 20% improvement… Group B showed a 15% improvement… Both groups started at the same baseline score of 60 points.",
+        answer: "True",
+        trap: "If the groups had different starting scores, you cannot compare percentages directly. Always check the base.",
+      },
+      {
+        title: "Reversal trap",
+        format: "tfct",
+        passage: "Hospital A admitted 840 patients in Q1. Hospital B admitted 1,120 patients in the same period.",
+        question: "Hospital A admitted more patients than Hospital B in Q1.",
+        steps: [
+          { label: "Extract A", action: "840 patients." },
+          { label: "Extract B", action: "1,120 patients." },
+          { label: "Compare", action: "840 < 1,120. A admitted fewer, not more." },
+          { label: "Decision", action: "The statement says A > B, but the evidence says A < B. False." },
+        ],
+        highlight: "Hospital A admitted 840 patients in Q1. Hospital B admitted 1,120 patients in the same period.",
+        answer: "False",
+        trap: "Reversals feel obvious once spotted but are easy to miss when reading quickly under time pressure.",
+      },
+    ],
+    traps: [
+      ["Reversal", "Mixing up which thing is bigger. Always write A vs B with arrows before deciding."],
+      ["Different bases", "Comparing percentages only works when the starting values are the same or the passage gives absolute figures."],
+      ["Wrong time period", "A comparison in one year doesn't prove anything about a different year."],
+      ["Association ≠ cause", "Even if A is higher than B, the passage may not say A caused B."],
+    ],
+  },
+
+  "tfct-scope": {
+    format: "tfct",
+    idea: "The passage says something about a limited group or situation. The statement stretches that finding — using stronger, broader or more certain language than the evidence supports. Your job is to judge whether the claim stays within the passage's boundaries.",
+    identify: [
+      "The statement uses absolute or universal language: all, always, every, never, proves, causes, definitely.",
+      "The passage uses qualified language: some, may, suggests, associated with, in this study.",
+      "The claim is broader than the evidence: the passage studied one group; the statement claims everyone.",
+    ],
+    signals: ["All… always… every… never… only… must… proves… causes… entirely… definitely…"],
+    proveNotes: [
+      ["P — Passage only", "The passage defines the evidence boundary. Don't let outside knowledge expand it."],
+      ["R — Read the scope words", "Circle every word in the statement that controls strength or breadth (all, may, causes, suggests)."],
+      ["O — Locate the evidence", "Find the passage sentence that is most relevant to the statement."],
+      ["V — Compare scope", "Is the statement's claim stronger or broader than the passage's evidence? If yes, it fails the scope test."],
+      ["E — Evidence gap", "If the passage is silent on some of the claim, that is Can't Tell. Only False if the passage actively contradicts the scope."],
+    ],
+    worked: [
+      {
+        title: "Association is not causation",
+        format: "tfct",
+        passage: "A study of 1,200 university students found that those who regularly ate breakfast reported higher average concentration scores than students who skipped breakfast. The researchers noted that several other factors, including sleep and exercise, may have influenced the results. They therefore concluded that breakfast consumption was associated with concentration but that a causal relationship had not been established.",
+        question: "Eating breakfast causes university students to concentrate better.",
+        steps: [
+          { label: "Scope word in statement", action: "'causes' — this is a strong causal claim." },
+          { label: "Find evidence", action: "'breakfast consumption was associated with concentration' and 'a causal relationship had not been established.'" },
+          { label: "Compare", action: "Statement: 'causes.' Passage: 'associated, not causal.' Direct contradiction." },
+          { label: "Decision", action: "False — the passage explicitly rejects causation." },
+        ],
+        highlight: "breakfast consumption was associated with concentration but that a causal relationship had not been established.",
+        answer: "False",
+        trap: "The study does show a positive link — that makes True tempting. But the passage uses 'associated,' not 'causes.'",
+      },
+      {
+        title: "Some vs all — Can't Tell boundary",
+        format: "tfct",
+        passage: "Several employees who took part in the four-day working week trial reported improved job satisfaction.",
+        question: "All employees experienced improved job satisfaction during the trial.",
+        steps: [
+          { label: "Scope word in statement", action: "'All' — universal claim." },
+          { label: "Evidence scope", action: "'Several employees' — partial, not universal." },
+          { label: "Does the passage say some didn't improve?", action: "No — it only says 'several reported improvement.'" },
+          { label: "Decision", action: "Can't prove all. Can't prove not-all either. Can't Tell." },
+        ],
+        highlight: "Several employees who took part in the four-day working week trial reported improved job satisfaction.",
+        answer: "Can't Tell",
+        trap: "Choosing False because 'several ≠ all' — that's the most common mistake here. The passage doesn't say some didn't improve, so you cannot call it False.",
+      },
+    ],
+    traps: [
+      ["Some → All", "Some, several, many — these are not all. But they don't prove 'not all' either. The gap is Can't Tell."],
+      ["May → Will", "The treatment may reduce symptoms ≠ the treatment will reduce symptoms."],
+      ["One study → Universal", "A single study, sample or trial cannot prove a universal claim."],
+      ["Suggesting → Proving", "'The results suggest' is softer than 'the results prove.' Match the strength exactly."],
+      ["No evidence → False", "If the passage doesn't address a claim, that is Can't Tell, not False."],
+    ],
+  },
+
+  "mcq-direct": {
+    format: "mcq",
+    idea: "One of the four options accurately restates a specific fact from the passage. The other three either misquote a detail, apply it to the wrong person or time period, or use near-match wording that quietly changes the meaning.",
+    identify: [
+      "The stem asks for a specific fact: who, what, when, where, how many, which one.",
+      "The stem often says 'according to the passage' or 'what does the passage state.'",
+      "One option will match a single sentence in the passage closely.",
+    ],
+    signals: ["According to the passage…", "What does the passage say about…", "Which of the following is stated…", "What did X do…", "When did…"],
+    proveNotes: [
+      ["P — Passage only", "Don't rely on what you know about the topic. Only what this passage says counts."],
+      ["R — Name the target detail", "Identify exactly what you're hunting: a person, date, place, action or quantity."],
+      ["O — Most distinctive word", "Use the rarest word in the stem — a name, unusual term or number — as your scan anchor."],
+      ["V — Test every clause", "Read the whole option, not just the part that sounds familiar. The wrong clause is often at the end."],
+      ["E — Eliminate explicitly", "Rule each wrong option out by pointing to what the passage says instead."],
+    ],
+    worked: [
+      {
+        title: "Right fact, wrong person",
+        format: "mcq",
+        passage: "Dr Yuen led the original research project in 2019. Her colleague Dr Marsh joined the team in 2021 and took over project leadership when Dr Yuen moved to a different institution the following year.",
+        question: "According to the passage, who led the research project from 2022?",
+        options: ["Dr Yuen", "Dr Marsh", "Both Dr Yuen and Dr Marsh jointly", "The passage does not say"],
+        correctIdx: 1,
+        steps: [
+          { label: "Anchor", action: "Use '2022' — the question asks about leadership from that year." },
+          { label: "Locate", action: "'Dr Yuen moved to a different institution the following year' — the year after 2021 is 2022. Dr Marsh 'took over project leadership' at that point." },
+          { label: "Test Option A", action: "Dr Yuen moved away in 2022. Eliminated." },
+          { label: "Test Option B", action: "Dr Marsh took over leadership. Supported by the passage." },
+          { label: "Decision", action: "B." },
+        ],
+        highlight: "Dr Marsh joined the team in 2021 and took over project leadership when Dr Yuen moved to a different institution the following year.",
+        answer: "B — Dr Marsh",
+        trap: "Dr Yuen is the first name mentioned and leads the project initially — a hurried reading assigns 2022 leadership to her.",
+      },
+      {
+        title: "Near-match wording",
+        format: "mcq",
+        passage: "The scheme was proposed in 2019 and approved by the council in June 2020. Construction began the following January and the facility opened to the public in March 2022.",
+        question: "According to the passage, when did the scheme receive council approval?",
+        options: ["2019", "June 2020", "January 2021", "March 2022"],
+        correctIdx: 1,
+        steps: [
+          { label: "Target", action: "'Council approval' — scan for that phrase or synonyms." },
+          { label: "Locate", action: "'approved by the council in June 2020.'" },
+          { label: "Match", action: "Option B: 'June 2020.' Exact match." },
+          { label: "Eliminate others", action: "2019 = proposed. January 2021 = construction start. March 2022 = opening." },
+        ],
+        highlight: "approved by the council in June 2020.",
+        answer: "B — June 2020",
+        trap: "2019 is the first year mentioned and 'proposed' sounds close to 'approved.' Check what happened in each year.",
+      },
+    ],
+    traps: [
+      ["Right fact, wrong person", "The detail is real but the passage assigns it to someone else."],
+      ["Right fact, wrong time", "The event happened — but in a different year or phase."],
+      ["Near-match wording", "One word changes the meaning: 'planned' vs 'launched,' 'proposed' vs 'approved.'"],
+      ["Familiar option", "An option feels right because it's the first thing mentioned — always verify against the passage."],
+    ],
+  },
+
+  "mcq-inference": {
+    format: "mcq",
+    idea: "The right answer follows necessarily from the passage but is not stated word for word. It uses the fewest assumptions, the mildest language, and stays closest to what the text actually establishes.",
+    identify: [
+      "The stem says 'can be inferred,' 'most reasonably concluded,' 'most strongly suggested.'",
+      "No single sentence states the answer directly.",
+      "You need to combine two or more details to reach a conclusion.",
+    ],
+    signals: ["Which of the following can be inferred…", "What can be most reasonably concluded…", "The passage most strongly suggests…", "What must follow from…"],
+    proveNotes: [
+      ["P — Passage only", "Real-world assumptions disqualify an answer. Every step of the chain must come from the passage."],
+      ["R — Identify the region", "Work out which part of the passage the question draws from before looking at the options."],
+      ["O — Evidence anchor", "Find the central piece of evidence the inference depends on."],
+      ["V — Check for added assumptions", "Ask of each option: does reaching this conclusion require any fact the passage doesn't give?"],
+      ["E — Eliminate the travellers", "Reject options that travel furthest from the text. The right answer often sounds modest."],
+    ],
+    worked: [
+      {
+        title: "Narrowest safe conclusion",
+        format: "mcq",
+        passage: "A community organisation tracked volunteering hours over two years. When coordinators were assigned to specific roles with clear descriptions, volunteers stayed for significantly longer periods than when roles were loosely defined. The organisation also noted that recruitment costs fell during the second year when retention improved.",
+        question: "Which of the following can be inferred from the passage?",
+        options: [
+          "Role clarity is the sole factor that determines volunteer retention.",
+          "Volunteer retention may be linked to the clarity of role descriptions.",
+          "The organisation will continue to use clear role descriptions in future.",
+          "All organisations benefit from assigning specific volunteer roles.",
+        ],
+        correctIdx: 1,
+        steps: [
+          { label: "Central evidence", action: "'volunteers stayed for significantly longer periods' when roles had 'clear descriptions.'" },
+          { label: "Test A", action: "'Sole factor' — the passage shows a link but does not rule out other factors. Too strong." },
+          { label: "Test B", action: "'May be linked' — cautious language. The passage establishes a correlation. This fits." },
+          { label: "Test C", action: "Future plans — the passage says nothing about what the organisation will do next. Can't infer." },
+          { label: "Test D", action: "'All organisations' — the passage studies one organisation. Far too broad." },
+        ],
+        highlight: "When coordinators were assigned to specific roles with clear descriptions, volunteers stayed for significantly longer periods.",
+        answer: "B — Volunteer retention may be linked to the clarity of role descriptions",
+        trap: "Option A sounds like a strong summary — but 'sole factor' goes beyond what one study can establish.",
+      },
+    ],
+    traps: [
+      ["Too strong", "Absolute language (only, always, proves) nearly always fails. The right answer is usually cautious."],
+      ["Outside knowledge", "Something that is true in general may not be established by this specific passage."],
+      ["Cause from correlation", "Two things happening together doesn't mean one caused the other."],
+      ["Future prediction", "What the passage reports about the past doesn't prove what will happen next."],
+    ],
+  },
+
+  "mcq-main-idea": {
+    format: "mcq",
+    idea: "The question asks for the central message of the whole passage — what the author is mainly arguing or doing. Wrong options either describe just one example (too narrow) or go beyond the passage entirely (too broad).",
+    identify: [
+      "The stem asks for the main point, best summary, best title or primary purpose.",
+      "You need to account for the whole passage, not just one part.",
+      "The right answer describes the argument's direction, not just its topic.",
+    ],
+    signals: ["The main point of the passage is…", "The passage is primarily about…", "Which best summarises…", "The best title for this passage would be…", "The primary purpose of the passage is…"],
+    proveNotes: [
+      ["P — Passage only", "The main idea must be grounded in the passage — don't go beyond what it argues."],
+      ["R — Read opening and closing", "The author's central argument usually appears near the start and is restated at the end."],
+      ["O — One structural turn", "Find the major contrast or pivot in the passage — 'however,' 'but,' 'yet' often mark the author's real point."],
+      ["V — Breadth check", "The right answer covers the whole passage. Too narrow = one example. Too broad = not established."],
+      ["E — Eliminate scope errors", "A detail that appears once cannot be the main point, however vivid."],
+    ],
+    worked: [
+      {
+        title: "Detail vs whole argument",
+        format: "mcq",
+        passage: "For decades, governments have attempted to reduce traffic congestion primarily by building additional roads. Such projects can initially improve journey times, but the effect is often temporary because greater road capacity encourages more people to drive. Public transport investment, cycling infrastructure and changes to land use may therefore be needed alongside road expansion. The challenge of congestion is not simply a shortage of road space, but a consequence of how cities organise and encourage travel.",
+        question: "Which option best summarises the main point of the passage?",
+        options: [
+          "Building roads is always a waste of public money.",
+          "Traffic congestion requires a broader approach than simply expanding road capacity.",
+          "Cycling is the most effective solution to urban congestion.",
+          "Governments have consistently failed to manage urban infrastructure.",
+        ],
+        correctIdx: 1,
+        steps: [
+          { label: "Opening claim", action: "Governments have relied on building roads." },
+          { label: "Major turn", action: "'but the effect is often temporary' — the author questions this approach." },
+          { label: "Conclusion", action: "'not simply a shortage of road space, but a consequence of how cities organise travel.'" },
+          { label: "Test A", action: "'Always a waste' — the passage says roads can help temporarily. Too strong." },
+          { label: "Test B", action: "'Broader approach needed' — exactly what the whole passage argues." },
+          { label: "Test C", action: "Cycling is one example. The passage doesn't say it's the best solution." },
+          { label: "Test D", action: "'Consistently failed' — too strong and too broad." },
+        ],
+        highlight: "The challenge of congestion is not simply a shortage of road space, but a consequence of how cities organise and encourage travel.",
+        answer: "B — Traffic congestion requires a broader approach than simply expanding road capacity",
+        trap: "Option C (cycling) appears in the passage — but mentioning something once doesn't make it the main point.",
+      },
+    ],
+    traps: [
+      ["Vivid detail", "A striking statistic or example can feel like the main point but is often just evidence."],
+      ["Topic without angle", "Naming the subject is not the same as capturing the author's argument about it."],
+      ["Ignoring the conclusion", "The final sentence often contains the real thesis — don't skip it."],
+      ["Too narrow", "Any answer that only describes one paragraph, example or study is probably wrong."],
+    ],
+  },
+
+  "mcq-viewpoint": {
+    format: "mcq",
+    idea: "The question asks whose view a statement represents, or what the author (or a named person) actually thinks. Passages contain many voices — critics, researchers, supporters — and wrong options mix them up or misread the strength of each position.",
+    identify: [
+      "The stem asks about the author's view, a named person's opinion, or the author's attitude.",
+      "The passage quotes or describes several different viewpoints.",
+      "Contrast words (however, yet, although) often signal where the author's own voice appears.",
+    ],
+    signals: ["The author argues…", "According to the passage, X believes…", "Which best reflects the author's view…", "Which statement best describes the author's attitude…"],
+    proveNotes: [
+      ["P — Passage only", "The author's view is in the text — you don't need to guess or infer motives."],
+      ["R — Name the speaker", "Before scanning, decide whose view is being tested."],
+      ["O — Contrast words", "Scan for however, yet, but, although — these often mark the author's own position after presenting others."],
+      ["V — Verify strength", "Match the option's certainty to the passage's language. A cautious view should stay cautious."],
+      ["E — Eliminate speaker swaps", "If an option correctly states what a critic says but attributes it to the author, it is wrong."],
+    ],
+    worked: [
+      {
+        title: "Author vs critic — using 'however'",
+        format: "mcq",
+        passage: "Critics of urban tree-planting programmes argue that their environmental impact is frequently exaggerated. It is true that planting trees alone cannot solve the problem of urban air pollution. However, dismissing such programmes on this basis would be equally misguided. Trees can lower local temperatures, provide habitats for wildlife and improve residents' access to green space. Urban planting should therefore be regarded as one useful component of a broader environmental strategy rather than a complete solution.",
+        question: "Which statement best reflects the author's view?",
+        options: [
+          "Urban tree planting is largely ineffective.",
+          "Urban tree planting cannot solve air pollution alone.",
+          "Urban tree planting is useful but should be part of a wider strategy.",
+          "Critics of urban tree planting have no valid concerns.",
+        ],
+        correctIdx: 2,
+        steps: [
+          { label: "Identify contrast", action: "'However, dismissing such programmes on this basis would be equally misguided.' — 'However' signals the author's voice." },
+          { label: "Author's conclusion", action: "'Urban planting should therefore be regarded as one useful component of a broader environmental strategy.'" },
+          { label: "Test A", action: "The author says dismissing is 'misguided' — they do not say it is ineffective." },
+          { label: "Test B", action: "True but this is what the author concedes, not the main argument." },
+          { label: "Test C", action: "Matches: useful but part of a wider strategy." },
+          { label: "Test D", action: "Author concedes critics have some point — this option is too extreme." },
+        ],
+        highlight: "Urban planting should therefore be regarded as one useful component of a broader environmental strategy rather than a complete solution.",
+        answer: "C — Urban tree planting is useful but should be part of a wider strategy",
+        trap: "Option A captures the critics' view, not the author's. 'Critics argue…' is the signal that this is not the author speaking.",
+      },
+    ],
+    traps: [
+      ["Speaker-author swap", "A view the author reports or challenges is not automatically the author's own view."],
+      ["Neutral = no opinion", "An author who presents both sides may still have a position — usually revealed after a contrast word."],
+      ["Too strong", "An author who says 'may be' does not 'believe definitively.' Match the strength."],
+      ["Concession as agreement", "The author may concede a point before arguing against it. The concession is not their main view."],
+    ],
+  },
+
+  "mcq-meaning": {
+    format: "mcq",
+    idea: "The question quotes a word or phrase from the passage and asks what it means in that specific context. The most familiar dictionary meaning is often a trap — the passage context decides.",
+    identify: [
+      "The stem quotes a specific word or phrase in quotation marks.",
+      "The question asks what the word 'most nearly means' or what the phrase 'refers to.'",
+      "Context (the surrounding sentences) will narrow the meaning."],
+    signals: ["In the context of the passage, 'X' most nearly means…", "The phrase '…' is used to mean…", "What does the author mean when they say '…'"],
+    proveNotes: [
+      ["P — Passage only", "The passage context is the only valid source. The dictionary is not."],
+      ["R — Read the sentence before and after", "The meaning is shaped by what comes immediately around the word."],
+      ["O — Tone anchor", "Decide whether the word is being used positively, negatively or neutrally — this narrows your options."],
+      ["V — Swap each option", "Replace the word with each option and check whether the sentence still makes sense logically and tonally."],
+      ["E — Eliminate by tone or logic", "If an option changes the tone or logic of the sentence, it is wrong."],
+    ],
+    worked: [
+      {
+        title: "Figurative vs literal",
+        format: "mcq",
+        passage: "The inquiry cast light on the opaque practices that had developed over two decades. Several officials who had assumed their decisions would never be scrutinised were taken aback by the thoroughness of the investigation.",
+        question: "In the context of the passage, 'cast light on' most nearly means:",
+        options: ["physically illuminated", "revealed or made clear", "celebrated", "questioned the legality of"],
+        correctIdx: 1,
+        steps: [
+          { label: "Read around the phrase", action: "The inquiry 'cast light on opaque practices' — opaque means hidden or unclear." },
+          { label: "Test A", action: "'Physically illuminated' — literal interpretation of 'light.' Context is about uncovering hidden practices, not actual light." },
+          { label: "Test B", action: "'Revealed or made clear' — fits the idea of making opaque things visible." },
+          { label: "Test C", action: "'Celebrated' — the passage says officials were 'taken aback,' not that anything was praised." },
+          { label: "Test D", action: "'Questioned the legality' — the passage says nothing about legality." },
+        ],
+        highlight: "The inquiry cast light on the opaque practices that had developed over two decades.",
+        answer: "B — revealed or made clear",
+        trap: "Option A (physically illuminated) is the literal meaning of 'cast light.' In context it is always figurative.",
+      },
+    ],
+    traps: [
+      ["Familiar definition", "The most common meaning of a word may be wrong in this specific context."],
+      ["Ignoring figurative use", "Words used metaphorically or idiomatically don't mean what they say literally."],
+      ["Wrong tone", "A replacement word with the right meaning but wrong emotion (sarcastic vs sincere) is still wrong."],
+      ["Partial match", "An option that matches one part of the phrase but not the whole surrounding meaning."],
+    ],
+  },
+};
+
+// ─── VR overview page ─────────────────────────────────────────────────────────
+
+const VR_SUBTYPES: { id: string; title: string; format: "tfct" | "mcq"; spot: string; quick: string }[] = [
+  { id: "tfct-direct",      format: "tfct", title: "Direct Retrieval",       spot: "The answer is explicitly stated in the passage.",                            quick: "Where does it say this?" },
+  { id: "tfct-inference",   format: "tfct", title: "Inference",               spot: "The conclusion must follow necessarily from two or more facts.",             quick: "Must this be true?" },
+  { id: "tfct-comparisons", format: "tfct", title: "Comparisons",             spot: "The statement describes a ranking, amount or relationship.",                 quick: "Direction, base and time correct?" },
+  { id: "tfct-scope",       format: "tfct", title: "Scope & Evidence",        spot: "The claim may be stronger or broader than the passage's evidence.",          quick: "Is this going beyond the evidence?" },
+  { id: "mcq-direct",       format: "mcq",  title: "Direct Retrieval (MCQ)",  spot: "One option accurately restates a specific fact.",                           quick: "Which option matches the text?" },
+  { id: "mcq-inference",    format: "mcq",  title: "Inference (MCQ)",         spot: "The right answer follows from the text using the fewest assumptions.",       quick: "Does this require any added assumption?" },
+  { id: "mcq-main-idea",    format: "mcq",  title: "Main Idea & Purpose",     spot: "The question asks what the passage is mainly arguing or doing.",             quick: "Is this the whole passage or one detail?" },
+  { id: "mcq-viewpoint",    format: "mcq",  title: "Author & Speaker View",   spot: "You must identify who holds a view and how strongly.",                       quick: "Whose opinion — and how certain?" },
+  { id: "mcq-meaning",      format: "mcq",  title: "Meaning in Context",      spot: "A quoted word or phrase — what does it mean in this passage?",               quick: "What meaning fits this sentence?" },
+];
+
+const PROVE_FULL: { letter: string; name: string; body: string; color: string }[] = [
+  { letter: "P", name: "Passage only",        color: "#2D7FF9", body: "The passage is your entire world. Do not use outside knowledge, assumptions or what is 'probably' true. If the passage does not say it, you cannot use it." },
+  { letter: "R", name: "Read the question",   color: "#8B6BFF", body: "Before reading closely, work out what you are being asked. Notice strong words like all, always, every, never, only — these often create traps." },
+  { letter: "O", name: "One anchor word",     color: "#3DBE6C", body: "Use the most distinctive word in the question to locate the relevant part of the passage. Names, dates and unusual terms work best." },
+  { letter: "V", name: "Verify",              color: "#FF9500", body: "Ask: does the passage actually support this exact answer? Compare the wording and strength of the evidence against the statement." },
+  { letter: "E", name: "Evidence",            color: "#FF6B5C", body: "Before choosing, you should be able to say: 'I know this because the passage says…' If you cannot point to the sentence, be suspicious." },
+];
+
+function VROverviewPage({ section, pageId, onNavigate }: { section: GuideSection; pageId: string; onNavigate: (id: string) => void }) {
+  const tfct = VR_SUBTYPES.filter(s => s.format === "tfct");
+  const mcq  = VR_SUBTYPES.filter(s => s.format === "mcq");
+
+  return (
+    <>
+      <GuidePageHeader section={section} pageId={pageId} title="VR overview" eyebrow="Start here" subtitle="Find evidence — judge it honestly — stay inside the passage." />
+
+      {/* Section stats */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 26 }}>
+        {[["44", "questions"], ["22 min", "section time"], ["~2 min", "per passage"], ["11", "passages"]].map(([v, l]) => (
+          <div key={l} style={{ padding: "14px 16px", borderRadius: 12, border: "1px solid var(--line)", background: "white", textAlign: "center" }}>
+            <strong style={{ display: "block", fontSize: 22, fontWeight: 850, color: "var(--section)", lineHeight: 1.1 }}>{v}</strong>
+            <small style={{ fontSize: 11, color: "var(--ink-soft)", fontWeight: 600 }}>{l}</small>
+          </div>
+        ))}
+      </div>
+
+      {/* PROVE method */}
+      <section style={{ marginBottom: 28 }}>
+        <h2 style={{ margin: "0 0 6px", fontSize: 17 }}>One method for almost every question — PROVE</h2>
+        <p style={{ margin: "0 0 14px", fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.6 }}>Use this five-step check instead of trying to remember separate approaches for each question type.</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
+          {PROVE_FULL.map(p => (
+            <div key={p.letter} style={{ borderRadius: 12, overflow: "hidden", border: "1px solid var(--line)" }}>
+              <div style={{ background: p.color, padding: "10px 12px" }}>
+                <span style={{ fontFamily: "monospace", fontSize: 22, fontWeight: 900, color: "white", lineHeight: 1 }}>{p.letter}</span>
+                <span style={{ display: "block", fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.85)", marginTop: 2, letterSpacing: "0.04em", textTransform: "uppercase" }}>{p.name}</span>
+              </div>
+              <div style={{ padding: "10px 12px", background: "white" }}>
+                <p style={{ margin: 0, fontSize: 11.5, lineHeight: 1.65, color: "var(--ink)" }}>{p.body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Two formats */}
+      <section style={{ marginBottom: 28 }}>
+        <h2 style={{ margin: "0 0 14px", fontSize: 17 }}>Two question formats</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          {[
+            { label: "True / False / Can't Tell", short: "T/F/CT", color: "#2D7FF9", bg: "#EAF2FF", desc: "A statement is given. Decide whether the passage supports it, contradicts it, or leaves it unresolved. The most important rule: no evidence ≠ False. Silence means Can't Tell." },
+            { label: "Multiple Choice", short: "A–D", color: "#8B6BFF", bg: "#F1ECFF", desc: "Four options. One is best supported by the passage. Distractors borrow real details and quietly change a word, person, time or strength. Eliminate by evidence, not by feel." },
+          ].map(f => (
+            <div key={f.label} style={{ borderRadius: 12, border: `2px solid ${f.color}`, background: f.bg, padding: "16px 18px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                <span style={{ fontFamily: "monospace", fontSize: 18, fontWeight: 900, color: f.color, background: "white", borderRadius: 8, padding: "4px 10px", border: `1.5px solid ${f.color}` }}>{f.short}</span>
+                <strong style={{ fontSize: 14, fontWeight: 800, color: f.color }}>{f.label}</strong>
+              </div>
+              <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: "var(--ink)" }}>{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* TFCT subtypes */}
+      <section style={{ marginBottom: 28 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+          <span style={{ fontFamily: "monospace", fontWeight: 900, fontSize: 13, color: "#2D7FF9", background: "#EAF2FF", padding: "3px 9px", borderRadius: 6 }}>T/F/CT</span>
+          <h2 style={{ margin: 0, fontSize: 16 }}>True / False / Can't Tell subtypes</h2>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          {tfct.map((s, i) => (
+            <article
+              key={s.id}
+              onClick={() => onNavigate(s.id)}
+              style={{ borderRadius: 12, border: "1.5px solid var(--line)", background: "white", padding: "18px 20px", cursor: "pointer", transition: "box-shadow 0.15s" }}
+              onMouseOver={e => (e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.10)")}
+              onMouseOut={e => (e.currentTarget.style.boxShadow = "")}
+              tabIndex={0}
+              onKeyDown={e => e.key === "Enter" && onNavigate(s.id)}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#2D7FF9", background: "#EAF2FF", padding: "2px 8px", borderRadius: 4 }}>TFCT {i + 1}</span>
+                <span style={{ fontSize: 11, color: "var(--ink-soft)" }}>→</span>
+              </div>
+              <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 800 }}>{s.title}</h3>
+              <p style={{ margin: "0 0 10px", fontSize: 12.5, lineHeight: 1.6, color: "var(--ink)" }}>{s.spot}</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 10px", background: "#EAF2FF", borderRadius: 7 }}>
+                <span style={{ fontSize: 10, fontWeight: 800, color: "#2D7FF9" }}>QUICK CHECK</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#1a5fd0", fontStyle: "italic" }}>{s.quick}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* MCQ subtypes */}
+      <section style={{ marginBottom: 28 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+          <span style={{ fontFamily: "monospace", fontWeight: 900, fontSize: 13, color: "#8B6BFF", background: "#F1ECFF", padding: "3px 9px", borderRadius: 6 }}>A–D</span>
+          <h2 style={{ margin: 0, fontSize: 16 }}>Multiple Choice subtypes</h2>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          {mcq.map((s, i) => (
+            <article
+              key={s.id}
+              onClick={() => onNavigate(s.id)}
+              style={{ borderRadius: 12, border: "1.5px solid var(--line)", background: "white", padding: "18px 20px", cursor: "pointer", transition: "box-shadow 0.15s" }}
+              onMouseOver={e => (e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.10)")}
+              onMouseOut={e => (e.currentTarget.style.boxShadow = "")}
+              tabIndex={0}
+              onKeyDown={e => e.key === "Enter" && onNavigate(s.id)}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#8B6BFF", background: "#F1ECFF", padding: "2px 8px", borderRadius: 4 }}>MCQ {i + 1}</span>
+                <span style={{ fontSize: 11, color: "var(--ink-soft)" }}>→</span>
+              </div>
+              <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 800 }}>{s.title}</h3>
+              <p style={{ margin: "0 0 10px", fontSize: 12.5, lineHeight: 1.6, color: "var(--ink)" }}>{s.spot}</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 10px", background: "#F1ECFF", borderRadius: 7 }}>
+                <span style={{ fontSize: 10, fontWeight: 800, color: "#8B6BFF" }}>QUICK CHECK</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#6747d8", fontStyle: "italic" }}>{s.quick}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* TFCT decision rules */}
+      <section style={{ marginBottom: 28 }}>
+        <h2 style={{ margin: "0 0 12px", fontSize: 17 }}>T/F/CT — the three decisions</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+          {[
+            { label: "TRUE", color: "#3DBE6C", bg: "#EDFBF3", desc: "The passage states or clearly implies it. You can point to the sentence." },
+            { label: "FALSE", color: "#FF6B5C", bg: "#FFEDEA", desc: "The passage gives evidence against it. Silence alone is never enough for False." },
+            { label: "CAN'T TELL", color: "#FF9500", bg: "#FFF8EC", desc: "The passage neither proves nor contradicts it. When in doubt, this is usually right." },
+          ].map(d => (
+            <div key={d.label} style={{ borderRadius: 12, background: d.bg, border: `1.5px solid ${d.color}`, padding: "16px 18px" }}>
+              <strong style={{ display: "block", fontSize: 13, fontWeight: 900, color: d.color, marginBottom: 8 }}>{d.label}</strong>
+              <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.6, color: "var(--ink)" }}>{d.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Top traps */}
+      <section style={{ marginBottom: 28 }}>
+        <h2 style={{ margin: "0 0 12px", fontSize: 17 }}>Top traps across all VR questions</h2>
+        <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid var(--line)" }}>
+          {[
+            ["Some → All", "The passage says some or several. The option says all or every. Wrong unless the passage says all."],
+            ["May → Will", "The passage says may or might. The option says will or does. Too strong."],
+            ["Association → Causation", "Two things correlate in the passage. The option says one caused the other. Not established."],
+            ["False vs Can't Tell", "No evidence for a claim ≠ evidence against it. Uncertainty is Can't Tell."],
+            ["Outside knowledge", "Something true in real life is irrelevant unless this passage says it. Passage only."],
+          ].map(([name, desc], i) => (
+            <div key={name as string} style={{ display: "grid", gridTemplateColumns: "160px 1fr", borderTop: i > 0 ? "1px solid var(--line)" : undefined, background: "white" }}>
+              <div style={{ padding: "12px 14px", background: "#EAF2FF", borderRight: "1px solid var(--line)" }}>
+                <strong style={{ fontSize: 12, fontWeight: 800, color: "#2D7FF9" }}>{name}</strong>
+              </div>
+              <p style={{ margin: 0, padding: "12px 14px", fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <GuidePageActions section={section} pageId={pageId} onNavigate={onNavigate} />
+    </>
+  );
+}
+
+// ─── VR lesson page ───────────────────────────────────────────────────────────
+
+function VRLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
+  section: GuideSection; topic: NonNullable<ReturnType<typeof findTopic>>;
+  pageId: string; onNavigate: (id: string) => void; onPractice: () => void;
+}) {
+  const lesson = VR_LESSONS[topic.id];
+  if (!lesson) return <TopicPage section={section} topic={topic} pageId={pageId} onNavigate={onNavigate} onPractice={onPractice} />;
+
+  const fmtColor = lesson.format === "tfct" ? "#2D7FF9" : "#8B6BFF";
+  const fmtBg    = lesson.format === "tfct" ? "#EAF2FF" : "#F1ECFF";
+  const fmtLabel = lesson.format === "tfct" ? "True / False / Can't Tell" : "Multiple Choice";
+
+  return (
+    <>
+      <GuidePageHeader section={section} pageId={pageId} title={topic.title} eyebrow={`VR — ${fmtLabel}`} subtitle={topic.description} />
+
+      {/* Format badge + big idea */}
+      <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 20 }}>
+        <span style={{ fontFamily: "monospace", fontWeight: 900, fontSize: 12, color: fmtColor, background: fmtBg, padding: "4px 10px", borderRadius: 6, flexShrink: 0, marginTop: 2 }}>
+          {lesson.format === "tfct" ? "T/F/CT" : "A–D"}
+        </span>
+        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: "var(--ink)", background: fmtBg, borderLeft: `3px solid ${fmtColor}`, padding: "12px 16px", borderRadius: "0 10px 10px 0", flex: 1 }}>
+          {lesson.idea}
+        </p>
+      </div>
+
+      {/* How to identify */}
+      <section style={{ marginBottom: 22 }}>
+        <h2 style={{ margin: "0 0 10px", fontSize: 16 }}>How to identify this type</h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+          {lesson.identify.map((item, i) => (
+            <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+              <span style={{ width: 20, height: 20, borderRadius: 6, background: fmtBg, color: fmtColor, fontSize: 10, fontWeight: 800, display: "grid", placeItems: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
+              <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: "var(--ink)" }}>{item}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Signal words */}
+      <section style={{ marginBottom: 22 }}>
+        <h2 style={{ margin: "0 0 10px", fontSize: 16 }}>Signal wording in question stems</h2>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          {lesson.signals.map((s, i) => (
+            <span key={i} style={{ background: fmtBg, color: fmtColor, border: `1px solid ${fmtColor}`, borderRadius: 6, padding: "4px 10px", fontSize: 12, fontWeight: 700 }}>{s}</span>
+          ))}
+        </div>
+      </section>
+
+      {/* PROVE breakdown */}
+      <section style={{ marginBottom: 22 }}>
+        <h2 style={{ margin: "0 0 10px", fontSize: 16 }}>PROVE for this question type</h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 12, overflow: "hidden", border: "1px solid var(--line)" }}>
+          {lesson.proveNotes.map(([label, note], i) => (
+            <div key={label} style={{ display: "grid", gridTemplateColumns: "160px 1fr", borderTop: i > 0 ? "1px solid var(--line)" : undefined, background: "white" }}>
+              <div style={{ padding: "11px 14px", background: fmtBg, borderRight: "1px solid var(--line)" }}>
+                <strong style={{ fontSize: 12, fontWeight: 800, color: fmtColor }}>{label}</strong>
+              </div>
+              <p style={{ margin: 0, padding: "11px 14px", fontSize: 12.5, lineHeight: 1.6, color: "var(--ink)" }}>{note}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Worked examples */}
+      <section style={{ marginBottom: 22 }}>
+        <h2 style={{ margin: "0 0 14px", fontSize: 16 }}>Worked examples</h2>
+        {lesson.worked.map((w, wi) => (
+          <div key={wi} style={{ marginBottom: 18, borderRadius: 12, border: "1.5px solid var(--line)", overflow: "hidden" }}>
+            {/* Header */}
+            <div style={{ padding: "12px 16px", background: fmtBg, borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 10, fontWeight: 900, color: fmtColor, background: "white", border: `1px solid ${fmtColor}`, borderRadius: 5, padding: "2px 8px" }}>
+                Example {wi + 1}
+              </span>
+              <strong style={{ fontSize: 13, color: "var(--ink)" }}>{w.title}</strong>
+            </div>
+
+            <div style={{ padding: "16px 18px", background: "white" }}>
+              {/* Passage */}
+              <div style={{ background: "#f8fafc", borderRadius: 8, padding: "12px 16px", marginBottom: 12, borderLeft: "3px solid #cbd5e1" }}>
+                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ink-soft)", display: "block", marginBottom: 6 }}>Passage</span>
+                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.75, color: "var(--ink)", fontStyle: "italic" }}>{w.passage}</p>
+              </div>
+
+              {/* Question */}
+              <div style={{ marginBottom: 12 }}>
+                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ink-soft)", display: "block", marginBottom: 5 }}>Question</span>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "var(--ink)", lineHeight: 1.5 }}>{w.question}</p>
+              </div>
+
+              {/* MCQ options if present */}
+              {w.options && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 12 }}>
+                  {w.options.map((opt, oi) => (
+                    <div key={oi} style={{ display: "flex", gap: 8, alignItems: "center", padding: "7px 12px", borderRadius: 7, background: oi === w.correctIdx ? "#EDFBF3" : "#f8fafc", border: `1px solid ${oi === w.correctIdx ? "#3DBE6C" : "var(--line)"}` }}>
+                      <span style={{ fontWeight: 900, fontSize: 12, color: oi === w.correctIdx ? "#3DBE6C" : "var(--ink-soft)", flexShrink: 0 }}>{String.fromCharCode(65 + oi)}.</span>
+                      <span style={{ fontSize: 12.5, color: "var(--ink)" }}>{opt}</span>
+                      {oi === w.correctIdx && <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 800, color: "#3DBE6C" }}>✓ CORRECT</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Steps */}
+              <div style={{ marginBottom: 12 }}>
+                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ink-soft)", display: "block", marginBottom: 8 }}>Working through it</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {w.steps.map((s, si) => (
+                    <div key={si} style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: 0, borderRadius: 8, overflow: "hidden", border: "1px solid var(--line)" }}>
+                      <div style={{ padding: "9px 12px", background: fmtBg }}>
+                        <strong style={{ fontSize: 11.5, fontWeight: 800, color: fmtColor }}>{s.label}</strong>
+                      </div>
+                      <div style={{ padding: "9px 12px", background: "white" }}>
+                        <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.55, color: "var(--ink)" }}>{s.action}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Evidence highlight */}
+              <div style={{ background: "#fffbeb", border: "1px solid #fcd34d", borderRadius: 8, padding: "10px 14px", marginBottom: 10 }}>
+                <span style={{ fontSize: 10, fontWeight: 800, color: "#78350f", display: "block", marginBottom: 4 }}>KEY EVIDENCE</span>
+                <p style={{ margin: 0, fontSize: 12.5, fontStyle: "italic", color: "#78350f", lineHeight: 1.6 }}>"{w.highlight}"</p>
+              </div>
+
+              {/* Answer */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ background: "#3DBE6C", color: "white", fontWeight: 900, fontSize: 11, padding: "4px 12px", borderRadius: 6 }}>ANSWER</span>
+                <strong style={{ fontSize: 13, color: "#259650" }}>{w.answer}</strong>
+              </div>
+
+              {/* Trap */}
+              {w.trap && (
+                <div style={{ marginTop: 10, background: "#FFEDEA", border: "1px solid #FF6B5C", borderRadius: 8, padding: "9px 14px" }}>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: "#d94b3e", display: "block", marginBottom: 3 }}>COMMON TRAP HERE</span>
+                  <p style={{ margin: 0, fontSize: 12, color: "#d94b3e", lineHeight: 1.6 }}>{w.trap}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </section>
+
+      {/* Traps */}
+      <section style={{ marginBottom: 22 }}>
+        <h2 style={{ margin: "0 0 10px", fontSize: 16 }}>Traps specific to this type</h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 12, overflow: "hidden", border: "1px solid var(--line)" }}>
+          {lesson.traps.map(([name, desc], i) => (
+            <div key={name} style={{ display: "grid", gridTemplateColumns: "150px 1fr", borderTop: i > 0 ? "1px solid var(--line)" : undefined, background: "white" }}>
+              <div style={{ padding: "11px 14px", background: fmtBg, borderRight: "1px solid var(--line)" }}>
+                <strong style={{ fontSize: 12, fontWeight: 800, color: fmtColor }}>{name}</strong>
+              </div>
+              <p style={{ margin: 0, padding: "11px 14px", fontSize: 12.5, lineHeight: 1.6, color: "var(--ink)" }}>{desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="vrg-panel tint" style={{ marginBottom: 14 }}>
+        <span className="vrg-panel-label">Practice tip</span>
+        <h3>{topic.spot}</h3>
+        <p>Remember the quick check: <em>{topic.rules[0]}</em></p>
+      </section>
+
+      <section style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+        <button className="vrg-practice-cta" onClick={onPractice} type="button">Practice VR questions →</button>
+      </section>
+
       <GuidePageActions section={section} pageId={pageId} onNavigate={onNavigate} />
     </>
   );
@@ -2219,10 +3108,14 @@ export default function StudyGuidePage() {
             testDate={testDate}
           />
           <main className="vrg-content">
-            {pageId === "overview" && <GuideOverview section={section} pageId={pageId} onNavigate={goToPage} />}
+            {pageId === "overview" && (sectionKey === "vr"
+              ? <VROverviewPage section={section} pageId={pageId} onNavigate={goToPage} />
+              : <GuideOverview section={section} pageId={pageId} onNavigate={goToPage} />)}
             {foundation && <FoundationPage section={section} page={foundation} pageId={pageId} onNavigate={goToPage} />}
             {topic && topic.id === "syllogisms"
               ? <SyllogismsPage section={section} topic={topic} pageId={pageId} onNavigate={goToPage} onPractice={() => router.push(`/practice/${sectionKey}`)} />
+              : topic && sectionKey === "vr" && VR_LESSONS[topic.id]
+              ? <VRLessonPage section={section} topic={topic} pageId={pageId} onNavigate={goToPage} onPractice={() => router.push(`/practice/${sectionKey}`)} />
               : topic && sectionKey === "dm" && DM_LESSONS[topic.id]
               ? <DMLessonPage section={section} topic={topic} pageId={pageId} onNavigate={goToPage} onPractice={() => router.push(`/practice/${sectionKey}`)} />
               : topic && sectionKey === "qr" && QR_LESSONS[topic.id]

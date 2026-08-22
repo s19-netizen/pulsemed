@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -259,16 +259,18 @@ export default function DiagnosticTest() {
     return () => document.body.classList.remove("screen-question");
   }, [stage]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!q) return;
     if (q.format === "multi") {
       const saved = multiAnswers[q.id];
       setMultiSelected(saved ? [...saved] : new Array(q.statements?.length ?? 0).fill(null));
     } else if (q.format === "mostleast") {
+      setMultiSelected([]);
       const saved = mostLeastAnswers[q.id];
       setMostSelected(saved?.most ?? null);
       setLeastSelected(saved?.least ?? null);
     } else {
+      setMultiSelected([]);
       setSelected(answers[q.id] !== undefined ? answers[q.id] : null);
     }
   }, [q?.id]); // eslint-disable-line react-hooks/exhaustive-deps

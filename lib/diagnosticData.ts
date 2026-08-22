@@ -194,9 +194,7 @@ export const QR_DATASETS: Record<string, QRDataSet> = {
       room: { length: 10, width: 8, height: 3 },
       door: { width: 1, height: 2 },
       windows: { count: 2, width: 1.5, height: 1 },
-      module: { length: 2, width: 1 },
-      clearance: 1,
-      gap: 0.5,
+      module: { length: 2, width: 1, height: 0.8 },
       paintCoverage: 10,
       coats: 2,
       tinSize: 5,
@@ -666,7 +664,7 @@ export const DIAGNOSTIC_QUESTIONS: DiagQuestion[] = [
   {
     id: "DIAG-DM-006", qNum: 26, section: "dm", format: "mcq",
     subtype: "Venn diagrams", difficulty: "Gold", mark_value: 1,
-    preamble: "The Venn diagram shows the languages spoken by 180 delegates. Each number represents delegates in that exact region only. Nine delegates speak none of the three languages.\n\nFrench only: 38 | Spanish only: 31 | German only: 24\nFrench & Spanish only: 26 | French & German only: 19 | Spanish & German only: 17 | All three: 16",
+    preamble: "The Venn diagram shows the languages spoken by 180 delegates. Each number represents delegates in that exact region only. Nine delegates speak none of the three languages.",
     stem: "How many delegates speak exactly one of the three languages?",
     options: ["86", "90", "93", "102"],
     correct: 2,
@@ -781,7 +779,7 @@ export const DIAGNOSTIC_QUESTIONS: DiagQuestion[] = [
   {
     id: "DIAG-DM-015", qNum: 35, section: "dm", format: "mcq",
     subtype: "Venn diagrams", difficulty: "Gold", mark_value: 1,
-    preamble: "A community centre has 120 members. The Venn diagram shows class attendance. Each overlapping region shows members attending exactly those classes.\n\nExercise only: 30 | Language only: 19 | Craft only: 20\nExercise & Language only: 17 | Exercise & Craft only: 9 | Language & Craft only: 6 | All three: 12",
+    preamble: "A community centre has 120 members. The Venn diagram shows class attendance. Each overlapping region shows members attending exactly those classes.",
     stem: "How many members attend none of the three types of class?",
     options: ["7", "9", "11", "13"],
     correct: 0,
@@ -837,11 +835,11 @@ export const DIAGNOSTIC_QUESTIONS: DiagQuestion[] = [
   // ══════════════════════════════════════════════════════════════════════════
   {
     id: "DIAG-QR-001", qNum: 39, section: "qr", format: "mcq",
-    subtype: "Geometry — spatial packing", difficulty: "Diamond", dataSetId: "qr-ds1",
-    stem: "What is the greatest number of display modules that can fit while meeting the clearance and gap requirements?",
-    options: ["8", "10", "12", "16"],
-    correct: 2,
-    explanation: "The 1 m clearance on all sides reduces the usable floor to 8 m × 6 m. Each module is 2 m × 1 m with a 0.5 m gap between modules. Orientation 1 (2 m along 8 m axis): ⌊(8+0.5)/(2+0.5)⌋ = 3 columns × ⌊(6+0.5)/(1+0.5)⌋ = 4 rows = 12. Orientation 2 (1 m along 8 m axis): ⌊(8+0.5)/(1+0.5)⌋ = 5 × ⌊(6+0.5)/(2+0.5)⌋ = 2 = 10. Maximum = 12 modules.",
+    subtype: "Geometry — stacking", difficulty: "Gold", dataSetId: "qr-ds1",
+    stem: "Each display module is 0.8 m tall and modules may be stacked directly on top of one another. What is the greatest number of modules that can be stacked in a single tower without exceeding the room's ceiling height?",
+    options: ["2", "3", "4", "5"],
+    correct: 1,
+    explanation: "Room height = 3 m. Each module = 0.8 m tall. Maximum stacked height ≤ 3 m → ⌊3 ÷ 0.8⌋ = ⌊3.75⌋ = 3 modules (3 × 0.8 = 2.4 m, within limit). A tower of 4 would reach 4 × 0.8 = 3.2 m, exceeding the ceiling. Maximum = 3 modules.",
   },
   {
     id: "DIAG-QR-002", qNum: 40, section: "qr", format: "mcq",

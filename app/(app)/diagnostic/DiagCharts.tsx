@@ -344,16 +344,14 @@ interface RoomData {
   room: { length: number; width: number; height: number };
   door: { width: number; height: number };
   windows: { count: number; width: number; height: number };
-  module: { length: number; width: number };
-  clearance: number;
-  gap: number;
+  module: { length: number; width: number; height?: number };
   paintCoverage: number;
   coats: number;
   tinSize: number;
 }
 
 export function RoomDataCard({ data }: { data: RoomData }) {
-  const { room, door, windows, module, clearance, gap } = data;
+  const { room, door, windows, module } = data;
 
   const S = 55;
   const PL = 60, PT = 30, PR = 44, PB = 64;
@@ -455,37 +453,54 @@ export function RoomDataCard({ data }: { data: RoomData }) {
           </svg>
         </div>
 
-        {/* ── Display unit ── */}
-        <div style={{ flex: "1 1 120px", textAlign: "center" }}>
+        {/* ── Display unit — plan + elevation ── */}
+        <div style={{ flex: "1 1 140px", textAlign: "center" }}>
           <p style={{ fontSize: 10, fontWeight: 800, color: "var(--ink-soft)", margin: "0 0 6px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
             Display Unit
           </p>
+
+          {/* Top view (plan) */}
           <svg viewBox={`0 0 ${DU_W} ${DU_H}`} style={{ width: "100%", maxWidth: DU_W, display: "block", margin: "0 auto", fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}>
             <rect x={DU_PAD} y={DU_PAD} width={duW} height={duH} fill="#c2d8f8" stroke="#6699dd" strokeWidth="2" rx="3" />
-            {/* Width label */}
             <text x={DU_PAD + duW / 2} y={DU_PAD + duH + 18} textAnchor="middle" fontSize="12" fill="#111" fontWeight="800">
               {module.length} m
             </text>
-            {/* Depth label */}
             <text x={DU_PAD - 10} y={DU_PAD + duH / 2} textAnchor="middle" fontSize="12" fill="#111" fontWeight="800"
               transform={`rotate(-90,${DU_PAD - 10},${DU_PAD + duH / 2})`}>
               {module.width} m
             </text>
           </svg>
-          <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: "2px 0 0" }}>
-            (view from above)
-          </p>
-        </div>
-      </div>
+          <p style={{ fontSize: 10, color: "var(--ink-soft)", margin: "0 0 8px" }}>plan (top view)</p>
 
-      {/* Placement rules */}
-      <div style={{ marginTop: 12, padding: "10px 14px", background: "#fffbeb", borderRadius: 8, border: "1px solid #fcd34d", fontSize: 12, color: "#78350f", lineHeight: 1.7 }}>
-        <strong style={{ fontWeight: 800 }}>Display units must:</strong>
-        <ul style={{ margin: "4px 0 0 18px", padding: 0 }}>
-          <li>remain at least <strong>{clearance} m</strong> from each wall</li>
-          <li>have at least <strong>{gap} m</strong> between neighbouring units</li>
-          <li>be positioned parallel to the walls</li>
-        </ul>
+          {/* Side elevation view — only shown when height is provided */}
+          {module.height !== undefined && (() => {
+            const ELS = 50; // px per metre
+            const elW = Math.round(module.length * ELS);
+            const elH = Math.round(module.height * ELS);
+            const EP = 20;
+            const SVG_W = elW + EP * 2 + 30;
+            const SVG_H = elH + EP * 2 + 20;
+            return (
+              <>
+                <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} style={{ width: "100%", maxWidth: SVG_W, display: "block", margin: "0 auto", fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}>
+                  <rect x={EP} y={EP} width={elW} height={elH} fill="#c2d8f8" stroke="#6699dd" strokeWidth="2" rx="3" />
+                  {/* Width label below */}
+                  <text x={EP + elW / 2} y={EP + elH + 15} textAnchor="middle" fontSize="12" fill="#111" fontWeight="800">
+                    {module.length} m
+                  </text>
+                  {/* Height label on right */}
+                  <line x1={EP + elW + 6} y1={EP} x2={EP + elW + 6} y2={EP + elH} stroke="#333" strokeWidth="1.5" />
+                  <line x1={EP + elW + 2} y1={EP} x2={EP + elW + 10} y2={EP} stroke="#333" strokeWidth="1.5" />
+                  <line x1={EP + elW + 2} y1={EP + elH} x2={EP + elW + 10} y2={EP + elH} stroke="#333" strokeWidth="1.5" />
+                  <text x={EP + elW + 20} y={EP + elH / 2 + 4} textAnchor="middle" fontSize="12" fill="#111" fontWeight="800">
+                    {module.height} m
+                  </text>
+                </svg>
+                <p style={{ fontSize: 10, color: "var(--ink-soft)", margin: "0" }}>elevation (side view)</p>
+              </>
+            );
+          })()}
+        </div>
       </div>
     </div>
   );
