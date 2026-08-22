@@ -264,7 +264,17 @@ function AddStudentModal({ onClose, onAdded }: { onClose: () => void; onAdded: (
           </div>
           <div>
             <label style={labelStyle}>Password *</label>
-            <input type="text" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 6 characters" required style={inputStyle} />
+            <div style={{ display: "flex", gap: 7 }}>
+              <input type="text" value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 6 characters" required style={{ ...inputStyle, flex: 1 }} />
+              <button
+                type="button"
+                onClick={() => setPassword(String(Math.floor(100000 + Math.random() * 900000)))}
+                title="Generate 6-digit password"
+                style={{ flexShrink: 0, border: "1.5px solid #e0e6ef", background: "#f8fafd", borderRadius: 10, padding: "0 12px", fontSize: 11, fontWeight: 800, cursor: "pointer", color: "#2d7ff9", whiteSpace: "nowrap" }}
+              >
+                Generate
+              </button>
+            </div>
             <div style={{ fontSize: 10, color: "#a0aec0", marginTop: 3 }}>Share this with the student. They can't change it themselves.</div>
           </div>
           <div>
