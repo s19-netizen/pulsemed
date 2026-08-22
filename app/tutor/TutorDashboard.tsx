@@ -259,7 +259,20 @@ function AddStudentModal({ onClose, onAdded }: { onClose: () => void; onAdded: (
           </div>
           <div>
             <label style={labelStyle}>Username *</label>
-            <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="janesmith" required style={inputStyle} />
+            <div style={{ display: "flex", gap: 7 }}>
+              <input type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="janesmith" required style={{ ...inputStyle, flex: 1 }} />
+              <button
+                type="button"
+                onClick={() => {
+                  const base = name.trim().toLowerCase().replace(/\s+/g, "").replace(/[^a-z]/g, "") || "student";
+                  setUsername(base + Math.floor(100 + Math.random() * 900));
+                }}
+                title="Generate username from name"
+                style={{ flexShrink: 0, border: "1.5px solid #e0e6ef", background: "#f8fafd", borderRadius: 10, padding: "0 12px", fontSize: 11, fontWeight: 800, cursor: "pointer", color: "#2d7ff9", whiteSpace: "nowrap" }}
+              >
+                Generate
+              </button>
+            </div>
             <div style={{ fontSize: 10, color: "#a0aec0", marginTop: 3 }}>Lowercase, no spaces. Student uses this to log in.</div>
           </div>
           <div>
