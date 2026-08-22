@@ -237,10 +237,13 @@ function ReviewQuestion({ q, row, idx }: { q: typeof DIAGNOSTIC_QUESTIONS[0]; ro
   const answered = !!row;
 
   return (
-    <div style={{
-      border: `1.5px solid ${answered ? (isCorrect ? "#3DBE6C28" : "#FF6B5C28") : "var(--line)"}`,
-      borderRadius: 12, overflow: "hidden",
-    }}>
+    <div
+      id={`review-q-${q.qNum}`}
+      style={{
+        border: `1.5px solid ${answered ? (isCorrect ? "#3DBE6C28" : "#FF6B5C28") : "var(--line)"}`,
+        borderRadius: 12, overflow: "hidden",
+      }}
+    >
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
@@ -811,29 +814,70 @@ export default function DiagnosticResults({ report, responses }: { report: Repor
 
       {activeTab === "review" && (
         <div>
-          {/* Section tabs */}
-          <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
-            {(["vr", "dm", "qr", "sjt"] as const).map(sec => {
-              const qs = DIAGNOSTIC_QUESTIONS.filter(q => q.section === sec);
-              const correct = qs.filter(q => responseMap.get(q.qNum - 1)?.is_correct).length;
-              const color = COLORS[sec];
-              return (
-                <button
-                  key={sec}
-                  type="button"
-                  onClick={() => setReviewSection(sec)}
-                  style={{
-                    padding: "7px 16px", borderRadius: 10, border: "1.5px solid",
-                    borderColor: reviewSection === sec ? color : "var(--line)",
-                    background: reviewSection === sec ? color + "12" : "white",
-                    color: reviewSection === sec ? color : "var(--ink-soft)",
-                    fontWeight: 700, fontSize: 12, cursor: "pointer",
-                  }}
-                >
-                  {sec.toUpperCase()} · {correct}/{qs.length}
-                </button>
-              );
-            })}
+          {/* ── Sticky navigator ── */}
+          <div style={{ position: "sticky", top: 0, zIndex: 20, background: "var(--bg, #f5f7fa)", paddingTop: 4, paddingBottom: 10 }}>
+            {/* Section tabs */}
+            <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" as const }}>
+              {(["vr", "dm", "qr", "sjt"] as const).map(sec => {
+                const secQs = DIAGNOSTIC_QUESTIONS.filter(q => q.section === sec);
+                const correct = secQs.filter(q => responseMap.get(q.qNum - 1)?.is_correct).length;
+                const color = COLORS[sec];
+                return (
+                  <button
+                    key={sec}
+                    type="button"
+                    onClick={() => setReviewSection(sec)}
+                    style={{
+                      padding: "7px 16px", borderRadius: 10, border: "1.5px solid",
+                      borderColor: reviewSection === sec ? color : "var(--line)",
+                      background: reviewSection === sec ? color + "12" : "white",
+                      color: reviewSection === sec ? color : "var(--ink-soft)",
+                      fontWeight: 700, fontSize: 12, cursor: "pointer",
+                    }}
+                  >
+                    {sec.toUpperCase()} · {correct}/{secQs.length}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Question colour grid */}
+            <div style={{ background: "white", borderRadius: 10, border: "1px solid var(--line)", padding: "10px 12px" }}>
+              <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 5 }}>
+                {DIAGNOSTIC_QUESTIONS.filter(q => q.section === reviewSection).map(q => {
+                  const row = responseMap.get(q.qNum - 1);
+                  const bg   = !row ? "#e2e8f0" : row.is_correct ? "#3DBE6C" : "#FF6B5C";
+                  const fg   = !row ? "#64748b" : "white";
+                  return (
+                    <button
+                      key={q.id}
+                      type="button"
+                      title={`Q${q.qNum}`}
+                      onClick={() => {
+                        document.getElementById(`review-q-${q.qNum}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }}
+                      style={{
+                        width: 28, height: 28, borderRadius: 6,
+                        background: bg, border: 0,
+                        fontSize: 9, fontWeight: 800, color: fg,
+                        cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {q.qNum}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* Legend */}
+              <div style={{ display: "flex", gap: 12, marginTop: 8, paddingTop: 8, borderTop: "1px solid #f0f2f5" }}>
+                {[["#3DBE6C", "Correct"], ["#FF6B5C", "Wrong"], ["#e2e8f0", "Not answered"]] .map(([c, l]) => (
+                  <span key={l} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 10, color: "var(--ink-soft)", fontWeight: 600 }}>
+                    <span style={{ width: 10, height: 10, borderRadius: 3, background: c, display: "inline-block" }} />{l}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
 
           <ReviewSection section={reviewSection} responseMap={responseMap} />
