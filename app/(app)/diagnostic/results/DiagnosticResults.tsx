@@ -509,7 +509,7 @@ function ReviewExam({ section, qIdx, onQIdxChange, responseMap }: {
   })();
   const correctIdx = q.correct ?? 0;
   const opts = q.format === "tfct" ? TFCT_OPTIONS : q.format === "approp" ? APPROP_OPTIONS : q.format === "import" ? IMPORT_OPTIONS : (q.options ?? []);
-  const gridCols   = section === "vr" ? "1.75fr 1fr" : section === "sjt" ? "1fr 1.2fr" : "1.75fr 1fr";
+  const gridCols   = "1fr 1.6fr";
 
   return (
     <div style={{ marginTop: 12 }}>
