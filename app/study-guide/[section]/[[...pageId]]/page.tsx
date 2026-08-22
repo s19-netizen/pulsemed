@@ -988,12 +988,13 @@ const DM_LESSONS: Record<string, {
     example: {
       title: "Hospital rules — what must be true?",
       stimulus: [
+        "A hospital operates the following admissions protocol:",
         "All patients admitted before 08:00 are assessed by Team A.",
         "Patients assessed by Team A who require imaging are transferred to Unit 3.",
         "No patient in Unit 3 is discharged before imaging is completed.",
-        "Maya was admitted at 07:45 and discharged at 11:30.",
+        "Maya arrives at the hospital at 07:45 and is admitted immediately.",
       ],
-      q: "Maya was admitted at 07:45 and her triage score was 3. Which statement about Maya must be true based on the rules?",
+      q: "Which of the following must be true about Maya?",
       steps: [
         "Rule 1 trigger: admitted before 08:00. Maya = 07:45 ✓. Consequence: assessed by Team A. → Option B is forced.",
         "Rule 2 trigger: Team A AND requires imaging. Maya is in Team A. But imaging is not confirmed. Rule 2 does not fire.",
@@ -1030,10 +1031,10 @@ const DM_LESSONS: Record<string, {
     example: {
       title: "Congestion charge — what does the argument assume?",
       stimulus: [
-        "A city is considering introducing a congestion charge in its centre.",
-        "Supporters argue: the charge should be introduced because it will reduce traffic.",
+        "A city council is debating whether to introduce a congestion charge for vehicles entering the city centre during morning peak hours. Several residents have complained about gridlocked roads and poor air quality.",
+        "A council spokesperson stated: 'We should introduce the congestion charge, because doing so will significantly reduce the volume of traffic in the city centre.'",
       ],
-      q: "The argument concludes that charging drivers will reduce congestion. What must the author be assuming for this conclusion to hold?",
+      q: "Which assumption is the spokesperson's argument relying on?",
       steps: [
         "Proposal: introduce a congestion charge.",
         "Evidence: it will reduce traffic.",
@@ -1071,10 +1072,10 @@ const DM_LESSONS: Record<string, {
     example: {
       title: "Five presentations Mon–Fri",
       stimulus: [
-        "Five presentations — J, K, L, M, N — occur Monday to Friday, one per day.",
-        "J occurs before L.  |  K occurs immediately after L.  |  N on Thursday.  |  M on Friday.",
+        "A conference runs from Monday to Friday. Five speakers — J, K, L, M, and N — each present on a different day. The schedule must follow these rules:",
+        "J presents before L.  |  K presents immediately after L, with no gap between them.  |  N presents on Thursday.  |  M presents on Friday.",
       ],
-      q: "Using the constraints above, which presentation is forced onto Monday?",
+      q: "Which speaker must present on Monday?",
       steps: [
         "Fixed facts first: Thursday = N, Friday = M. Three slots remain: Mon, Tue, Wed for J, L, K.",
         "K immediately after L → L-K is a block. Block can only fit Mon-Tue or Tue-Wed.",
@@ -1111,9 +1112,10 @@ const DM_LESSONS: Record<string, {
     example: {
       title: "Symptoms X and Y — how many have both?",
       stimulus: [
-        "Of 100 patients: 62 have symptom X, 51 have symptom Y, 23 have neither symptom.",
+        "A respiratory clinic reviewed 100 patients admitted over one week. Doctors recorded which patients presented with symptom X (a persistent cough) and which presented with symptom Y (shortness of breath).",
+        "62 patients had symptom X.  |  51 patients had symptom Y.  |  23 patients had neither symptom.",
       ],
-      q: "How many of the 100 patients have both symptom X and symptom Y?",
+      q: "How many patients had both symptom X and symptom Y?",
       steps: [
         "Find the union first: patients with at least one symptom = 100 − 23 = 77.",
         "Apply the formula: |X∪Y| = |X| + |Y| − |X∩Y|.",
@@ -1148,13 +1150,14 @@ const DM_LESSONS: Record<string, {
       { label: "At least one", symbol: "1 − P(none)", detail: "Calculate P(none of the event), then subtract from 1. Almost always the faster route." },
     ],
     example: {
-      title: "Defective components — Bayes' reasoning",
+      title: "Defective components — which machine is to blame?",
       stimulus: [
-        "Machine A makes 60% of components; 2% are defective.",
-        "Machine B makes 40% of components; 5% are defective.",
-        "A randomly selected component is known to be defective.",
+        "A factory uses two machines to produce components. Quality control records show the following:",
+        "Machine A produces 60% of all components, of which 2% are defective.",
+        "Machine B produces the remaining 40%, of which 5% are defective.",
+        "An inspector picks a component at random from the day's output and finds it is defective.",
       ],
-      q: "A randomly selected component turns out to be defective. What is the chance it was made by Machine B?",
+      q: "What is the probability that the defective component was made by Machine B?",
       steps: [
         "Use 10,000 components as a base.",
         "Machine A: 6,000 × 2% = 120 defective.",
