@@ -3037,199 +3037,140 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
 
       </div>
 
-      {/* ── 3. Worked examples ── */}
-      <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>3 — Worked examples</h2>
+      {/* ── 3. Worked example ── */}
+      <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>3 — Worked example</h2>
       <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 28 }}>
 
-        {/* Example 1 — three-premise chain */}
         <div style={{ borderRadius: 14, border: "1px solid var(--line)", background: "white", overflow: "hidden" }}>
+
+          {/* Header */}
           <div style={{ padding: "10px 16px", background: t, borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 10 }}>
-            <strong style={{ fontSize: 11, color: c, fontWeight: 800, letterSpacing: ".04em" }}>EXAMPLE 1</strong>
-            <span style={{ fontSize: 12, color: "var(--ink)", fontWeight: 600 }}>Three-premise chain</span>
+            <strong style={{ fontSize: 11, color: c, fontWeight: 800, letterSpacing: ".04em" }}>EXAMPLE</strong>
+            <span style={{ fontSize: 12, color: "var(--ink)", fontWeight: 600 }}>Three-premise chain — 5 conclusions to judge</span>
           </div>
+
+          {/* Premises */}
           <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
-            <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Given</p>
-            {["All reptiles are cold-blooded.", "No cold-blooded animals are warm-blooded.", "Some lizards are reptiles."].map((p, i) => (
-              <div key={i} style={{ padding: "6px 12px", borderRadius: 7, background: t, marginBottom: 5, fontSize: 13, color: "var(--ink)", fontStyle: "italic" }}>{p}</div>
-            ))}
-          </div>
-          <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--line)", background: "#fafafa" }}>
-            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Conclusion to test</p>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>Some lizards are not warm-blooded.</p>
-          </div>
-          <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
-            <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Working — build the diagram one premise at a time</p>
-
-            {/* P1 + P2 side by side */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                  <span style={{ padding: "2px 8px", borderRadius: 20, background: c, color: "white", fontSize: 10, fontWeight: 800 }}>P1</span>
-                  <span style={{ fontSize: 11, color: d, fontWeight: 700 }}>Reptiles ⇒ Cold-blooded</span>
-                </div>
-                <svg viewBox="0 0 200 140" style={{ width: "100%", maxWidth: 200, display: "block", borderRadius: 10, border: `1.5px solid ${c}`, background: "white" }} aria-label="Reptiles circle nested inside Cold-blooded circle">
-                  <circle cx="100" cy="78" r="52" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.7"/>
-                  <text x="100" y="46" textAnchor="middle" fontSize="12" fontWeight="800" fill={d}>Cold-blooded</text>
-                  <circle cx="100" cy="85" r="27" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
-                  <text x="100" y="89" textAnchor="middle" fontSize="11" fontWeight="700" fill={d}>Reptiles</text>
-                </svg>
-                <p style={{ margin: "5px 0 0", fontSize: 10, color: "#64748b", textAlign: "center" as const }}>Reptiles sits entirely inside Cold-blooded</p>
-              </div>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                  <span style={{ padding: "2px 8px", borderRadius: 20, background: c, color: "white", fontSize: 10, fontWeight: 800 }}>P2</span>
-                  <span style={{ fontSize: 11, color: d, fontWeight: 700 }}>Cold-blooded ✕ Warm-blooded</span>
-                </div>
-                <svg viewBox="0 0 220 140" style={{ width: "100%", maxWidth: 220, display: "block", borderRadius: 10, border: `1.5px solid ${c}`, background: "white" }} aria-label="Cold-blooded and Warm-blooded as completely separate circles">
-                  <circle cx="72" cy="74" r="44" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.7"/>
-                  <text x="72" y="42" textAnchor="middle" fontSize="10" fontWeight="800" fill={d}>Cold-blooded</text>
-                  <circle cx="72" cy="80" r="22" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
-                  <text x="72" y="84" textAnchor="middle" fontSize="9" fontWeight="700" fill={d}>Reptiles</text>
-                  <line x1="126" y1="64" x2="138" y2="82" stroke="#d94b3e" strokeWidth="3" strokeLinecap="round"/>
-                  <line x1="138" y1="64" x2="126" y2="82" stroke="#d94b3e" strokeWidth="3" strokeLinecap="round"/>
-                  <circle cx="182" cy="74" r="36" fill="#ffedea" stroke="#FF6B5C" strokeWidth="2"/>
-                  <text x="182" y="69" textAnchor="middle" fontSize="10" fontWeight="700" fill="#d94b3e">Warm-</text>
-                  <text x="182" y="82" textAnchor="middle" fontSize="10" fontWeight="700" fill="#d94b3e">blooded</text>
-                </svg>
-                <p style={{ margin: "5px 0 0", fontSize: 10, color: "#d94b3e", textAlign: "center" as const }}>✕ no overlap — completely separate</p>
-              </div>
-            </div>
-
-            {/* P3 + conclusion */}
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <span style={{ padding: "3px 10px", borderRadius: 20, background: "#259650", color: "white", fontSize: 10, fontWeight: 800 }}>P3 + ∴</span>
-                <strong style={{ fontSize: 12, color: "#259650" }}>Some lizards are reptiles → those lizards are inside Cold-blooded and outside Warm-blooded</strong>
-              </div>
-              <svg viewBox="0 0 320 150" style={{ width: "100%", maxWidth: 360, display: "block", borderRadius: 10, border: "1.5px solid #3DBE6C", background: "white" }} aria-label="Full diagram — some lizard dots inside Reptiles and Cold-blooded, outside Warm-blooded">
-                <circle cx="108" cy="80" r="52" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.55"/>
-                <text x="108" y="40" textAnchor="middle" fontSize="12" fontWeight="800" fill={d}>Cold-blooded</text>
-                <circle cx="108" cy="86" r="28" fill={c} fillOpacity="0.22" stroke={c} strokeWidth="1.5"/>
-                <text x="108" y="108" textAnchor="middle" fontSize="10" fontWeight="700" fill={d}>Reptiles</text>
-                <circle cx="92" cy="76" r="22" fill="#8B6BFF" fillOpacity="0.12" stroke="#8B6BFF" strokeWidth="2" strokeDasharray="5,3"/>
-                <text x="66" y="55" textAnchor="middle" fontSize="10" fontWeight="700" fill="#8B6BFF">Lizards</text>
-                <circle cx="103" cy="81" r="6" fill="#259650"/>
-                <circle cx="117" cy="75" r="6" fill="#259650"/>
-                <line x1="178" y1="68" x2="190" y2="88" stroke="#d94b3e" strokeWidth="3.5" strokeLinecap="round"/>
-                <line x1="190" y1="68" x2="178" y2="88" stroke="#d94b3e" strokeWidth="3.5" strokeLinecap="round"/>
-                <circle cx="256" cy="80" r="46" fill="#ffedea" stroke="#FF6B5C" strokeWidth="2"/>
-                <text x="256" y="74" textAnchor="middle" fontSize="11" fontWeight="700" fill="#d94b3e">Warm-</text>
-                <text x="256" y="88" textAnchor="middle" fontSize="11" fontWeight="700" fill="#d94b3e">blooded</text>
-              </svg>
-              <p style={{ margin: "6px 0 0", fontSize: 10, color: "#259650", fontWeight: 700 }}>Green dots = some lizards — inside Reptiles and Cold-blooded, outside Warm-blooded ✓</p>
-            </div>
-          </div>
-          <div style={{ padding: "10px 16px", background: "#edfbf3", display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: "#259650", color: "white" }}>Follows</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#259650" }}>YES — must follow</span>
-          </div>
-        </div>
-
-        {/* Example 2 — converse trap */}
-        <div style={{ borderRadius: 14, border: "1px solid var(--line)", background: "white", overflow: "hidden" }}>
-          <div style={{ padding: "10px 16px", background: t, borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 10 }}>
-            <strong style={{ fontSize: 11, color: c, fontWeight: 800, letterSpacing: ".04em" }}>EXAMPLE 2</strong>
-            <span style={{ fontSize: 12, color: "var(--ink)", fontWeight: 600 }}>The converse trap</span>
-          </div>
-          <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
-            <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Given</p>
-            {["All pilots are licensed to fly.", "James is licensed to fly."].map((p, i) => (
-              <div key={i} style={{ padding: "6px 12px", borderRadius: 7, background: t, marginBottom: 5, fontSize: 13, color: "var(--ink)", fontStyle: "italic" }}>{p}</div>
-            ))}
-          </div>
-          <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--line)", background: "#fafafa" }}>
-            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Conclusion to test</p>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>James is a pilot.</p>
-          </div>
-          <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
-            <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Working — draw the diagram, then ask the question</p>
-
-            {/* Step 1: Draw the circles */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <span style={{ padding: "3px 10px", borderRadius: 20, background: c, color: "white", fontSize: 10, fontWeight: 800 }}>Step 1</span>
-                <strong style={{ fontSize: 12, color: d }}>Pilots ⇒ Licensed → draw Pilots as a smaller circle sitting inside Licensed to fly</strong>
-              </div>
-              <svg viewBox="0 0 240 140" style={{ width: "100%", maxWidth: 280, display: "block", borderRadius: 10, border: `1.5px solid ${c}`, background: "white" }} aria-label="Pilots circle inside Licensed to fly circle">
-                <circle cx="120" cy="78" r="50" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.7"/>
-                <text x="120" y="40" textAnchor="middle" fontSize="12" fontWeight="800" fill={d}>Licensed to fly</text>
-                <circle cx="120" cy="84" r="26" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
-                <text x="120" y="88" textAnchor="middle" fontSize="11" fontWeight="700" fill={d}>Pilots</text>
-              </svg>
-              <p style={{ margin: "5px 0 0", fontSize: 10, color: "#64748b" }}>Pilots sits entirely inside Licensed to fly</p>
-            </div>
-
-            {/* Step 2: Place James and ask the question */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <span style={{ padding: "3px 10px", borderRadius: 20, background: "#d94b3e", color: "white", fontSize: 10, fontWeight: 800 }}>Step 2</span>
-                <strong style={{ fontSize: 12, color: "#d94b3e" }}>James ∈ Licensed — place him in the diagram. Does he have to be inside Pilots?</strong>
-              </div>
-              <svg viewBox="0 0 300 150" style={{ width: "100%", maxWidth: 340, display: "block", borderRadius: 10, border: "1.5px solid #d94b3e", background: "white" }} aria-label="James placed in Licensed to fly but not necessarily inside Pilots">
-                <circle cx="130" cy="82" r="54" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.65"/>
-                <text x="130" y="40" textAnchor="middle" fontSize="12" fontWeight="800" fill={d}>Licensed to fly</text>
-                <circle cx="118" cy="88" r="27" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
-                <text x="118" y="92" textAnchor="middle" fontSize="11" fontWeight="700" fill={d}>Pilots</text>
-                <circle cx="180" cy="64" r="7" fill="#d94b3e"/>
-                <text x="196" y="61" fontSize="11" fontWeight="800" fill="#d94b3e">James</text>
-                <text x="196" y="74" fontSize="9" fill="#d94b3e" fontWeight="600">(flight instructor)</text>
-                <circle cx="118" cy="76" r="5" fill="#8B6BFF" fillOpacity="0.4"/>
-                <text x="136" y="74" fontSize="8" fill="#94a3b8">could also be here</text>
-                <text x="178" y="118" fontSize="28" fontWeight="900" fill="#d94b3e" fillOpacity="0.18">?</text>
-              </svg>
-              <p style={{ margin: "5px 0 0", fontSize: 10, color: "#d94b3e", fontWeight: 700 }}>James is somewhere inside Licensed — he does NOT have to be inside Pilots ✗</p>
-            </div>
-
-            {/* The rule */}
-            <div style={{ padding: "10px 14px", borderRadius: 8, background: "#fff5f5", border: "1.5px solid #FF6B5C" }}>
-              <p style={{ margin: "0 0 3px", fontSize: 10, fontWeight: 800, color: "#d94b3e", letterSpacing: ".06em", textTransform: "uppercase" as const }}>Converse error — never do this</p>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#d94b3e", fontFamily: "monospace" }}>A ⇒ B does NOT mean B ⇒ A</p>
-              <p style={{ margin: "5px 0 0", fontSize: 12, color: "var(--ink)", lineHeight: 1.5 }}>All pilots are licensed ≠ all licensed people are pilots. One counterexample (a flight instructor) is enough to prove the conclusion does not follow.</p>
-            </div>
-          </div>
-          <div style={{ padding: "10px 16px", background: "#fff0f0", display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: "#d94b3e", color: "white" }}>Does not follow</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#d94b3e" }}>NO — converse error</span>
-          </div>
-        </div>
-
-        {/* Example 3 — five-statement Yes/No set */}
-        <div style={{ borderRadius: 14, border: "1px solid var(--line)", background: "white", overflow: "hidden" }}>
-          <div style={{ padding: "10px 16px", background: t, borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 10 }}>
-            <strong style={{ fontSize: 11, color: c, fontWeight: 800, letterSpacing: ".04em" }}>EXAMPLE 3</strong>
-            <span style={{ fontSize: 12, color: "var(--ink)", fontWeight: 600 }}>Five-statement Yes / No set</span>
-          </div>
-          <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
-            <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Given</p>
-            {[
-              "All surgeons are doctors.",
-              "All doctors must complete continuing professional development (CPD).",
-              "Some surgeons are also researchers.",
-              "No researchers work fewer than 50 hours per week.",
-            ].map((p, i) => (
-              <div key={i} style={{ padding: "6px 12px", borderRadius: 7, background: t, marginBottom: 5, fontSize: 13, color: "var(--ink)", fontStyle: "italic" }}>{p}</div>
-            ))}
-          </div>
-          <div style={{ padding: "14px 16px" }}>
-            <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Judge each statement</p>
+            <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Premises</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {([
-                { stmt: "All surgeons must complete CPD.", answer: "Yes" as const, reason: "Surgeons ⇒ Doctors (P1). Doctors must complete CPD (P2). The chain forces it: all surgeons must complete CPD." },
-                { stmt: "Some doctors are researchers.", answer: "Yes" as const, reason: "Some surgeons are researchers (P3). All surgeons are doctors (P1). Those surgeon-researchers are therefore doctors who are also researchers — so some doctors are researchers." },
-                { stmt: "No surgeons work fewer than 50 hours per week.", answer: "No" as const, reason: "Only some surgeons are researchers (P3), so only those have the 50-hour rule (P4). Non-researcher surgeons could work fewer hours. The word 'no' is too strong here." },
-                { stmt: "All researchers must complete CPD.", answer: "No" as const, reason: "P1 tells us surgeons ⇒ doctors, and P2 says doctors must do CPD. But researchers who are not surgeons are not shown to be doctors, so P2 does not apply to them. Only researcher-surgeons definitely must complete CPD." },
-                { stmt: "Some researchers are doctors.", answer: "Yes" as const, reason: "Some surgeons are researchers (P3). All surgeons are doctors (P1). Those surgeon-researchers are both doctors and researchers, so some researchers are doctors." },
-              ]).map((item, i) => (
-                <div key={i} style={{ borderRadius: 10, border: `1px solid ${item.answer === "Yes" ? "#259650" : "#d94b3e"}`, overflow: "hidden" }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr auto", padding: "8px 12px", background: item.answer === "Yes" ? "#edfbf3" : "#fff5f5", borderBottom: "1px solid var(--line)" }}>
+                { label: "P1", notation: "Reptiles ⇒ Cold-blooded",    note: "All reptiles are cold-blooded" },
+                { label: "P2", notation: "Cold-blooded ✕ Warm-blooded", note: "No cold-blooded animals are warm-blooded" },
+                { label: "P3", notation: "Lizards → Reptiles",          note: "Some lizards are reptiles" },
+              ] as { label: string; notation: string; note: string }[]).map(({ label, notation, note }) => (
+                <div key={label} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" as const }}>
+                  <span style={{ padding: "3px 10px", borderRadius: 20, background: c, color: "white", fontSize: 10, fontWeight: 800, flexShrink: 0 }}>{label}</span>
+                  <span style={{ padding: "5px 14px", borderRadius: 8, background: t, fontSize: 14, fontWeight: 800, fontFamily: "monospace", color: d, flexShrink: 0 }}>{notation}</span>
+                  <span style={{ fontSize: 11, color: "var(--ink-soft)" }}>{note}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Chain */}
+          <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)", background: "#fafafa" }}>
+            <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>The chain</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" as const }}>
+              {([
+                { text: "Lizards",      kind: "node", bg: "#f1ecff", col: "#6747d8" },
+                { text: "→",           kind: "arrow", col: "#6747d8" },
+                { text: "Reptiles",    kind: "node", bg: t,        col: d },
+                { text: "⇒",           kind: "arrow", col: d },
+                { text: "Cold-blooded", kind: "node", bg: t,        col: d },
+                { text: "✕",           kind: "arrow", col: "#d94b3e" },
+                { text: "Warm-blooded", kind: "node", bg: "#ffedea", col: "#d94b3e" },
+              ] as { text: string; kind: string; bg?: string; col: string }[]).map((item, i) => (
+                item.kind === "arrow"
+                  ? <span key={i} style={{ fontSize: 20, fontWeight: 900, fontFamily: "monospace", color: item.col }}>{item.text}</span>
+                  : <span key={i} style={{ padding: "5px 14px", borderRadius: 8, background: item.bg, fontSize: 13, fontWeight: 800, color: item.col }}>{item.text}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* How to read the chain */}
+          <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
+            <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>How to read the chain</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {([
+                {
+                  symbol: "⇒",
+                  label:  "All — one direction only",
+                  desc:   "Reptiles ⇒ Cold-blooded: you can travel right from Reptiles and always reach Cold-blooded. You cannot go left — not every cold-blooded thing is a reptile.",
+                },
+                {
+                  symbol: "✕",
+                  label:  "None — blocks both ways",
+                  desc:   "Cold-blooded ✕ Warm-blooded: the cross blocks both directions. No cold-blooded thing can be warm-blooded, and no warm-blooded thing can be cold-blooded.",
+                },
+                {
+                  symbol: "→",
+                  label:  "Some — partial bridge",
+                  desc:   "Lizards → Reptiles: only some lizards cross over. Those that do inherit everything on the right side of the chain — but you cannot say ALL lizards do.",
+                },
+              ] as { symbol: string; label: string; desc: string }[]).map(({ symbol, label, desc }) => (
+                <div key={symbol} style={{ display: "flex", gap: 10, padding: "8px 12px", borderRadius: 8, background: t, border: `1px solid ${c}30` }}>
+                  <span style={{ fontSize: 22, fontWeight: 900, fontFamily: "monospace", color: d, flexShrink: 0, minWidth: 26, textAlign: "center" as const }}>{symbol}</span>
+                  <div>
+                    <strong style={{ fontSize: 12, color: d }}>{label}</strong>
+                    <p style={{ margin: "3px 0 0", fontSize: 11, color: "var(--ink-soft)", lineHeight: 1.55 }}>{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 5 conclusions */}
+          <div style={{ padding: "14px 16px" }}>
+            <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Judge each conclusion</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {([
+                {
+                  stmt:    "Some lizards are cold-blooded.",
+                  verdict: "Yes",
+                  color:   "#259650",
+                  bg:      "#edfbf3",
+                  reason:  "P3 says Lizards → Reptiles: some lizards cross into the Reptiles group. P1 says Reptiles ⇒ Cold-blooded: all reptiles are cold-blooded. Those lizards that are reptiles must therefore be cold-blooded. Yes — some lizards are cold-blooded.",
+                },
+                {
+                  stmt:    "Some lizards are not warm-blooded.",
+                  verdict: "Yes",
+                  color:   "#259650",
+                  bg:      "#edfbf3",
+                  reason:  "From the first conclusion, some lizards are cold-blooded. P2 says Cold-blooded ✕ Warm-blooded — the cross blocks both ways, so cold-blooded things cannot be warm-blooded at all. Those lizards that are cold-blooded are therefore definitely not warm-blooded.",
+                },
+                {
+                  stmt:    "All reptiles are warm-blooded.",
+                  verdict: "No",
+                  color:   "#d94b3e",
+                  bg:      "#fff5f5",
+                  reason:  "Follow the chain: Reptiles ⇒ Cold-blooded, then Cold-blooded ✕ Warm-blooded. The chain carries reptiles into the cold-blooded group and then hits a full block. Reptiles cannot reach warm-blooded — the conclusion is the opposite of what the premises show.",
+                },
+                {
+                  stmt:    "All cold-blooded animals are reptiles.",
+                  verdict: "No",
+                  color:   "#d94b3e",
+                  bg:      "#fff5f5",
+                  reason:  "P1 says Reptiles ⇒ Cold-blooded: the arrow goes right from Reptiles. You cannot reverse it. Cold-blooded ⇒ Reptiles is a converse error. There could be cold-blooded animals (fish, frogs) that are not reptiles — P1 says nothing about them.",
+                },
+                {
+                  stmt:    "No lizards are warm-blooded.",
+                  verdict: "Does not follow",
+                  color:   "#b45309",
+                  bg:      "#fffbeb",
+                  reason:  "P3 says SOME lizards are reptiles — the → is partial. The lizards that are reptiles cannot be warm-blooded (via the chain), but the remaining lizards that are not reptiles are not bound by the chain at all. We have no information about them, so we cannot say NO lizards are warm-blooded.",
+                },
+              ] as { stmt: string; verdict: string; color: string; bg: string; reason: string }[]).map((item, i) => (
+                <div key={i} style={{ borderRadius: 10, border: `1px solid ${item.color}`, overflow: "hidden" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr auto", padding: "8px 12px", background: item.bg, borderBottom: "1px solid var(--line)", gap: 8, alignItems: "center" }}>
                     <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{item.stmt}</span>
-                    <span style={{ fontSize: 11, fontWeight: 800, padding: "2px 10px", borderRadius: 20, background: item.answer === "Yes" ? "#259650" : "#d94b3e", color: "white", alignSelf: "center" }}>{item.answer}</span>
+                    <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 10px", borderRadius: 20, background: item.color, color: "white", whiteSpace: "nowrap" as const }}>{item.verdict}</span>
                   </div>
                   <p style={{ margin: 0, padding: "8px 12px", fontSize: 11, lineHeight: 1.6, color: "var(--ink-soft)" }}>{item.reason}</p>
                 </div>
               ))}
             </div>
           </div>
+
         </div>
 
       </div>
