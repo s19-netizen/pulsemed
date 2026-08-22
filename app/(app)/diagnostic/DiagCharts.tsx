@@ -531,49 +531,43 @@ export function CargoDataCard({ data }: { data: CargoData }) {
 
       <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" as const, justifyContent: "center" }}>
 
-        {/* ── Cargo Bay flat rect with labels ── */}
-        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 6 }}>
+        {/* ── Cargo Bay ── */}
+        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 4 }}>
           <span style={label}>Available cargo space</span>
-          {/* rect + width arrow below, height arrow on right */}
-          <svg viewBox="0 0 170 130" style={{ width: 170, display: "block" }}>
-            {/* Box */}
-            <rect x="20" y="10" width="100" height="80" fill="#dbeafe" stroke="#2d7ff9" strokeWidth="2" rx="2"/>
-
-            {/* Width arrow below */}
-            <line x1="20" y1="102" x2="120" y2="102" stroke="#1a5fd0" strokeWidth="1.2"/>
-            <line x1="20" y1="98"  x2="20"  y2="106" stroke="#1a5fd0" strokeWidth="1.2"/>
-            <line x1="120" y1="98" x2="120" y2="106" stroke="#1a5fd0" strokeWidth="1.2"/>
-            <text x="70" y="116" textAnchor="middle" fontSize="11" fontWeight="800" fill="#1a5fd0">{uw} cm</text>
-
-            {/* Height arrow on right */}
-            <line x1="132" y1="10" x2="132" y2="90" stroke="#1a5fd0" strokeWidth="1.2"/>
-            <line x1="128" y1="10"  x2="136" y2="10"  stroke="#1a5fd0" strokeWidth="1.2"/>
-            <line x1="128" y1="90"  x2="136" y2="90"  stroke="#1a5fd0" strokeWidth="1.2"/>
-            <text x="154" y="55" textAnchor="middle" fontSize="11" fontWeight="800" fill="#1a5fd0" transform="rotate(-90,154,55)">{uh} cm</text>
+          <span style={{ fontSize: 10, fontWeight: 700, color: "#1a5fd0" }}>Height: {uh} cm</span>
+          {/* top-down floor plan: width across, length down */}
+          <svg viewBox="0 0 164 144" style={{ width: 164, display: "block" }}>
+            <rect x="30" y="14" width="96" height="78" fill="#dbeafe" stroke="#2d7ff9" strokeWidth="2" rx="2"/>
+            {/* width arrow below box */}
+            <line x1="30" y1="104" x2="126" y2="104" stroke="#1a5fd0" strokeWidth="1.2"/>
+            <line x1="30" y1="100" x2="30"  y2="108" stroke="#1a5fd0" strokeWidth="1.2"/>
+            <line x1="126" y1="100" x2="126" y2="108" stroke="#1a5fd0" strokeWidth="1.2"/>
+            <text x="78" y="118" textAnchor="middle" fontSize="11" fontWeight="800" fill="#1a5fd0">width {uw} cm</text>
+            {/* length arrow left of box */}
+            <line x1="18" y1="14" x2="18" y2="92" stroke="#1a5fd0" strokeWidth="1.2"/>
+            <line x1="14" y1="14" x2="22" y2="14" stroke="#1a5fd0" strokeWidth="1.2"/>
+            <line x1="14" y1="92" x2="22" y2="92" stroke="#1a5fd0" strokeWidth="1.2"/>
+            <text x="10" y="57" textAnchor="middle" fontSize="11" fontWeight="800" fill="#1a5fd0" transform="rotate(-90,10,57)">length {ul} cm</text>
           </svg>
-          <span style={dim}>Length: {ul} cm</span>
         </div>
 
-        {/* ── LSM flat rect with labels ── */}
-        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 6 }}>
+        {/* ── LSM ── */}
+        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 4 }}>
           <span style={label}>Life-Support Module</span>
-          <svg viewBox="0 0 120 110" style={{ width: 120, display: "block" }}>
-            {/* Box */}
-            <rect x="16" y="10" width="68" height="56" fill="#d1fae5" stroke="#259650" strokeWidth="2" rx="2"/>
-
-            {/* Width arrow below */}
-            <line x1="16" y1="76" x2="84" y2="76" stroke="#259650" strokeWidth="1.2"/>
-            <line x1="16" y1="72" x2="16" y2="80" stroke="#259650" strokeWidth="1.2"/>
-            <line x1="84" y1="72" x2="84" y2="80" stroke="#259650" strokeWidth="1.2"/>
-            <text x="50" y="90" textAnchor="middle" fontSize="10" fontWeight="800" fill="#259650">{lsm.footprintA} cm</text>
-
-            {/* Height arrow on right */}
-            <line x1="96" y1="10" x2="96" y2="66" stroke="#259650" strokeWidth="1.2"/>
-            <line x1="92" y1="10" x2="100" y2="10" stroke="#259650" strokeWidth="1.2"/>
-            <line x1="92" y1="66" x2="100" y2="66" stroke="#259650" strokeWidth="1.2"/>
-            <text x="114" y="42" textAnchor="middle" fontSize="10" fontWeight="800" fill="#259650" transform="rotate(-90,114,42)">{lsm.height} cm</text>
+          <span style={{ fontSize: 10, fontWeight: 700, color: "#259650" }}>Height: {lsm.height} cm</span>
+          <svg viewBox="0 0 130 120" style={{ width: 130, display: "block" }}>
+            <rect x="26" y="14" width="64" height="52" fill="#d1fae5" stroke="#259650" strokeWidth="2" rx="2"/>
+            {/* width arrow below */}
+            <line x1="26" y1="78" x2="90" y2="78" stroke="#259650" strokeWidth="1.2"/>
+            <line x1="26" y1="74" x2="26" y2="82" stroke="#259650" strokeWidth="1.2"/>
+            <line x1="90" y1="74" x2="90" y2="82" stroke="#259650" strokeWidth="1.2"/>
+            <text x="58" y="93" textAnchor="middle" fontSize="10" fontWeight="800" fill="#259650">width {lsm.footprintA} cm</text>
+            {/* length arrow left */}
+            <line x1="14" y1="14" x2="14" y2="66" stroke="#259650" strokeWidth="1.2"/>
+            <line x1="10" y1="14" x2="18" y2="14" stroke="#259650" strokeWidth="1.2"/>
+            <line x1="10" y1="66" x2="18" y2="66" stroke="#259650" strokeWidth="1.2"/>
+            <text x="6" y="43" textAnchor="middle" fontSize="10" fontWeight="800" fill="#259650" transform="rotate(-90,6,43)">length {lsm.footprintB} cm</text>
           </svg>
-          <span style={dimG}>Depth: {lsm.footprintB} cm</span>
           <span style={{ fontSize: 14, fontWeight: 900, color: "#1e293b" }}>{massKg} kg</span>
           <span style={{ fontSize: 9, fontWeight: 600, color: "#64748b" }}>per module</span>
         </div>
