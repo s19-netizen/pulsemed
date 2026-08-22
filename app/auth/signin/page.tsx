@@ -1,8 +1,36 @@
 "use client";
+import { useState } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 
 export default function SignInPage() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError]       = useState("");
+  const [loading, setLoading]   = useState(false);
+
+  async function handleStudentSignIn(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    const res = await signIn("student-credentials", {
+      username: username.trim().toLowerCase(),
+      password,
+      redirect: false,
+    });
+    setLoading(false);
+    if (res?.error) {
+      setError("Username or password incorrect.");
+    } else {
+      window.location.href = "/dashboard";
+    }
+  }
+
+  const inputStyle: React.CSSProperties = {
+    border: "1.5px solid #e0e6ef", borderRadius: 10, padding: "11px 14px",
+    fontSize: 14, outline: "none", fontFamily: "inherit", width: "100%", boxSizing: "border-box",
+  };
+
   return (
     <div className="signin-page">
       <div className="signin-card">
@@ -14,6 +42,8 @@ export default function SignInPage() {
         </Link>
         <h1>Sign in to Pulsemed</h1>
         <p>Continue your UCAT preparation.</p>
+
+        {/* Google */}
         <button
           className="google-btn"
           onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
@@ -27,20 +57,57 @@ export default function SignInPage() {
           Continue with Google
         </button>
 
-        <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-          <Link
-            href="/auth/student"
-            style={{ flex: 1, display: "block", textAlign: "center", border: "1.5px solid #e0e6ef", borderRadius: 11, padding: "11px", fontSize: 13, fontWeight: 700, color: "#1a2a3a", textDecoration: "none", background: "#f8fafd" }}
-          >
-            Student Login
-          </Link>
-          <Link
-            href="/auth/tutor"
-            style={{ flex: 1, display: "block", textAlign: "center", border: "1.5px solid #e0e6ef", borderRadius: 11, padding: "11px", fontSize: 13, fontWeight: 700, color: "#1a2a3a", textDecoration: "none", background: "#f8fafd" }}
-          >
-            Tutor Login
-          </Link>
+        {/* Divider */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "18px 0" }}>
+          <div style={{ flex: 1, height: 1, background: "#eaeef4" }} />
+          <span style={{ fontSize: 12, color: "#a0aec0", fontWeight: 600 }}>or sign in as a student</span>
+          <div style={{ flex: 1, height: 1, background: "#eaeef4" }} />
         </div>
+
+        {/* Student credentials form */}
+        <form onSubmit={handleStudentSignIn} style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#6b7a8c" }}>Username</label>
+            <input
+              type="text"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="your-username"
+              autoComplete="username"
+              style={inputStyle}
+            />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            <label style={{ fontSize: 12, fontWeight: 700, color: "#6b7a8c" }}>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="••••••••"
+              autoComplete="current-password"
+              style={inputStyle}
+            />
+          </div>
+
+          {error && (
+            <div style={{ background: "#fff0ef", border: "1px solid #ffd6d3", borderRadius: 9, padding: "10px 13px", color: "#c0392b", fontSize: 13, fontWeight: 600 }}>
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{ background: "#1a2a3a", color: "white", border: 0, borderRadius: 11, padding: "12px", fontSize: 14, fontWeight: 800, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1 }}
+          >
+            {loading ? "Signing in…" : "Sign In as Student"}
+          </button>
+        </form>
+
+        <p style={{ textAlign: "center", marginTop: 18, fontSize: 12, color: "#a0aec0" }}>
+          Are you a tutor?{" "}
+          <Link href="/auth/tutor" style={{ color: "#2d7ff9", fontWeight: 700 }}>Tutor login →</Link>
+        </p>
       </div>
     </div>
   );
