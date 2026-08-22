@@ -18,10 +18,26 @@ type Props = {
   diagnosticDone: boolean;
   diagnosticScore: number | null;
   diagnosticBand: number | null;
+  diagnosticVr: number | null;
+  diagnosticDm: number | null;
+  diagnosticQr: number | null;
   practiceSessions: any[];
 };
 
-export default function DashboardClient({ user, responses, testDate, diagnosticDone, diagnosticScore, diagnosticBand, practiceSessions }: Props) {
+function blendScore(diagScore: number | null, accuracy: number, sessionCount: number): number | null {
+  if (diagScore === null && sessionCount === 0) return null;
+  const practiceScore = Math.round(300 + (accuracy / 100) * 600);
+  if (diagScore === null) return practiceScore;
+  if (sessionCount === 0) return diagScore;
+  const pw = Math.min(sessionCount * 0.15, 0.6);
+  return Math.round(diagScore * (1 - pw) + practiceScore * pw);
+}
+
+function sjtBandFromAccuracy(accuracy: number): number {
+  return accuracy >= 80 ? 1 : accuracy >= 65 ? 2 : accuracy >= 50 ? 3 : 4;
+}
+
+export default function DashboardClient({ user, responses, testDate, diagnosticDone, diagnosticScore, diagnosticBand, diagnosticVr, diagnosticDm, diagnosticQr, practiceSessions }: Props) {
   const [plan, setPlan] = useState<any>(null);
   const [planLoading, setPlanLoading] = useState(true);
 
@@ -54,6 +70,35 @@ export default function DashboardClient({ user, responses, testDate, diagnosticD
     const lastBand    = s.key === "sjt" ? (sSessions.find(p => p.sjt_band != null)?.sjt_band ?? null) : null;
     return { ...s, total: sResponses.length, accuracy: pct, avgPredicted, lastBand, sessionCount: sSessions.length };
   });
+
+  // ── Working grade ─────────────────────────────────────────────────────────
+  const vrStat  = sectionStats.find(s => s.key === "vr")!;
+  const dmStat  = sectionStats.find(s => s.key === "dm")!;
+  const qrStat  = sectionStats.find(s => s.key === "qr")!;
+  const sjtStat = sectionStats.find(s => s.key === "sjt")!;
+
+  const wgVr  = blendScore(diagnosticVr,  vrStat.accuracy,  vrStat.sessionCount);
+  const wgDm  = blendScore(diagnosticDm,  dmStat.accuracy,  dmStat.sessionCount);
+  const wgQr  = blendScore(diagnosticQr,  qrStat.accuracy,  qrStat.sessionCount);
+
+  const wgTotal = (wgVr !== null && wgDm !== null && wgQr !== null)
+    ? wgVr + wgDm + wgQr : null;
+
+  const wgSjt = (() => {
+    const hasData = sjtStat.sessionCount > 0;
+    const practiceBand = hasData ? sjtBandFromAccuracy(sjtStat.accuracy) : null;
+    if (diagnosticBand === null) return practiceBand;
+    if (practiceBand === null) return diagnosticBand;
+    return Math.round((diagnosticBand + practiceBand) / 2);
+  })();
+
+  const wgDelta = (wgTotal !== null && diagnosticScore !== null) ? wgTotal - diagnosticScore : null;
+
+  const COG_SECTIONS = [
+    { key: "vr", label: "VR", diagScore: diagnosticVr, wg: wgVr, sessions: vrStat.sessionCount },
+    { key: "dm", label: "DM", diagScore: diagnosticDm, wg: wgDm, sessions: dmStat.sessionCount },
+    { key: "qr", label: "QR", diagScore: diagnosticQr, wg: wgQr, sessions: qrStat.sessionCount },
+  ];
 
   const firstName = (user.name ?? "").split(" ")[0] || "there";
 
@@ -121,7 +166,7 @@ export default function DashboardClient({ user, responses, testDate, diagnosticD
         </div>
       </div>
 
-      {/* ── Diagnostic (shown prominently before section grid) ─── */}
+      {/* ── Diagnostic banner / Working grade ────────────────────── */}
       {!diagnosticDone ? (
         <div className="d2-diag-banner">
           <div className="d2-diag-banner-deco" aria-hidden="true" />
@@ -141,7 +186,56 @@ export default function DashboardClient({ user, responses, testDate, diagnosticD
             <button className="d2-diag-banner-btn">Start diagnostic →</button>
           </Link>
         </div>
-      ) : null}
+      ) : (
+        <div className="d2-wg">
+          <div className="d2-wg-deco" aria-hidden="true" />
+
+          {/* Total score */}
+          <div className="d2-wg-left">
+            <p className="d2-wg-kicker">WORKING GRADE</p>
+            <div className="d2-wg-total">
+              <strong>{wgTotal ?? "—"}</strong>
+              <span>/ 2700</span>
+            </div>
+            {wgDelta !== null && (
+              <span className={`d2-wg-delta ${wgDelta > 0 ? "up" : wgDelta < 0 ? "dn" : "eq"}`}>
+                {wgDelta > 0 ? `↑ +${wgDelta}` : wgDelta < 0 ? `↓ ${wgDelta}` : "="} from diagnostic
+              </span>
+            )}
+            {wgTotal === null && <span className="d2-wg-delta eq">Complete the diagnostic to set your baseline</span>}
+          </div>
+
+          {/* Per-section breakdown */}
+          <div className="d2-wg-sections">
+            {COG_SECTIONS.map(s => {
+              const delta = s.wg !== null && s.diagScore !== null ? s.wg - s.diagScore : null;
+              return (
+                <div key={s.key} className="d2-wg-sec">
+                  <span className="d2-wg-sec-label">{s.label}</span>
+                  <strong className="d2-wg-sec-score">{s.wg ?? "—"}</strong>
+                  <span className={`d2-wg-sec-delta ${delta === null ? "eq" : delta > 0 ? "up" : delta < 0 ? "dn" : "eq"}`}>
+                    {delta === null ? (s.diagScore ? "baseline" : "—") : delta > 0 ? `↑ +${delta}` : delta < 0 ? `↓ ${delta}` : "="}
+                  </span>
+                  <span className="d2-wg-sec-note">{s.sessions > 0 ? `${s.sessions} session${s.sessions !== 1 ? "s" : ""}` : "no practice"}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* SJT band */}
+          <div className="d2-wg-sjt">
+            <p className="d2-wg-kicker" style={{ color: "rgba(255,255,255,.6)" }}>SJT BAND</p>
+            <strong className="d2-wg-sjt-band">{wgSjt ? `Band ${wgSjt}` : "—"}</strong>
+            <span className="d2-wg-sjt-note">
+              {wgSjt === 1 ? "Excellent" : wgSjt === 2 ? "Good" : wgSjt === 3 ? "Average" : wgSjt === 4 ? "Below average" : ""}
+            </span>
+          </div>
+
+          <Link href="/diagnostic/results" className="d2-wg-link">
+            <button className="d2-wg-btn">Full report →</button>
+          </Link>
+        </div>
+      )}
 
       {/* ── Section cards 2×2 ─────────────────────────────────── */}
       <div className="d2-section-grid">
