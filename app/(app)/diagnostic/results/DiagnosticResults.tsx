@@ -292,7 +292,7 @@ function ReviewQuestion({ q, row, idx }: { q: typeof DIAGNOSTIC_QUESTIONS[0]; ro
           {q.explanation && (
             <div style={{ marginTop: 14, padding: "12px 14px", background: "#f0f4ff", borderRadius: 10, borderLeft: `3px solid ${color}` }}>
               <p style={{ fontSize: 10, fontWeight: 800, color, margin: "0 0 5px", letterSpacing: "0.06em", textTransform: "uppercase" }}>Walkthrough</p>
-              <p style={{ fontSize: 13, lineHeight: 1.75, color: "var(--ink)", margin: 0 }}>{q.explanation}</p>
+              <WalkthroughText text={q.explanation} color={color} />
             </div>
           )}
         </div>
@@ -426,6 +426,47 @@ function PassageBox({ title, text }: { title: string; text: string }) {
           {text}
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Review: walkthrough formatter ───────────────────────────────────────────
+
+function inlineMath(text: string, color: string): React.ReactNode {
+  const regex = /⌊[^⌋]+⌋(?:\s*=\s*[\d,.]+)?|£[\d,]+(?:\.\d+)?(?:\s*(?:[+\-×÷]\s*£?[\d,]+(?:\.\d+)?)+)?(?:\s*=\s*£?[\d,]+(?:\.\d+)?)?|[\d,]+(?:\.\d+)?(?:\s*(?:%|kg|cm|t\b|s\b))?(?:\s*(?:[×÷+\-=])\s*[\d£,]+(?:\.\d+)?(?:\s*(?:%|kg|cm|t\b))?)+|[\d,]+(?:\.\d+)?%/g;
+  const parts: React.ReactNode[] = [];
+  let last = 0, m: RegExpExecArray | null;
+  while ((m = regex.exec(text)) !== null) {
+    if (m.index > last) parts.push(<span key={`t${m.index}`}>{text.slice(last, m.index)}</span>);
+    parts.push(<mark key={`m${m.index}`} style={{ background: color + "18", color, fontWeight: 700, padding: "0 4px", borderRadius: 3, fontFamily: "ui-monospace, monospace", fontSize: 12, fontStyle: "normal" }}>{m[0]}</mark>);
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push(<span key="tail">{text.slice(last)}</span>);
+  return parts.length ? <>{parts}</> : <>{text}</>;
+}
+
+function WalkthroughText({ text, color }: { text: string; color: string }) {
+  const steps = text.trim()
+    .split(/\.\s+(?=[A-Z\d⌊£"'])/)
+    .map(s => s.replace(/\.$/, "").trim())
+    .filter(s => s.length > 3);
+
+  if (steps.length <= 1) {
+    return <p style={{ fontSize: 13, lineHeight: 1.75, margin: 0 }}>{inlineMath(text.trim(), color)}</p>;
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {steps.map((step, i) => (
+        <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+          <span style={{ minWidth: 22, height: 22, borderRadius: 6, background: color + "20", color, fontSize: 10, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+            {i + 1}
+          </span>
+          <span style={{ fontSize: 13, lineHeight: 1.65, color: "var(--ink)" }}>
+            {inlineMath(step, color)}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
@@ -614,7 +655,7 @@ function ReviewExam({ section, qIdx, onQIdxChange, responseMap }: {
           {q.explanation && (
             <div style={{ marginTop: 14, padding: "12px 14px", background: "#f0f4ff", borderRadius: 10, borderLeft: `3px solid ${color}` }}>
               <p style={{ fontSize: 10, fontWeight: 800, color, margin: "0 0 5px", letterSpacing: "0.06em", textTransform: "uppercase" as const }}>Walkthrough</p>
-              <p style={{ fontSize: 13, lineHeight: 1.75, color: "var(--ink)", margin: 0 }}>{q.explanation}</p>
+              <WalkthroughText text={q.explanation} color={color} />
             </div>
           )}
 
