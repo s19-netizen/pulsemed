@@ -521,100 +521,61 @@ export function CargoDataCard({ data }: { data: CargoData }) {
   const ul = bay.lengthM * 100 - shielding.endwall  * 2;  // 342 cm
   const uh = bay.heightM * 100 - shielding.floor - shielding.ceiling; // 220 cm
 
-  // ── Cargo bay oblique-projection box ──────────────────────────────────────────
-  // Front face: width(264cm)=88px × height(220cm)=72px
-  // Depth projection: length(342cm) → dx=36px, dy=22px
-  //
-  // Front face corners (origin with ML=50 left margin, MT=26 top margin):
-  //   FTL(86,26)  FTR(174,26)
-  //   FBL(86,98)  FBR(174,98)
-  // Back corners (depth offset):
-  //   BTL(50,48)  BTR(138,48)  BBR(138,120)
-  //
-  // Dimension lines drawn OUTSIDE each face.
-
-  // ── LSM oblique-projection box ────────────────────────────────────────────────
-  // Front face: width(54cm)=42px × height(40cm)=31px
-  // Depth projection: depth(36cm) → dx=20px, dy=13px
-  //
-  // Front face corners (ML=38, MT=22):
-  //   FTL(58,22)  FTR(100,22)
-  //   FBL(58,53)  FBR(100,53)
-  // Back corners:
-  //   BTL(38,35)  BTR(80,35)  BBR(80,66)
+  const dim: React.CSSProperties = { fontSize: 11, fontWeight: 800, color: "#1a5fd0", textAlign: "center" as const };
+  const dimG: React.CSSProperties = { fontSize: 10, fontWeight: 800, color: "#259650", textAlign: "center" as const };
+  const label: React.CSSProperties = { fontSize: 9, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".08em", textAlign: "center" as const };
 
   return (
     <div style={{ background: "#f8fafc", borderRadius: 10, border: "1px solid var(--line)", padding: "14px 12px" }}>
       <p style={{ textAlign: "center", fontSize: 12, fontWeight: 800, color: "var(--ink)", margin: "0 0 12px", letterSpacing: ".04em", textTransform: "uppercase" as const }}>Cargo Bay &amp; Module</p>
 
-      <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" as const, justifyContent: "center" }}>
+      <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" as const, justifyContent: "center" }}>
 
-        {/* ── Cargo Bay 3D box ── */}
-        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 4, flex: "2 1 200px" }}>
-          <span style={{ fontSize: 9, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".08em" }}>Available cargo space</span>
-          <svg viewBox="0 0 238 152" style={{ width: "100%", maxWidth: 238 }}>
-            {/* Right face (darkest) */}
-            <polygon points="174,26 138,48 138,120 174,98" fill="#93c5fd" stroke="#2d7ff9" strokeWidth="1.8"/>
-            {/* Top face */}
-            <polygon points="50,48 138,48 174,26 86,26" fill="#bfdbfe" stroke="#2d7ff9" strokeWidth="1.8"/>
-            {/* Front face (lightest) */}
-            <polygon points="86,26 174,26 174,98 86,98" fill="#dbeafe" stroke="#2d7ff9" strokeWidth="1.8"/>
+        {/* ── Cargo Bay flat rect with labels ── */}
+        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 6 }}>
+          <span style={label}>Available cargo space</span>
+          {/* rect + width arrow below, height arrow on right */}
+          <svg viewBox="0 0 170 130" style={{ width: 170, display: "block" }}>
+            {/* Box */}
+            <rect x="20" y="10" width="100" height="80" fill="#dbeafe" stroke="#2d7ff9" strokeWidth="2" rx="2"/>
 
-            {/* Depth edge bottom-right — visible spine */}
-            <line x1="174" y1="98" x2="138" y2="120" stroke="#2d7ff9" strokeWidth="1.8"/>
+            {/* Width arrow below */}
+            <line x1="20" y1="102" x2="120" y2="102" stroke="#1a5fd0" strokeWidth="1.2"/>
+            <line x1="20" y1="98"  x2="20"  y2="106" stroke="#1a5fd0" strokeWidth="1.2"/>
+            <line x1="120" y1="98" x2="120" y2="106" stroke="#1a5fd0" strokeWidth="1.2"/>
+            <text x="70" y="116" textAnchor="middle" fontSize="11" fontWeight="800" fill="#1a5fd0">{uw} cm</text>
 
-            {/* ── Width label (264 cm) — below front bottom edge ── */}
-            <line x1="86" y1="108" x2="174" y2="108" stroke="#1a5fd0" strokeWidth="1.2"/>
-            <line x1="86"  y1="104" x2="86"  y2="112" stroke="#1a5fd0" strokeWidth="1.2"/>
-            <line x1="174" y1="104" x2="174" y2="112" stroke="#1a5fd0" strokeWidth="1.2"/>
-            <text x="130" y="124" textAnchor="middle" fontSize="11" fontWeight="800" fill="#1a5fd0">{uw} cm</text>
-
-            {/* ── Height label (220 cm) — right of front right edge ── */}
-            <line x1="183" y1="26" x2="183" y2="98" stroke="#1a5fd0" strokeWidth="1.2"/>
-            <line x1="179" y1="26" x2="187" y2="26" stroke="#1a5fd0" strokeWidth="1.2"/>
-            <line x1="179" y1="98" x2="187" y2="98" stroke="#1a5fd0" strokeWidth="1.2"/>
-            <text x="204" y="66" textAnchor="middle" fontSize="11" fontWeight="800" fill="#1a5fd0" transform="rotate(-90,204,66)">{uh} cm</text>
-
-            {/* ── Length label (342 cm) — along top-left depth edge, outside box ── */}
-            {/* Edge: FTL(86,26)→BTL(50,48) · angle ≈ −31° · label offset above/left */}
-            <line x1="86" y1="26" x2="50" y2="48" stroke="#1a5fd0" strokeWidth="1.2"/>
-            <text x="58" y="22" textAnchor="middle" fontSize="11" fontWeight="800" fill="#1a5fd0" transform="rotate(-31,58,22)">{ul} cm</text>
+            {/* Height arrow on right */}
+            <line x1="132" y1="10" x2="132" y2="90" stroke="#1a5fd0" strokeWidth="1.2"/>
+            <line x1="128" y1="10"  x2="136" y2="10"  stroke="#1a5fd0" strokeWidth="1.2"/>
+            <line x1="128" y1="90"  x2="136" y2="90"  stroke="#1a5fd0" strokeWidth="1.2"/>
+            <text x="154" y="55" textAnchor="middle" fontSize="11" fontWeight="800" fill="#1a5fd0" transform="rotate(-90,154,55)">{uh} cm</text>
           </svg>
+          <span style={dim}>Length: {ul} cm</span>
         </div>
 
-        {/* ── LSM 3D box ── */}
-        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 4, flex: "1 1 130px" }}>
-          <span style={{ fontSize: 9, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".08em" }}>Life-Support Module</span>
-          <svg viewBox="0 0 148 120" style={{ width: "100%", maxWidth: 148 }}>
-            {/* Right face */}
-            <polygon points="100,22 80,35 80,66 100,53" fill="#6ee7b7" stroke="#259650" strokeWidth="1.8"/>
-            {/* Top face */}
-            <polygon points="38,35 80,35 100,22 58,22" fill="#a7f3d0" stroke="#259650" strokeWidth="1.8"/>
-            {/* Front face */}
-            <polygon points="58,22 100,22 100,53 58,53" fill="#d1fae5" stroke="#259650" strokeWidth="1.8"/>
-            {/* Bottom-right depth spine */}
-            <line x1="100" y1="53" x2="80" y2="66" stroke="#259650" strokeWidth="1.8"/>
+        {/* ── LSM flat rect with labels ── */}
+        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 6 }}>
+          <span style={label}>Life-Support Module</span>
+          <svg viewBox="0 0 120 110" style={{ width: 120, display: "block" }}>
+            {/* Box */}
+            <rect x="16" y="10" width="68" height="56" fill="#d1fae5" stroke="#259650" strokeWidth="2" rx="2"/>
 
-            {/* ── Width label (54 cm) — below front bottom ── */}
-            <line x1="58" y1="62" x2="100" y2="62" stroke="#259650" strokeWidth="1.2"/>
-            <line x1="58"  y1="58" x2="58"  y2="66" stroke="#259650" strokeWidth="1.2"/>
-            <line x1="100" y1="58" x2="100" y2="66" stroke="#259650" strokeWidth="1.2"/>
-            <text x="79" y="77" textAnchor="middle" fontSize="10" fontWeight="800" fill="#259650">{lsm.footprintA} cm</text>
+            {/* Width arrow below */}
+            <line x1="16" y1="76" x2="84" y2="76" stroke="#259650" strokeWidth="1.2"/>
+            <line x1="16" y1="72" x2="16" y2="80" stroke="#259650" strokeWidth="1.2"/>
+            <line x1="84" y1="72" x2="84" y2="80" stroke="#259650" strokeWidth="1.2"/>
+            <text x="50" y="90" textAnchor="middle" fontSize="10" fontWeight="800" fill="#259650">{lsm.footprintA} cm</text>
 
-            {/* ── Height label (40 cm) — right of front right edge ── */}
-            <line x1="109" y1="22" x2="109" y2="53" stroke="#259650" strokeWidth="1.2"/>
-            <line x1="105" y1="22" x2="113" y2="22" stroke="#259650" strokeWidth="1.2"/>
-            <line x1="105" y1="53" x2="113" y2="53" stroke="#259650" strokeWidth="1.2"/>
-            <text x="128" y="40" textAnchor="middle" fontSize="10" fontWeight="800" fill="#259650" transform="rotate(-90,128,40)">{lsm.height} cm</text>
-
-            {/* ── Depth label (36 cm) — along top-left depth edge, outside box ── */}
-            <line x1="58" y1="22" x2="38" y2="35" stroke="#259650" strokeWidth="1.2"/>
-            <text x="36" y="17" textAnchor="middle" fontSize="10" fontWeight="800" fill="#259650" transform="rotate(-33,36,17)">{lsm.footprintB} cm</text>
-
-            {/* ── Mass ── */}
-            <text x="79" y="96" textAnchor="middle" fontSize="13" fontWeight="900" fill="#1e293b">{massKg} kg</text>
-            <text x="79" y="110" textAnchor="middle" fontSize="9" fontWeight="600" fill="#64748b">per module</text>
+            {/* Height arrow on right */}
+            <line x1="96" y1="10" x2="96" y2="66" stroke="#259650" strokeWidth="1.2"/>
+            <line x1="92" y1="10" x2="100" y2="10" stroke="#259650" strokeWidth="1.2"/>
+            <line x1="92" y1="66" x2="100" y2="66" stroke="#259650" strokeWidth="1.2"/>
+            <text x="114" y="42" textAnchor="middle" fontSize="10" fontWeight="800" fill="#259650" transform="rotate(-90,114,42)">{lsm.height} cm</text>
           </svg>
+          <span style={dimG}>Depth: {lsm.footprintB} cm</span>
+          <span style={{ fontSize: 14, fontWeight: 900, color: "#1e293b" }}>{massKg} kg</span>
+          <span style={{ fontSize: 9, fontWeight: 600, color: "#64748b" }}>per module</span>
         </div>
 
       </div>
