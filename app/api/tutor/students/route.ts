@@ -9,9 +9,16 @@ const serviceSupabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const ADMIN_EMAIL = "sawdaj19@gmail.com";
+
+// Returns tutor UUID, or "admin" sentinel for the admin Google user, or null if unauthorised
 function getTutorId(session: any): string | null {
-  if (!session?.user || (session.user as any).role !== "tutor") return null;
-  return (session.user as any).id;
+  if (!session?.user) return null;
+  const role  = (session.user as any).role;
+  const email = session.user.email;
+  if (role === "tutor") return (session.user as any).id;
+  if (email === ADMIN_EMAIL) return "admin";
+  return null;
 }
 
 // GET /api/tutor/students — list all students for this tutor
@@ -20,11 +27,14 @@ export async function GET() {
   const tutorId = getTutorId(session);
   if (!tutorId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { data: students, error } = await serviceSupabase
+  const q = serviceSupabase
     .from("students")
     .select("id, name, username, exam_date, created_at")
-    .eq("tutor_id", tutorId)
     .order("created_at", { ascending: false });
+
+  if (tutorId !== "admin") q.eq("tutor_id", tutorId);
+
+  const { data: students, error } = await q;
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
@@ -108,7 +118,7 @@ export async function POST(req: NextRequest) {
   const password_hash = await bcrypt.hash(password, 10);
   const { data: student, error } = await serviceSupabase
     .from("students")
-    .insert({ name: name.trim(), username: cleanUsername, password_hash, tutor_id: tutorId, exam_date: exam_date ?? null })
+    .insert({ name: name.trim(), username: cleanUsername, password_hash, tutor_id: tutorId === "admin" ? null : tutorId, exam_date: exam_date ?? null })
     .select("id, name, username, exam_date, created_at")
     .single();
 
@@ -136,7 +146,8 @@ export async function DELETE(req: NextRequest) {
   const { data: student } = await serviceSupabase
     .from("students").select("tutor_id").eq("id", id).single();
 
-  if (!student || student.tutor_id !== tutorId) {
+  // Admin can delete any student; tutors can only delete their own
+  if (!student || (tutorId !== "admin" && student.tutor_id !== tutorId)) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

@@ -9,9 +9,15 @@ const serviceSupabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const ADMIN_EMAIL = "sawdaj19@gmail.com";
+
 function getTutorId(session: any): string | null {
-  if (!session?.user || (session.user as any).role !== "tutor") return null;
-  return (session.user as any).id;
+  if (!session?.user) return null;
+  const role  = (session.user as any).role;
+  const email = session.user.email;
+  if (role === "tutor") return (session.user as any).id;
+  if (email === ADMIN_EMAIL) return "admin";
+  return null;
 }
 
 // GET /api/tutor/students/[id] — full stats for one student
@@ -28,7 +34,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     .eq("id", id)
     .single();
 
-  if (!student || student.tutor_id !== tutorId) {
+  if (!student || (tutorId !== "admin" && student.tutor_id !== tutorId)) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
@@ -120,7 +126,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const { data: student } = await serviceSupabase
     .from("students").select("tutor_id").eq("id", id).single();
 
-  if (!student || student.tutor_id !== tutorId) {
+  if (!student || (tutorId !== "admin" && student.tutor_id !== tutorId)) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

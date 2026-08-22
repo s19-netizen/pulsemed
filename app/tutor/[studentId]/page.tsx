@@ -9,11 +9,17 @@ const serviceSupabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export default async function StudentDetailPage({ params }: { params: { studentId: string } }) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user || (session.user as any).role !== "tutor") redirect("/auth/tutor");
+const ADMIN_EMAIL = "sawdaj19@gmail.com";
 
-  const tutorId   = (session.user as any).id;
+export default async function StudentDetailPage({ params }: { params: { studentId: string } }) {
+  const session  = await getServerSession(authOptions);
+  const role     = (session?.user as any)?.role;
+  const email    = session?.user?.email;
+  const isAdmin  = email === ADMIN_EMAIL;
+
+  if (!session?.user || (role !== "tutor" && !isAdmin)) redirect("/auth/tutor");
+
+  const tutorId   = role === "tutor" ? (session.user as any).id : null;
   const studentId = params.studentId;
 
   const { data: student } = await serviceSupabase
@@ -22,7 +28,7 @@ export default async function StudentDetailPage({ params }: { params: { studentI
     .eq("id", studentId)
     .single();
 
-  if (!student || student.tutor_id !== tutorId) notFound();
+  if (!student || (tutorId !== null && student.tutor_id !== tutorId)) notFound();
 
   const [
     { data: sessions },

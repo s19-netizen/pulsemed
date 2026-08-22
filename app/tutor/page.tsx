@@ -9,23 +9,32 @@ const serviceSupabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const ADMIN_EMAIL = "sawdaj19@gmail.com";
+
 export default async function TutorPage() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user || (session.user as any).role !== "tutor") redirect("/auth/tutor");
+  const session  = await getServerSession(authOptions);
+  const role     = (session?.user as any)?.role;
+  const email    = session?.user?.email;
+  const isAdmin  = email === ADMIN_EMAIL;
 
-  const tutorId = (session.user as any).id;
+  if (!session?.user || (role !== "tutor" && !isAdmin)) redirect("/auth/tutor");
 
-  const { data: tutor } = await serviceSupabase
-    .from("tutors")
-    .select("name, email")
-    .eq("id", tutorId)
-    .single();
+  // Admin logs in via Google (no tutors row) — synthesise their profile
+  const tutorId = (role === "tutor") ? (session.user as any).id : null;
 
-  const { data: students } = await serviceSupabase
+  const tutorProfile = tutorId
+    ? (await serviceSupabase.from("tutors").select("name, email").eq("id", tutorId).single()).data
+    : { name: session.user!.name ?? "Admin", email: email ?? "" };
+
+  // Admin sees ALL students; tutor sees only their own
+  const studentsQuery = serviceSupabase
     .from("students")
     .select("id, name, username, exam_date, created_at")
-    .eq("tutor_id", tutorId)
     .order("created_at", { ascending: false });
+
+  if (tutorId) studentsQuery.eq("tutor_id", tutorId);
+
+  const { data: students } = await studentsQuery;
 
   const ids = (students ?? []).map(s => s.id);
 
@@ -47,7 +56,6 @@ export default async function TutorPage() {
       if (!sessionStats[s.user_id].last_active || s.created_at > sessionStats[s.user_id].last_active!) {
         sessionStats[s.user_id].last_active = s.created_at;
       }
-      // Track per-section accuracy
       if (!sectionBests[s.user_id]) sectionBests[s.user_id] = {};
       const sec = s.section;
       if (!sectionBests[s.user_id][sec]) sectionBests[s.user_id][sec] = 0;
@@ -69,14 +77,14 @@ export default async function TutorPage() {
 
   const enriched = (students ?? []).map(s => ({
     ...s,
-    sessions:    sessionStats[s.id]?.sessions ?? 0,
-    avg_score:   sessionStats[s.id]?.total
-                   ? Math.round((sessionStats[s.id].correct / sessionStats[s.id].total) * 100)
-                   : null,
-    last_active: sessionStats[s.id]?.last_active ?? null,
-    avg_time_s:  timeStats[s.id] ?? null,
+    sessions:      sessionStats[s.id]?.sessions ?? 0,
+    avg_score:     sessionStats[s.id]?.total
+                     ? Math.round((sessionStats[s.id].correct / sessionStats[s.id].total) * 100)
+                     : null,
+    last_active:   sessionStats[s.id]?.last_active ?? null,
+    avg_time_s:    timeStats[s.id] ?? null,
     section_bests: sectionBests[s.id] ?? {},
   }));
 
-  return <TutorDashboard tutor={tutor ?? { name: "Tutor", email: "" }} students={enriched} />;
+  return <TutorDashboard tutor={tutorProfile ?? { name: "Admin", email: "" }} students={enriched} />;
 }
