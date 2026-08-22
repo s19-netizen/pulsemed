@@ -596,7 +596,11 @@ const SHAPE_HINTS = ["Safety first", "Honesty always", "Act within your role", "
 type FPart    = string | { top: string; bottom: string };
 type QRFormula = { title: string; parts: FPart[]; example: string };
 type QRStep    = { label: string; calc: string; result: string };
-type QRWorked  = { title: string; passage: string; question: string; steps: QRStep[]; answer: string; trap?: string };
+type QRBarData        = { type: "bar";         yMax: number; yStep: number; unit: string; labels: string[]; values: number[]; hi?: number };
+type QRStackedBarData = { type: "stacked-bar"; yMax: number; yStep: number; unit: string; labels: string[]; segments: { name: string; values: number[]; color: string }[] };
+type QRPieData        = { type: "pie";         unit: string; total: number; slices: { name: string; angle: number; color: string; hi?: boolean }[] };
+type QRChart = QRBarData | QRStackedBarData | QRPieData;
+type QRWorked  = { title: string; passage: string; question: string; steps: QRStep[]; answer: string; trap?: string; chart?: QRChart };
 type QRLesson  = {
   idea: string;
   where: string[];
@@ -789,6 +793,7 @@ const QR_LESSONS: Record<string, QRLesson> = {
       },
       {
         title: "Bar chart — percentage change between two bars",
+        chart: { type: "bar" as const, yMax: 60, yStep: 10, unit: "£000s", labels: ["Q1", "Q2", "Q3", "Q4"], values: [40, 44, 52, 49], hi: 2 },
         passage: "A hospital trust's quarterly finance report includes a bar chart with the title 'Outpatient service income by quarter, 2025 (£000s)'. The chart's vertical axis runs from 0 to 60, with horizontal gridlines every 10 units. The chart key confirms that all values are in thousands of pounds. Reading the four bars left to right: Q1 reaches the 40 gridline; Q2 reaches 44; Q3 reaches 52; Q4 reaches 49. The trust's finance director asks two questions from this chart.",
         question: "What was the percentage increase in outpatient income from Q1 to Q3, and what was the actual cash value of that increase in full pounds?",
         steps: [
@@ -803,6 +808,7 @@ const QR_LESSONS: Record<string, QRLesson> = {
       },
       {
         title: "Stacked bar — isolating one segment",
+        chart: { type: "stacked-bar" as const, yMax: 120, yStep: 20, unit: "£ millions", labels: ["Yr 1","Yr 2","Yr 3","Yr 4"], segments: [{ name: "In-store", values: [52, 30, 38, 44], color: "#93c5fd" }, { name: "Online", values: [18, 50, 58, 72], color: "#2563eb" }] },
         passage: "A national retailer's annual report includes a stacked bar chart titled 'Total sales revenue by channel (£ millions), Years 1–4'. The Y-axis runs from £0 m to £120 m, with gridlines every £20 m. Two segments are stacked in each bar: the bottom segment (light blue) represents In-store sales, and the top segment (dark blue) represents Online sales. In Year 2, the top of the complete bar sits at the £80 m gridline. The boundary between the In-store and Online segments sits exactly at the £30 m gridline. A chart footnote reads: 'Online figures include click-and-collect orders fulfilled from store stock.'",
         question: "In Year 2, what were the Online sales and the In-store sales as separate figures, and what percentage of total Year 2 revenue did each channel represent?",
         steps: [
@@ -818,6 +824,7 @@ const QR_LESSONS: Record<string, QRLesson> = {
       },
       {
         title: "Pie chart — value from sector angle",
+        chart: { type: "pie" as const, unit: "Total = £4,800,000", total: 4800000, slices: [{ name: "Admin", angle: 54, color: "#94a3b8" }, { name: "Nursing", angle: 126, color: "#3b82f6" }, { name: "Equipment", angle: 90, color: "#8b5cf6", hi: true }, { name: "Pharma", angle: 72, color: "#f59e0b", hi: true }, { name: "Estates", angle: 18, color: "#10b981" }] },
         passage: "A healthcare trust's annual budget report contains a pie chart titled 'Operating budget allocation, 2025–26 (total = £4,800,000)'. The chart key lists each department's sector angle: Administration = 54°; Nursing staff = 126°; Medical equipment = 90°; Pharmaceuticals = 72°; Estates and facilities = 18°. A footnote beneath the chart states: 'Angle measurements are rounded to the nearest whole degree. Minor rounding differences may cause the sum to differ from exactly 360°.' The trust's director of finance wants to know the precise budget allocation for each of two departments.",
         question: "What is the budget allocated to Medical equipment, and what is the budget for Pharmaceuticals? Express both as a pound value and as a percentage of the total.",
         steps: [
@@ -1261,37 +1268,6 @@ const DM_LESSONS: Record<string, {
 // ─── Topic-specific visual aid (replaces "Key concepts" grid) ────────────────
 
 function TopicVisual({ topicId, color: c, tint: t, deep: d }: { topicId: string; color: string; tint: string; deep: string }) {
-  if (topicId === "interpreting-information") {
-    return (
-      <>
-        <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>How a rule fires</h2>
-        <div style={{ borderRadius: 12, border: "1px solid var(--line)", overflow: "hidden", marginBottom: 28 }}>
-          <div style={{ display: "flex", alignItems: "stretch", background: "white" }}>
-            <div style={{ flex: 1, padding: "14px 16px", background: t }}>
-              <p style={{ margin: "0 0 4px", fontSize: 9, fontWeight: 800, color: c, letterSpacing: ".1em", textTransform: "uppercase" as const }}>Trigger (A)</p>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>Admitted before 08:00</p>
-            </div>
-            <div style={{ display: "grid", placeItems: "center", padding: "0 16px", fontSize: 24, fontWeight: 900, color: c }}>→</div>
-            <div style={{ flex: 1, padding: "14px 16px" }}>
-              <p style={{ margin: "0 0 4px", fontSize: 9, fontWeight: 800, color: c, letterSpacing: ".1em", textTransform: "uppercase" as const }}>Consequence (B)</p>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>Assessed by Team A</p>
-            </div>
-          </div>
-          <div style={{ borderTop: "1px solid var(--line)", padding: "10px 16px", background: "#fafafa" }}>
-            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)" }}>Contrapositive — always valid, always free:</p>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--ink)", fontFamily: "monospace" }}>
-              Not assessed by Team A → Not admitted before 08:00
-            </p>
-          </div>
-          <div style={{ borderTop: "1px solid var(--line)", padding: "10px 16px" }}>
-            <p style={{ margin: 0, fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.6 }}>
-              The rule is silent when A is false — "admitted after 08:00" tells you nothing. Only the trigger fires the consequence.
-            </p>
-          </div>
-        </div>
-      </>
-    );
-  }
 
   if (topicId === "arguments-assumptions") {
     return (
@@ -1436,13 +1412,126 @@ function TopicVisual({ topicId, color: c, tint: t, deep: d }: { topicId: string;
   return null;
 }
 
+// ─── QR chart renderers ───────────────────────────────────────────────────────
+
+function QRBarChart({ data, c, t, d }: { data: QRBarData; c: string; t: string; d: string }) {
+  const lm=40, tm=14, bm=26, rm=12;
+  const svgW=300, svgH=160;
+  const chartW = svgW-lm-rm;
+  const chartH = svgH-tm-bm;
+  const scale = chartH/data.yMax;
+  const n = data.values.length;
+  const slotW = chartW/n;
+  const barW = slotW*0.60;
+  const barPad = (slotW-barW)/2;
+  const baseY = tm+chartH;
+  const gridLevels = Math.round(data.yMax/data.yStep)+1;
+  return (
+    <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width:"100%", maxWidth:svgW, display:"block", margin:"0 auto 8px", borderRadius:10, border:"1px solid var(--line)", background:"#fafbff" }}>
+      {Array.from({length:gridLevels},(_,i)=>{
+        const v=i*data.yStep; const y=baseY-v*scale;
+        return <g key={i}>
+          <line x1={lm} y1={y} x2={svgW-rm} y2={y} stroke="#e2e8f0" strokeWidth={i===0?1.5:1} strokeDasharray={i>0?"4,3":undefined}/>
+          <text x={lm-4} y={y+3.5} textAnchor="end" fontSize="8" fill="#94a3b8" fontWeight="600">{v}</text>
+        </g>;
+      })}
+      {data.values.map((v,i)=>{
+        const bH=v*scale; const x=lm+i*slotW+barPad; const bY=baseY-bH; const cx=lm+i*slotW+slotW/2;
+        const isHi=data.hi===i;
+        return <g key={i}>
+          <rect x={x} y={bY} width={barW} height={bH} fill={isHi?d:c} fillOpacity={isHi?0.95:0.72} rx={3}/>
+          <text x={cx} y={bY-4} textAnchor="middle" fontSize="9" fontWeight="800" fill={isHi?d:"#64748b"}>{v}</text>
+          <text x={cx} y={baseY+16} textAnchor="middle" fontSize="9" fontWeight="700" fill="#475569">{data.labels[i]}</text>
+        </g>;
+      })}
+      <line x1={lm} y1={tm} x2={lm} y2={baseY} stroke="#94a3b8" strokeWidth={1.5}/>
+      <line x1={lm} y1={baseY} x2={svgW-rm} y2={baseY} stroke="#94a3b8" strokeWidth={1.5}/>
+      <text x={lm} y={tm-2} fontSize="7" fill="#94a3b8" fontStyle="italic">{data.unit}</text>
+    </svg>
+  );
+}
+
+function QRStackedBarChart({ data, c, t }: { data: QRStackedBarData; c: string; t: string; d: string }) {
+  const lm=44, tm=14, bm=26, rm=60;
+  const svgW=320, svgH=165;
+  const chartW=svgW-lm-rm; const chartH=svgH-tm-bm;
+  const scale=chartH/data.yMax;
+  const n=data.labels.length;
+  const slotW=chartW/n; const barW=slotW*0.62; const barPad=(slotW-barW)/2;
+  const baseY=tm+chartH;
+  const gridLevels=Math.round(data.yMax/data.yStep)+1;
+  return (
+    <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width:"100%", maxWidth:svgW, display:"block", margin:"0 auto 8px", borderRadius:10, border:"1px solid var(--line)", background:"#fafbff" }}>
+      {Array.from({length:gridLevels},(_,i)=>{
+        const v=i*data.yStep; const y=baseY-v*scale;
+        return <g key={i}>
+          <line x1={lm} y1={y} x2={svgW-rm} y2={y} stroke="#e2e8f0" strokeWidth={i===0?1.5:1} strokeDasharray={i>0?"4,3":undefined}/>
+          <text x={lm-4} y={y+3.5} textAnchor="end" fontSize="8" fill="#94a3b8" fontWeight="600">{v}</text>
+        </g>;
+      })}
+      {data.labels.map((lbl,i)=>{
+        let cumH=0; const cx=lm+i*slotW+slotW/2; const x=lm+i*slotW+barPad;
+        const segs=data.segments.map(seg=>{
+          const h=seg.values[i]*scale; const segY=baseY-cumH-h;
+          const el=<g key={seg.name}>
+            <rect x={x} y={segY} width={barW} height={h} fill={seg.color} fillOpacity={0.85} rx={i===0?3:0}/>
+            {i===1&&<line x1={lm} y1={segY} x2={svgW-rm} y2={segY} stroke="#f59e0b" strokeWidth={1.5} strokeDasharray="5,3"/>}
+          </g>;
+          cumH+=h; return el;
+        });
+        return <g key={i}>{segs}<text x={cx} y={baseY+16} textAnchor="middle" fontSize="9" fontWeight="700" fill="#475569">{lbl}</text></g>;
+      })}
+      <line x1={lm} y1={tm} x2={lm} y2={baseY} stroke="#94a3b8" strokeWidth={1.5}/>
+      <line x1={lm} y1={baseY} x2={svgW-rm} y2={baseY} stroke="#94a3b8" strokeWidth={1.5}/>
+      <text x={lm} y={tm-2} fontSize="7" fill="#94a3b8" fontStyle="italic">{data.unit}</text>
+      {data.segments.map((seg,i)=>(
+        <g key={seg.name}>
+          <rect x={svgW-rm+6} y={tm+i*14} width={9} height={9} fill={seg.color} fillOpacity={0.85} rx={2}/>
+          <text x={svgW-rm+18} y={tm+i*14+7} fontSize="8" fontWeight="600" fill="#475569">{seg.name}</text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+function polarXY(cx:number,cy:number,r:number,deg:number){const a=(deg-90)*Math.PI/180;return{x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)};}
+
+function QRPieChart({ data }: { data: QRPieData }) {
+  const cx=90,cy=80,r=64,svgW=280,svgH=165;
+  let cumDeg=0;
+  return (
+    <svg viewBox={`0 0 ${svgW} ${svgH}`} style={{ width:"100%", maxWidth:svgW, display:"block", margin:"0 auto 8px", borderRadius:10, border:"1px solid var(--line)", background:"#fafbff" }}>
+      {data.slices.map((sl)=>{
+        const startDeg=cumDeg; cumDeg+=sl.angle;
+        const endDeg=cumDeg;
+        const s=polarXY(cx,cy,r,startDeg); const e=polarXY(cx,cy,r,endDeg);
+        const laf=sl.angle>180?1:0;
+        const path=`M${cx},${cy} L${s.x},${s.y} A${r},${r} 0 ${laf} 1 ${e.x},${e.y} Z`;
+        const mid=polarXY(cx,cy,r*0.6,startDeg+sl.angle/2);
+        return <g key={sl.name}>
+          <path d={path} fill={sl.color} fillOpacity={sl.hi?0.92:0.62} stroke="white" strokeWidth={2}/>
+          {sl.angle>=30&&<text x={mid.x} y={mid.y+4} textAnchor="middle" fontSize="9" fontWeight="800" fill="white">{sl.angle}°</text>}
+        </g>;
+      })}
+      {(()=>{let cd=0;return data.slices.map((sl,i)=>{
+        cd+=sl.angle;
+        return <g key={sl.name+"-l"}>
+          <rect x={cx+r+10} y={14+i*20} width={9} height={9} fill={sl.color} fillOpacity={sl.hi?0.92:0.62} rx={2}/>
+          <text x={cx+r+22} y={14+i*20+7} fontSize="8" fontWeight={sl.hi?"800":"600"} fill={sl.hi?"#1e293b":"#475569"}>{sl.name} {sl.angle}°</text>
+        </g>;
+      });})()}
+      <text x={cx} y={svgH-8} textAnchor="middle" fontSize="7" fill="#94a3b8" fontStyle="italic">{data.unit}</text>
+    </svg>
+  );
+}
+
 // ─── DM visual worked example components ─────────────────────────────────────
 
 function VennWorkedExample({ c, t, d }: { c: string; t: string; d: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <svg viewBox="0 0 320 165" style={{ width: "100%", maxWidth: 280 }} aria-label="Two-circle Venn diagram with regions filled">
-        <rect x="4" y="4" width="312" height="154" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5"/>
+      <svg viewBox="0 0 320 178" style={{ width: "100%", maxWidth: 360, display: "block", margin: "0 auto" }} aria-label="Two-circle Venn diagram with regions filled">
+        <rect x="4" y="4" width="312" height="168" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5"/>
         <text x="24" y="22" fontSize="8" fontWeight="700" fill="#64748b">NEITHER</text>
         <text x="24" y="40" fontSize="16" fontWeight="900" fill="#64748b">23</text>
         <defs><clipPath id="vwx"><circle cx="117" cy="82" r="63"/></clipPath></defs>
@@ -1455,8 +1544,8 @@ function VennWorkedExample({ c, t, d }: { c: string; t: string; d: string }) {
         <text x="160" y="97" textAnchor="middle" fontSize="26" fontWeight="900" fill={d}>36</text>
         <text x="238" y="75" textAnchor="middle" fontSize="9" fontWeight="700" fill={d}>Y ONLY</text>
         <text x="238" y="97" textAnchor="middle" fontSize="26" fontWeight="900" fill={d}>15</text>
-        <text x="88" y="157" textAnchor="middle" fontSize="9" fontWeight="700" fill={c}>Symptom X (total 62)</text>
-        <text x="232" y="157" textAnchor="middle" fontSize="9" fontWeight="700" fill={c}>Symptom Y (total 51)</text>
+        <text x="88" y="170" textAnchor="middle" fontSize="9" fontWeight="700" fill={c}>Symptom X (total 62)</text>
+        <text x="232" y="170" textAnchor="middle" fontSize="9" fontWeight="700" fill={c}>Symptom Y (total 51)</text>
       </svg>
       <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--line)" }}>
         {[
@@ -1788,27 +1877,20 @@ function QRLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
 
       {/* Formulas */}
       <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>Formulas</h2>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 28 }}>
         {lesson.formulas.map((f, i) => (
-          <div key={i} style={{ borderRadius: 12, border: `1.5px solid ${c}`, overflow: "hidden" }}>
-            <div style={{ padding: "8px 14px", background: c }}>
-              <span style={{ fontSize: 11, fontWeight: 800, color: "white", letterSpacing: ".06em", textTransform: "uppercase" as const }}>{f.title}</span>
-            </div>
-            <div style={{ padding: "12px 16px", background: "white" }}>
-              <div style={{ background: t, borderRadius: 8, padding: "12px 16px", marginBottom: 8, display: "flex", alignItems: "center", flexWrap: "wrap", gap: "4px 2px" }}>
-                {f.parts.map((p, pi) =>
-                  typeof p === "string"
-                    ? <span key={pi} style={{ fontFamily: "monospace", fontSize: 14, fontWeight: 700, color: d, whiteSpace: "pre" }}>{p}</span>
-                    : <span key={pi} style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", margin: "0 4px", verticalAlign: "middle" }}>
-                        <span style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 700, color: d, lineHeight: 1.2, paddingBottom: 2 }}>{p.top}</span>
-                        <span style={{ display: "block", height: 2, background: d, borderRadius: 1, width: "100%", minWidth: 20 }} />
-                        <span style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 700, color: d, lineHeight: 1.2, paddingTop: 2 }}>{p.bottom}</span>
-                      </span>
-                )}
-              </div>
-              <p style={{ margin: 0, fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.6 }}>
-                <strong style={{ color: "var(--ink)" }}>Example: </strong>{f.example}
-              </p>
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" as const }}>
+            <span style={{ fontSize: 9, fontWeight: 800, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".08em", minWidth: 130, flexShrink: 0 }}>{f.title}</span>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "2px 4px", padding: "6px 14px", borderRadius: 8, background: t, border: `1.5px solid ${c}50`, flexWrap: "wrap" as const }}>
+              {f.parts.map((p, pi) =>
+                typeof p === "string"
+                  ? <span key={pi} style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 700, color: d, whiteSpace: "pre" as const }}>{p}</span>
+                  : <span key={pi} style={{ display: "inline-flex", flexDirection: "column" as const, alignItems: "center", margin: "0 3px", verticalAlign: "middle" }}>
+                      <span style={{ fontFamily: "monospace", fontSize: 12, fontWeight: 700, color: d, lineHeight: 1.2, paddingBottom: 2 }}>{p.top}</span>
+                      <span style={{ display: "block", height: 1.5, background: d, borderRadius: 1, width: "100%", minWidth: 20 }} />
+                      <span style={{ fontFamily: "monospace", fontSize: 12, fontWeight: 700, color: d, lineHeight: 1.2, paddingTop: 2 }}>{p.bottom}</span>
+                    </span>
+              )}
             </div>
           </div>
         ))}
@@ -1887,6 +1969,14 @@ function QRLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
               <p style={{ margin: "0 0 3px", fontSize: 10, fontWeight: 800, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".06em" }}>Given</p>
               <p style={{ margin: 0, fontSize: 13, color: "var(--ink)", lineHeight: 1.6, fontStyle: "italic" }}>{w.passage}</p>
             </div>
+            {/* Chart */}
+            {w.chart && (
+              <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--line)" }}>
+                {w.chart.type === "bar"          && <QRBarChart        data={w.chart as QRBarData}        c={c} t={t} d={d}/>}
+                {w.chart.type === "stacked-bar"  && <QRStackedBarChart data={w.chart as QRStackedBarData} c={c} t={t} d={d}/>}
+                {w.chart.type === "pie"          && <QRPieChart        data={w.chart as QRPieData}/>}
+              </div>
+            )}
             {/* Question */}
             <div style={{ padding: "9px 16px", borderBottom: "1px solid var(--line)" }}>
               <p style={{ margin: "0 0 2px", fontSize: 10, fontWeight: 800, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".06em" }}>Question</p>
