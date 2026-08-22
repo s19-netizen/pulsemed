@@ -2922,48 +2922,67 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
             <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>Some lizards are not warm-blooded.</p>
           </div>
           <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
-            <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Working — build the chain then draw the diagram</p>
-            {/* Chain notation */}
-            <div style={{ padding: "10px 14px", borderRadius: 8, background: t, border: `1.5px solid ${c}`, marginBottom: 14, fontFamily: "monospace", fontSize: 13, fontWeight: 700, color: d }}>
-              Lizards →(some) Reptiles ⇒ Cold-blooded ✕ Warm-blooded
-            </div>
-            {/* Circle diagram */}
-            <svg viewBox="0 0 320 165" style={{ width: "100%", marginBottom: 14 }} aria-label="Syllogism circle diagram — reptiles inside cold-blooded, separate from warm-blooded">
-              {/* Warm-blooded (separate, right) */}
-              <circle cx="282" cy="82" r="34" fill="#ffedea" stroke="#FF6B5C" strokeWidth="2"/>
-              <text x="282" y="78" textAnchor="middle" fontSize="9" fontWeight="700" fill="#d94b3e">Warm-</text>
-              <text x="282" y="91" textAnchor="middle" fontSize="9" fontWeight="700" fill="#d94b3e">blooded</text>
-              {/* ✕ separator */}
-              <line x1="237" y1="73" x2="247" y2="91" stroke="#d94b3e" strokeWidth="2.5" strokeLinecap="round"/>
-              <line x1="247" y1="73" x2="237" y2="91" stroke="#d94b3e" strokeWidth="2.5" strokeLinecap="round"/>
-              {/* Cold-blooded (large) */}
-              <circle cx="112" cy="85" r="92" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.55"/>
-              <text x="112" y="18" textAnchor="middle" fontSize="10" fontWeight="800" fill={d}>Cold-blooded</text>
-              {/* Reptiles (inside Cold-blooded) */}
-              <circle cx="120" cy="92" r="52" fill={c} fillOpacity="0.2" stroke={c} strokeWidth="1.5"/>
-              <text x="120" y="114" textAnchor="middle" fontSize="9" fontWeight="700" fill={d}>Reptiles</text>
-              {/* Lizards (partly overlapping Reptiles) */}
-              <circle cx="100" cy="80" r="36" fill="#8B6BFF" fillOpacity="0.12" stroke="#8B6BFF" strokeWidth="1.5" strokeDasharray="4,2.5"/>
-              <text x="62" y="58" textAnchor="middle" fontSize="9" fontWeight="700" fill="#8B6BFF">Lizards</text>
-              {/* Some lizard dots inside Reptiles ∩ Cold-blooded */}
-              <circle cx="110" cy="84" r="4.5" fill="#8B6BFF"/>
-              <circle cx="125" cy="76" r="4.5" fill="#8B6BFF"/>
-              <text x="118" y="67" textAnchor="middle" fontSize="8" fill="#8B6BFF">(some lizards)</text>
-            </svg>
-            {/* Step-by-step reading of the diagram */}
-            {[
-              ["P1", "Reptiles ⇒ Cold-blooded — draw Reptiles circle entirely inside the Cold-blooded circle."],
-              ["P2", "Cold-blooded ✕ Warm-blooded — completely separate circles. The ✕ marks no overlap whatsoever."],
-              ["P3", "Some lizards are Reptiles — draw a dashed Lizards circle partly overlapping Reptiles. The two dots sit inside both Lizards and Reptiles."],
-              ["∴",  "Those dots are also inside Cold-blooded and outside Warm-blooded → some lizards are not warm-blooded. ✓"],
-            ].map(([label, note], i) => (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "36px 1fr", borderTop: "1px solid var(--line)", background: i === 3 ? "#edfbf3" : "white" }}>
-                <div style={{ padding: "9px 10px", display: "grid", placeItems: "center", background: i === 3 ? "#259650" : t, borderRight: "1px solid var(--line)" }}>
-                  <strong style={{ fontSize: 11, fontWeight: 900, color: i === 3 ? "white" : c, fontFamily: "monospace" }}>{label}</strong>
-                </div>
-                <p style={{ margin: 0, padding: "9px 12px", fontSize: 12, lineHeight: 1.6, color: i === 3 ? "#259650" : "var(--ink)" }}>{note}</p>
+            <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Working — build the diagram one premise at a time</p>
+
+            {/* P1 */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{ padding: "3px 10px", borderRadius: 20, background: c, color: "white", fontSize: 10, fontWeight: 800 }}>P1</span>
+                <strong style={{ fontSize: 12, color: d }}>All reptiles are cold-blooded → Reptiles ⇒ Cold-blooded</strong>
               </div>
-            ))}
+              <svg viewBox="0 0 280 130" style={{ width: "100%", borderRadius: 10, border: `1.5px solid ${c}`, background: "white" }} aria-label="Reptiles circle nested inside Cold-blooded circle">
+                <circle cx="140" cy="62" r="56" fill={t} stroke={c} strokeWidth="2.5" fillOpacity="0.7"/>
+                <text x="140" y="18" textAnchor="middle" fontSize="13" fontWeight="800" fill={d}>Cold-blooded</text>
+                <circle cx="140" cy="68" r="30" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="2"/>
+                <text x="140" y="72" textAnchor="middle" fontSize="12" fontWeight="700" fill={d}>Reptiles</text>
+                <text x="140" y="118" textAnchor="middle" fontSize="10" fill="#64748b">Reptiles sits entirely inside Cold-blooded — every reptile is cold-blooded</text>
+              </svg>
+            </div>
+
+            {/* P2 */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{ padding: "3px 10px", borderRadius: 20, background: c, color: "white", fontSize: 10, fontWeight: 800 }}>P2</span>
+                <strong style={{ fontSize: 12, color: d }}>No cold-blooded animals are warm-blooded → Cold-blooded ✕ Warm-blooded</strong>
+              </div>
+              <svg viewBox="0 0 320 130" style={{ width: "100%", borderRadius: 10, border: `1.5px solid ${c}`, background: "white" }} aria-label="Cold-blooded and Warm-blooded as completely separate circles">
+                <circle cx="108" cy="62" r="56" fill={t} stroke={c} strokeWidth="2.5" fillOpacity="0.7"/>
+                <text x="108" y="18" textAnchor="middle" fontSize="12" fontWeight="800" fill={d}>Cold-blooded</text>
+                <circle cx="108" cy="68" r="30" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
+                <text x="108" y="72" textAnchor="middle" fontSize="11" fontWeight="700" fill={d}>Reptiles</text>
+                <line x1="178" y1="52" x2="192" y2="72" stroke="#d94b3e" strokeWidth="3.5" strokeLinecap="round"/>
+                <line x1="192" y1="52" x2="178" y2="72" stroke="#d94b3e" strokeWidth="3.5" strokeLinecap="round"/>
+                <circle cx="254" cy="62" r="48" fill="#ffedea" stroke="#FF6B5C" strokeWidth="2.5"/>
+                <text x="254" y="58" textAnchor="middle" fontSize="12" fontWeight="700" fill="#d94b3e">Warm-</text>
+                <text x="254" y="74" textAnchor="middle" fontSize="12" fontWeight="700" fill="#d94b3e">blooded</text>
+                <text x="160" y="118" textAnchor="middle" fontSize="10" fill="#d94b3e" fontWeight="600">✕ = no overlap — Cold-blooded and Warm-blooded are completely separate</text>
+              </svg>
+            </div>
+
+            {/* P3 + conclusion */}
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{ padding: "3px 10px", borderRadius: 20, background: "#259650", color: "white", fontSize: 10, fontWeight: 800 }}>P3 + ∴</span>
+                <strong style={{ fontSize: 12, color: "#259650" }}>Some lizards are reptiles → those lizards are inside Cold-blooded and outside Warm-blooded</strong>
+              </div>
+              <svg viewBox="0 0 320 145" style={{ width: "100%", borderRadius: 10, border: "1.5px solid #3DBE6C", background: "white" }} aria-label="Full diagram — some lizard dots inside Reptiles and Cold-blooded, outside Warm-blooded">
+                <circle cx="108" cy="70" r="58" fill={t} stroke={c} strokeWidth="2.5" fillOpacity="0.55"/>
+                <text x="108" y="20" textAnchor="middle" fontSize="12" fontWeight="800" fill={d}>Cold-blooded</text>
+                <circle cx="108" cy="76" r="32" fill={c} fillOpacity="0.22" stroke={c} strokeWidth="1.5"/>
+                <text x="108" y="100" textAnchor="middle" fontSize="10" fontWeight="700" fill={d}>Reptiles</text>
+                <circle cx="90" cy="64" r="26" fill="#8B6BFF" fillOpacity="0.12" stroke="#8B6BFF" strokeWidth="2" strokeDasharray="5,3"/>
+                <text x="62" y="44" textAnchor="middle" fontSize="10" fontWeight="700" fill="#8B6BFF">Lizards</text>
+                <circle cx="104" cy="70" r="6.5" fill="#259650"/>
+                <circle cx="120" cy="63" r="6.5" fill="#259650"/>
+                <text x="112" y="52" textAnchor="middle" fontSize="9" fontWeight="800" fill="#259650">some lizards</text>
+                <line x1="181" y1="58" x2="195" y2="82" stroke="#d94b3e" strokeWidth="3.5" strokeLinecap="round"/>
+                <line x1="195" y1="58" x2="181" y2="82" stroke="#d94b3e" strokeWidth="3.5" strokeLinecap="round"/>
+                <circle cx="256" cy="70" r="48" fill="#ffedea" stroke="#FF6B5C" strokeWidth="2.5"/>
+                <text x="256" y="66" textAnchor="middle" fontSize="11" fontWeight="700" fill="#d94b3e">Warm-</text>
+                <text x="256" y="81" textAnchor="middle" fontSize="11" fontWeight="700" fill="#d94b3e">blooded</text>
+                <text x="160" y="134" textAnchor="middle" fontSize="10" fontWeight="700" fill="#259650">Green dots = some lizards — inside Reptiles + Cold-blooded → outside Warm-blooded ✓</text>
+              </svg>
+            </div>
           </div>
           <div style={{ padding: "10px 16px", background: "#edfbf3", display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: "#259650", color: "white" }}>Follows</span>
@@ -2988,46 +3007,54 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
             <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>James is a pilot.</p>
           </div>
           <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
-            <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Working — draw the diagram first</p>
-            {/* Translation line */}
-            <div style={{ padding: "10px 14px", borderRadius: 8, background: "#fff5f5", border: "1.5px solid #FF6B5C", marginBottom: 14 }}>
-              <p style={{ margin: "0 0 3px", fontSize: 9, fontWeight: 800, color: "#d94b3e", letterSpacing: ".06em", textTransform: "uppercase" as const }}>Translation</p>
-              <code style={{ fontSize: 13, fontWeight: 700, color: "#d94b3e", fontFamily: "monospace" }}>Pilots ⇒ Licensed   |   James ∈ Licensed</code>
-            </div>
-            {/* Converse trap SVG */}
-            <svg viewBox="0 0 300 165" style={{ width: "100%", maxWidth: 340, margin: "0 auto 14px", display: "block" }} aria-label="Converse trap — Licensed to fly circle contains Pilots circle, James could be anywhere in Licensed">
-              {/* Licensed to fly (large) */}
-              <circle cx="138" cy="82" r="72" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.7"/>
-              <text x="138" y="22" textAnchor="middle" fontSize="10" fontWeight="800" fill={d}>Licensed to fly</text>
-              {/* Pilots (smaller, inside) */}
-              <circle cx="126" cy="90" r="37" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
-              <text x="126" y="94" textAnchor="middle" fontSize="10" fontWeight="700" fill={d}>Pilots</text>
-              {/* James dot — inside Licensed but OUTSIDE Pilots */}
-              <circle cx="182" cy="60" r="5.5" fill="#8B6BFF"/>
-              <text x="196" y="58" fontSize="11" fontWeight="700" fill="#8B6BFF">James ?</text>
-              <text x="196" y="72" fontSize="9" fill="#64748b">Could be anywhere here</text>
-              {/* Dashed line showing James might or might not be in Pilots */}
-              <line x1="181" y1="66" x2="166" y2="82" stroke="#8B6BFF" strokeWidth="1.5" strokeDasharray="3,2"/>
-              {/* Ghost James inside Pilots */}
-              <circle cx="126" cy="80" r="4" fill="#8B6BFF" fillOpacity="0.35"/>
-              <text x="142" y="78" fontSize="8" fill="#94a3b8">…or here</text>
-              {/* Valid direction label */}
-              <text x="138" y="157" textAnchor="middle" fontSize="9" fontWeight="800" fill={c}>Pilots ⇒ Licensed ✓  (all pilots are licensed)</text>
-            </svg>
-            {/* Step annotations */}
-            {[
-              ["Draw",    `"Licensed to fly" is the large circle. "Pilots" is a smaller circle that sits entirely inside it. James is placed somewhere in Licensed-to-fly.`],
-              ["Ask",     "Must James be inside the Pilots circle? He is in Licensed-to-fly, but that circle is bigger than Pilots — he could be anywhere in it."],
-              ["Counter", "James could be a flight instructor, drone operator, or student licence holder — all licensed, but none a pilot. One counterexample is enough."],
-              ["Error",   "Converse error: A ⇒ B ≠ B ⇒ A. All pilots are licensed does not mean all licensed people are pilots. ✗"],
-            ].map(([label, note], i) => (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "56px 1fr", borderTop: "1px solid var(--line)", background: i === 3 ? "#fff5f5" : "white" }}>
-                <div style={{ padding: "9px 10px", display: "grid", placeItems: "center", background: i === 3 ? "#d94b3e" : "#fff5f5", borderRight: "1px solid var(--line)" }}>
-                  <strong style={{ fontSize: 10, fontWeight: 900, color: i === 3 ? "white" : "#d94b3e" }}>{label}</strong>
-                </div>
-                <p style={{ margin: 0, padding: "9px 12px", fontSize: 12, lineHeight: 1.6, color: i === 3 ? "#d94b3e" : "var(--ink)" }}>{note}</p>
+            <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Working — draw the diagram, then ask the question</p>
+
+            {/* Step 1: Draw the circles */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{ padding: "3px 10px", borderRadius: 20, background: c, color: "white", fontSize: 10, fontWeight: 800 }}>Step 1</span>
+                <strong style={{ fontSize: 12, color: d }}>Pilots ⇒ Licensed → draw Pilots as a smaller circle sitting inside Licensed to fly</strong>
               </div>
-            ))}
+              <svg viewBox="0 0 280 130" style={{ width: "100%", borderRadius: 10, border: `1.5px solid ${c}`, background: "white" }} aria-label="Pilots circle inside Licensed to fly circle">
+                <circle cx="140" cy="62" r="58" fill={t} stroke={c} strokeWidth="2.5" fillOpacity="0.7"/>
+                <text x="140" y="16" textAnchor="middle" fontSize="13" fontWeight="800" fill={d}>Licensed to fly</text>
+                <circle cx="140" cy="68" r="30" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="2"/>
+                <text x="140" y="72" textAnchor="middle" fontSize="12" fontWeight="700" fill={d}>Pilots</text>
+                <text x="140" y="118" textAnchor="middle" fontSize="10" fill="#64748b">Pilots ⊂ Licensed — the Pilots circle fits inside the Licensed circle</text>
+              </svg>
+            </div>
+
+            {/* Step 2: Place James and ask the question */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{ padding: "3px 10px", borderRadius: 20, background: "#d94b3e", color: "white", fontSize: 10, fontWeight: 800 }}>Step 2</span>
+                <strong style={{ fontSize: 12, color: "#d94b3e" }}>James ∈ Licensed — place him in the diagram. Does he have to be inside Pilots?</strong>
+              </div>
+              <svg viewBox="0 0 300 145" style={{ width: "100%", borderRadius: 10, border: "1.5px solid #d94b3e", background: "white" }} aria-label="James placed in Licensed to fly but not necessarily inside Pilots">
+                <circle cx="134" cy="65" r="60" fill={t} stroke={c} strokeWidth="2.5" fillOpacity="0.65"/>
+                <text x="134" y="16" textAnchor="middle" fontSize="12" fontWeight="800" fill={d}>Licensed to fly</text>
+                <circle cx="124" cy="72" r="30" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
+                <text x="124" y="76" textAnchor="middle" fontSize="11" fontWeight="700" fill={d}>Pilots</text>
+                {/* James OUTSIDE Pilots (flight instructor) */}
+                <circle cx="186" cy="52" r="7" fill="#d94b3e"/>
+                <text x="205" y="49" fontSize="11" fontWeight="800" fill="#d94b3e">James</text>
+                <text x="205" y="63" fontSize="9" fill="#d94b3e" fontWeight="600">(flight instructor)</text>
+                <text x="205" y="76" fontSize="9" fill="#64748b">licensed ✓ but not a pilot</text>
+                {/* Ghost James INSIDE Pilots to show it's also possible */}
+                <circle cx="124" cy="62" r="5" fill="#8B6BFF" fillOpacity="0.4"/>
+                <text x="146" y="60" fontSize="8" fill="#94a3b8">could also be here</text>
+                {/* Big question mark */}
+                <text x="182" y="100" fontSize="28" fontWeight="900" fill="#d94b3e" fillOpacity="0.25">?</text>
+                <text x="150" y="133" textAnchor="middle" fontSize="10" fontWeight="700" fill="#d94b3e">James is somewhere in Licensed — he does NOT have to be inside Pilots ✗</text>
+              </svg>
+            </div>
+
+            {/* The rule */}
+            <div style={{ padding: "10px 14px", borderRadius: 8, background: "#fff5f5", border: "1.5px solid #FF6B5C" }}>
+              <p style={{ margin: "0 0 3px", fontSize: 10, fontWeight: 800, color: "#d94b3e", letterSpacing: ".06em", textTransform: "uppercase" as const }}>Converse error — never do this</p>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#d94b3e", fontFamily: "monospace" }}>A ⇒ B does NOT mean B ⇒ A</p>
+              <p style={{ margin: "5px 0 0", fontSize: 12, color: "var(--ink)", lineHeight: 1.5 }}>All pilots are licensed ≠ all licensed people are pilots. One counterexample (a flight instructor) is enough to prove the conclusion does not follow.</p>
+            </div>
           </div>
           <div style={{ padding: "10px 16px", background: "#fff0f0", display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: "#d94b3e", color: "white" }}>Does not follow</span>
