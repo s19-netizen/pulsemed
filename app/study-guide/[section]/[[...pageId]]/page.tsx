@@ -591,6 +591,375 @@ const SHAPE: Record<string, [string, string, string, string, string]> = {
 const SHAPE_LABELS = ["S", "H", "A", "P", "E"] as const;
 const SHAPE_HINTS = ["Safety first", "Honesty always", "Act within your role", "Proportionate", "Escalate right"] as const;
 
+// ─── QR lesson data ──────────────────────────────────────────────────────────
+
+type QRFormula = { title: string; formula: string; example: string };
+type QRStep    = { label: string; calc: string; result: string };
+type QRWorked  = { title: string; passage: string; question: string; steps: QRStep[]; answer: string; trap?: string };
+type QRLesson  = {
+  idea: string;
+  where: string[];
+  formulas: QRFormula[];
+  method: [string, string][];
+  worked: QRWorked[];
+  rules: [string, string][];
+  chartDemo?: { title: string; caption: string; headers: string[]; rows: string[][]; notes: string[] };
+};
+
+const QR_LESSONS: Record<string, QRLesson> = {
+  "ratio-rates": {
+    idea: "A ratio describes how a total is divided into relative shares. The key habit: always find the value of one part first, then scale.",
+    where: [
+      "A drink recipe mixes concentrate and water in a ratio — how many litres of concentrate in a 660 ml batch?",
+      "A concrete mix uses cement : sand : gravel = 1 : 3 : 5 — how much sand in a 360 kg batch?",
+      "Eight pumps empty a tank in 6 hours — how long for 6 pumps? (inverse proportion)",
+      "A car travels 120 km at 80 km/h — how long for the same car at 60 km/h?",
+      "A factory uses 480 kg of raw material. 7% is lost in processing. How much finished product?",
+    ],
+    formulas: [
+      {
+        title: "One part of a ratio",
+        formula: "One part  =  Total  ÷  Sum of all ratio parts",
+        example: "Ratio 3 : 5  →  sum = 8.  Total = 480.  One part = 480 ÷ 8 = 60.",
+      },
+      {
+        title: "Your share of a ratio",
+        formula: "Share  =  One part  ×  Your ratio number",
+        example: "The '3' share = 60 × 3 = 180.  The '5' share = 60 × 5 = 300.",
+      },
+      {
+        title: "Direct proportion (scale up/down)",
+        formula: "New amount  =  (Target quantity  ÷  Base quantity)  ×  Original amount",
+        example: "Recipe for 8 needs 320 g flour. For 14: (14 ÷ 8) × 320 = 560 g.",
+      },
+      {
+        title: "Inverse proportion (rate × time = constant)",
+        formula: "Rate₁ × Time₁  =  Rate₂ × Time₂",
+        example: "4 pumps × 9 h = 6 pumps × T₂.  T₂ = 36 ÷ 6 = 6 hours.",
+      },
+      {
+        title: "Reverse a processing loss",
+        formula: "Raw input  =  Usable output  ÷  Survival rate",
+        example: "Need 186 L usable. 7% lost → survival = 0.93.  Raw = 186 ÷ 0.93 = 200 L.",
+      },
+    ],
+    method: [
+      ["Read the ratio", "Write it with labels: concentrate : water = 3 : 8. Keep the stated order — reversing it is the #1 error."],
+      ["Add the parts", "Sum all ratio numbers: 3 + 8 = 11 total parts. This is your denominator."],
+      ["Find one part", "One part = Total ÷ sum. If 770 L total: one part = 770 ÷ 11 = 70 L."],
+      ["Scale to each share", "Multiply one part by each ratio number. Concentrate = 70 × 3 = 210 L. Water = 70 × 8 = 560 L."],
+      ["Sense-check", "Shares must add back to the total. 210 + 560 = 770 ✓. If they don't, you added the ratio parts wrong."],
+    ],
+    worked: [
+      {
+        title: "2-part ratio split",
+        passage: "A sports drink is made by mixing concentrate and water in the ratio 3 : 8. A finished batch contains 770 litres.",
+        question: "How many litres of water are in the batch?",
+        steps: [
+          { label: "Add ratio parts", calc: "3 + 8", result: "11 total parts" },
+          { label: "Find one part", calc: "770 ÷ 11", result: "70 L per part" },
+          { label: "Water share (8 parts)", calc: "70 × 8", result: "560 L" },
+          { label: "Check: concentrate + water", calc: "210 + 560", result: "770 ✓" },
+        ],
+        answer: "560 litres",
+        trap: "Don't divide 770 by 8 directly — that ignores the 3 parts for concentrate.",
+      },
+      {
+        title: "3-part ratio",
+        passage: "An alloy is made from copper, zinc and nickel in the ratio 5 : 3 : 2. A sample weighs 640 g.",
+        question: "How much zinc does the sample contain?",
+        steps: [
+          { label: "Add all 3 ratio parts", calc: "5 + 3 + 2", result: "10 total parts" },
+          { label: "Find one part", calc: "640 ÷ 10", result: "64 g per part" },
+          { label: "Zinc share (3 parts)", calc: "64 × 3", result: "192 g" },
+          { label: "Check all three: 5+3+2 = 10 parts", calc: "320 + 192 + 128", result: "640 g ✓" },
+        ],
+        answer: "192 g",
+        trap: "Adding only two of the three parts when calculating the sum (e.g. 5 + 3 = 8) — always add every part.",
+      },
+      {
+        title: "Direct proportion — recipe scaling",
+        passage: "A recipe for 12 portions uses 1.8 kg of rice, 1.2 kg of vegetables and 0.6 L of sauce. A caterer needs to prepare 35 portions.",
+        question: "How much sauce is required for 35 portions?",
+        steps: [
+          { label: "Sauce per portion", calc: "0.6 ÷ 12", result: "0.05 L per portion" },
+          { label: "Scale to 35 portions", calc: "0.05 × 35", result: "1.75 L" },
+          { label: "Or in one step: multiply by scale factor", calc: "0.6 × (35 ÷ 12)", result: "0.6 × 2.917 = 1.75 L" },
+        ],
+        answer: "1.75 L",
+        trap: "Using the ratio 12 : 35 directly without finding the per-portion amount first.",
+      },
+      {
+        title: "Inverse proportion — pumps and time",
+        passage: "Four identical pumps can empty a 14,400-litre tank in 9 hours.",
+        question: "How long would it take 6 pumps to empty the same tank?",
+        steps: [
+          { label: "Find rate per pump", calc: "14,400 ÷ 9 ÷ 4", result: "400 L/h per pump" },
+          { label: "Combined rate of 6 pumps", calc: "400 × 6", result: "2,400 L/h" },
+          { label: "Time for 6 pumps", calc: "14,400 ÷ 2,400", result: "6 hours" },
+          { label: "Or use inverse rule: 4 × 9 = 6 × T₂", calc: "36 ÷ 6", result: "6 hours ✓" },
+        ],
+        answer: "6 hours",
+        trap: "More pumps = less time (inverse), not more time. Direct proportion gives the wrong answer here.",
+      },
+      {
+        title: "Processing loss — reverse calculation",
+        passage: "During production, 7% of raw concentrate is lost. A recipe requires 210 litres of usable concentrate.",
+        question: "How many litres of raw concentrate must enter the process?",
+        steps: [
+          { label: "Survival rate after 7% loss", calc: "100% − 7%", result: "93% = 0.93 survives" },
+          { label: "210 L is 93% of the raw input — reverse it", calc: "210 ÷ 0.93", result: "225.8 L raw needed" },
+        ],
+        answer: "225.8 L",
+        trap: "Multiplying 210 × 1.07 = 224.7 — close but wrong. To reverse a loss you divide by the survival rate, not multiply by (1 + loss rate).",
+      },
+    ],
+    rules: [
+      ["Add ALL parts", "For a 3-part ratio like 1:3:5, the sum is 9 — not 4 or 8. Miss one part and everything is wrong."],
+      ["Keep the order", "Concentrate : Water = 3 : 8 is not the same as 8 : 3. Label each number before calculating."],
+      ["More workers = less time", "Inverse proportion: double the workers, halve the time. The product (rate × time) stays constant."],
+      ["Reverse a loss with division", "If 7% is lost, 93% survives. To find the original input, divide the output by 0.93 — never multiply."],
+      ["Round up for whole items", "Bags, containers, batches — if 5.2 bags are needed, buy 6. Round down only if the question asks for the maximum that fits."],
+    ],
+  },
+
+  "charts-graphs": {
+    idea: "Every wrong number in a chart question traces back to one mistake: grabbing a figure before fully reading the axis, legend or title. Spend five seconds orienting before you calculate.",
+    where: [
+      "A bar chart shows monthly sales — what was the percentage increase from March to June?",
+      "A line graph has two series — which month did Series A overtake Series B?",
+      "A stacked bar chart shows total and components — what fraction was Category X in Year 2?",
+      "A table shows hospital admissions by region and quarter — what was the total for Region B in H1?",
+      "A pie chart shows market share — if the total market is £2.4 m, what is the value of the 35° sector?",
+    ],
+    formulas: [
+      {
+        title: "Reading a bar or line chart",
+        formula: "Value  =  Scale value at the top of the bar (or point on the line)",
+        example: "Bar reaches 7.5 on a 0–10 axis with gridlines every 2.5 → value = 7.5.",
+      },
+      {
+        title: "Pie chart — value from angle",
+        formula: "Value  =  (Angle ÷ 360)  ×  Total",
+        example: "Sector angle = 72°. Total = £500,000.  Value = (72 ÷ 360) × 500,000 = £100,000.",
+      },
+      {
+        title: "Pie chart — angle from percentage",
+        formula: "Angle  =  Percentage  ×  3.6",
+        example: "35% sector: 35 × 3.6 = 126°.",
+      },
+      {
+        title: "Stacked bar — reading a segment",
+        formula: "Segment value  =  Top of segment  −  Bottom of segment",
+        example: "Top of middle segment = 80. Bottom of middle segment = 50.  Segment = 30.",
+      },
+      {
+        title: "Percentage change from a chart",
+        formula: "% change  =  ((New − Old)  ÷  Old)  ×  100",
+        example: "Bar rises from 40 to 52.  Change = 12. % change = (12 ÷ 40) × 100 = 30%.",
+      },
+    ],
+    method: [
+      ["Read the title", "Before any numbers: what does this chart show? Time period, geographic area, unit (£, thousands, %)."],
+      ["Check every axis", "X-axis label and scale. Y-axis label, scale and — crucially — whether it starts at zero or is truncated."],
+      ["Read the legend", "Which colour/pattern/marker is which series? Don't guess. A mis-identified series wastes the whole calculation."],
+      ["Check for footnotes", "Footnotes often define the unit (e.g. 'all figures in millions') or exclude a group. They change the answer."],
+      ["Extract, then calculate", "Write the raw values down first. Only then do arithmetic. This separates reading errors from calculation errors."],
+    ],
+    worked: [
+      {
+        title: "Reading a table — finding the right cell",
+        passage: "A table shows average daily water use (litres) by region and year.",
+        question: "Using the table below, what was the total water use across all three regions in 2024?",
+        steps: [
+          { label: "Read the table title and units", calc: "Units: litres per day per household", result: "Noted — don't add raw numbers yet" },
+          { label: "Read 2024 column for each region", calc: "North: 142 L  |  East: 155 L  |  South: 138 L", result: "Three values extracted" },
+          { label: "Sum all three regions", calc: "142 + 155 + 138", result: "435 L per day across the three regions" },
+        ],
+        answer: "435 litres per day",
+        trap: "Reading the 2023 column instead of 2024 — always trace the column heading, not just left-to-right order.",
+      },
+      {
+        title: "Bar chart — percentage change",
+        passage: "A bar chart shows quarterly revenue. Q1 = £40,000. Q3 = £52,000.",
+        question: "What is the percentage increase from Q1 to Q3?",
+        steps: [
+          { label: "Identify old and new values", calc: "Old = £40,000  |  New = £52,000", result: "From Q1 and Q3 bars" },
+          { label: "Calculate the change", calc: "52,000 − 40,000", result: "£12,000 increase" },
+          { label: "Divide by the ORIGINAL (Q1)", calc: "12,000 ÷ 40,000", result: "0.30" },
+          { label: "Convert to percentage", calc: "0.30 × 100", result: "30% increase" },
+        ],
+        answer: "30%",
+        trap: "Dividing by the new value (52,000) gives 23% — wrong. Always divide by the original (starting) value.",
+      },
+      {
+        title: "Stacked bar — reading one segment",
+        passage: "A stacked bar chart shows total sales split into Online and In-store. In Year 2, the bar reaches 80. The Online segment runs from 50 to 80.",
+        question: "What were the In-store sales in Year 2?",
+        steps: [
+          { label: "Total bar height", calc: "Bar top = 80", result: "Total = 80 units" },
+          { label: "Online segment", calc: "Top: 80  −  Bottom: 50", result: "Online = 30 units" },
+          { label: "In-store = remainder", calc: "80 − 30", result: "In-store = 50 units (bottom segment)" },
+        ],
+        answer: "50 units",
+        trap: "Reading just the top number (80) as the In-store value — the bar shows the total, not the segment.",
+      },
+    ],
+    chartDemo: {
+      title: "Example data table — Water usage by region",
+      caption: "Average daily household water consumption (litres)",
+      headers: ["Region", "Households", "Use per household", "Leakage rate", "Net supply needed"],
+      rows: [
+        ["North",  "48,000", "142 L", "18%", "8,317,073 L"],
+        ["East",   "36,000", "155 L", "12%", "6,340,909 L"],
+        ["South",  "52,000", "138 L", "15%", "8,447,059 L"],
+      ],
+      notes: [
+        "Leakage rate = proportion of water entering the network that is lost before reaching households.",
+        "Net supply = (Households × Use per household) ÷ (1 − Leakage rate).",
+        "Always check the footnotes — 'leakage' here refers to network loss, not household waste.",
+      ],
+    },
+    rules: [
+      ["Title first", "The chart title tells you the population, unit and time period. A wrong reading here means every calculation is wrong."],
+      ["Truncated axes inflate change", "If a bar chart's Y-axis starts at 60, a bar rising from 70 to 77 looks like it doubled. Always note the baseline."],
+      ["Stacked bar: subtract", "A stacked segment's value = top of segment − bottom of segment. Never read a mid-point directly."],
+      ["Cumulative line: subtract", "A cumulative line graph for June includes Jan–Jun. June-only = cumulative June − cumulative May."],
+      ["Pie: use angle or fraction", "Part/whole = angle/360. Convert the angle to a fraction, then multiply by the total."],
+      ["Two y-axes: check which series uses which", "In a dual-axis chart, both series look similar in scale but one axis may be 10× the other."],
+    ],
+  },
+
+  "percentages-change": {
+    idea: "Every percentage question is one of four types: find the percentage, find the amount, find the original, or apply repeated changes. Identify the type before picking up the calculator.",
+    where: [
+      "A price is reduced by 15% — what is the sale price?",
+      "After a 20% rise, a salary is £36,000 — what was it before?",
+      "A clinic saw 12,400 patients last year. This year there are 8% more — how many this year?",
+      "A laptop is discounted 20% then VAT of 20% is added — is the final price higher or lower than the original?",
+      "Two years of 5% annual growth — what multiplier covers both years?",
+    ],
+    formulas: [
+      {
+        title: "Percentage of an amount",
+        formula: "Amount  =  Percentage  ÷  100  ×  Total",
+        example: "35% of £18,000 = 0.35 × 18,000 = £6,300.",
+      },
+      {
+        title: "Percentage change",
+        formula: "% change  =  (Change  ÷  Original)  ×  100",
+        example: "Price rises from £80 to £92. Change = 12. % change = (12 ÷ 80) × 100 = 15%.",
+      },
+      {
+        title: "Multiplier for a change",
+        formula: "Increase by r% → multiply by (1 + r/100).   Decrease by r% → multiply by (1 − r/100)",
+        example: "15% discount: multiply by 0.85.  20% rise: multiply by 1.20.",
+      },
+      {
+        title: "Reverse a percentage (find the original)",
+        formula: "Original  =  Known value  ÷  Multiplier",
+        example: "After 15% off, price is £68. Original = £68 ÷ 0.85 = £80.",
+      },
+      {
+        title: "Repeated percentage changes",
+        formula: "Final  =  Original  ×  Multiplier₁  ×  Multiplier₂  × …",
+        example: "−20% then +20%: 1.00 × 0.80 × 1.20 = 0.96 → net −4%. They do NOT cancel.",
+      },
+    ],
+    method: [
+      ["Name the type", "Is this 'find the percentage', 'find the amount', 'find the original' or 'repeated change'?"],
+      ["Write the multiplier", "15% off → 0.85. 8% more → 1.08. Writing it down prevents sign errors."],
+      ["Apply in order", "For multi-step problems (discount then VAT then delivery), apply each multiplier in the given sequence."],
+      ["Reverse with division", "If you're given the result and need the original, divide by the multiplier — never subtract the percentage directly."],
+      ["Check direction", "Estimate first: 15% off £80 should be below £80. If your answer is above, something went wrong."],
+    ],
+    worked: [
+      {
+        title: "Reverse a percentage — find the original price",
+        passage: "A laptop is reduced by 15%. VAT at 20% is then added to the discounted price. Delivery costs £24. The final bill is £840.",
+        question: "What was the original price of the laptop before the discount?",
+        steps: [
+          { label: "Remove delivery charge", calc: "840 − 24", result: "£816 is the price after discount + VAT" },
+          { label: "Reverse the 20% VAT (÷ 1.20)", calc: "816 ÷ 1.20", result: "£680 is the discounted price before VAT" },
+          { label: "Reverse the 15% discount (÷ 0.85)", calc: "680 ÷ 0.85", result: "£800 original price" },
+        ],
+        answer: "£800",
+        trap: "Adding 15% back to £680 gives £782 — wrong. To reverse a discount you divide by the survival rate, not add the percentage.",
+      },
+      {
+        title: "Percentage change between two values",
+        passage: "A clinic recorded 18,000 appointments in 2025 and 19,800 in 2026.",
+        question: "What is the percentage increase in appointments from 2025 to 2026?",
+        steps: [
+          { label: "Calculate the change", calc: "19,800 − 18,000", result: "1,800 more appointments" },
+          { label: "Divide by the ORIGINAL (2025)", calc: "1,800 ÷ 18,000", result: "0.10" },
+          { label: "Convert to percentage", calc: "0.10 × 100", result: "10% increase" },
+        ],
+        answer: "10%",
+        trap: "Dividing by 19,800 gives 9.09% — wrong. Always divide by the starting value, not the new one.",
+      },
+    ],
+    rules: [
+      ["Original = denominator", "In a % change, always divide by where you STARTED. The original is the denominator."],
+      ["Reverse by dividing", "To find the original after a % change, divide by the multiplier. Never subtract the % from the final value."],
+      ["Successive changes multiply", "−20% then +20% is NOT zero change. It's 0.80 × 1.20 = 0.96 → a net 4% loss."],
+      ["Percentage points ≠ percentages", "A rise from 20% to 25% is a 5 percentage-point increase, but a 25% relative increase."],
+      ["Markup vs margin", "Markup uses cost as the base. Margin uses selling price. Different denominators → different answers."],
+    ],
+  },
+
+  "tables-data": {
+    idea: "Correct calculation with the wrong table cell is still a wrong answer. Read column headings, row labels, units and footnotes before touching the calculator.",
+    where: [
+      "A table gives hospital admissions by region and quarter — total for Region B in Q1 and Q2",
+      "A table gives costs and quantities — total expenditure for a selected category",
+      "A table gives population and percentage figures — absolute number from the percentage",
+      "A table has a sub-total row — checking whether it includes or excludes certain items",
+      "A table footnote redefines the unit — 'all figures in thousands'",
+    ],
+    formulas: [
+      {
+        title: "Absolute value from a percentage column",
+        formula: "Absolute amount  =  Row total  ×  (Percentage  ÷  100)",
+        example: "Row total = 18,000. Follow-up % = 35%.  Follow-ups = 18,000 × 0.35 = 6,300.",
+      },
+      {
+        title: "Combining two rows",
+        formula: "Combined total  =  Row A value  +  Row B value  (same column)",
+        example: "North Q1 = 4,200. South Q1 = 3,800. Combined = 8,000.",
+      },
+    ],
+    method: [
+      ["Read the title", "Establish what the table measures, the population covered and the time period."],
+      ["Check units once", "Find where units are stated — often in the header, sometimes in a footnote. 'Thousands' in a footnote changes every number."],
+      ["Trace row AND column", "Lay one finger on the row label and one on the column heading. The intersection is your number."],
+      ["Check for a totals row/column", "If a totals row exists, verify your sum against it — or check whether the question asks for a sub-group, not the total."],
+      ["Read footnotes before calculating", "Footnotes often redefine included/excluded groups or change units. Missing them is the single most common error."],
+    ],
+    worked: [
+      {
+        title: "Extract and combine from a table",
+        passage: "A water company table shows average daily consumption (litres per household) for three regions: North 142 L, East 155 L, South 138 L. North has 48,000 households, East 36,000, South 52,000.",
+        question: "What is the total volume of water used daily across all three regions?",
+        steps: [
+          { label: "North: households × use", calc: "48,000 × 142", result: "6,816,000 L" },
+          { label: "East: households × use", calc: "36,000 × 155", result: "5,580,000 L" },
+          { label: "South: households × use", calc: "52,000 × 138", result: "7,176,000 L" },
+          { label: "Sum all three", calc: "6,816,000 + 5,580,000 + 7,176,000", result: "19,572,000 L per day" },
+        ],
+        answer: "19,572,000 litres per day",
+        trap: "Adding just the 'use per household' figures (142 + 155 + 138 = 435) — that ignores the different household counts in each region.",
+      },
+    ],
+    rules: [
+      ["Title and units first", "Two minutes on the title and units saves five minutes of recalculation with the wrong base."],
+      ["Footnotes change numbers", "A footnote saying 'all figures in millions' means 4.2 means 4,200,000 — not 4.2."],
+      ["Don't double-count totals", "If a 'Total' row is present and you've already added the component rows, don't add the Total row again."],
+      ["One row, one column", "In dense tables, physically trace both axes. Picking a neighbouring cell is the most common reading error."],
+    ],
+  },
+};
+
 // ─── DM lesson data ──────────────────────────────────────────────────────────
 
 const DM_LESSONS: Record<string, {
@@ -806,6 +1175,185 @@ const DM_LESSONS: Record<string, {
   },
 };
 
+// ─── Topic-specific visual aid (replaces "Key concepts" grid) ────────────────
+
+function TopicVisual({ topicId, color: c, tint: t, deep: d }: { topicId: string; color: string; tint: string; deep: string }) {
+  if (topicId === "interpreting-information") {
+    return (
+      <>
+        <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>How a rule fires</h2>
+        <div style={{ borderRadius: 12, border: "1px solid var(--line)", overflow: "hidden", marginBottom: 28 }}>
+          <div style={{ display: "flex", alignItems: "stretch", background: "white" }}>
+            <div style={{ flex: 1, padding: "14px 16px", background: t }}>
+              <p style={{ margin: "0 0 4px", fontSize: 9, fontWeight: 800, color: c, letterSpacing: ".1em", textTransform: "uppercase" as const }}>Trigger (A)</p>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>Admitted before 08:00</p>
+            </div>
+            <div style={{ display: "grid", placeItems: "center", padding: "0 16px", fontSize: 24, fontWeight: 900, color: c }}>→</div>
+            <div style={{ flex: 1, padding: "14px 16px" }}>
+              <p style={{ margin: "0 0 4px", fontSize: 9, fontWeight: 800, color: c, letterSpacing: ".1em", textTransform: "uppercase" as const }}>Consequence (B)</p>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>Assessed by Team A</p>
+            </div>
+          </div>
+          <div style={{ borderTop: "1px solid var(--line)", padding: "10px 16px", background: "#fafafa" }}>
+            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)" }}>Contrapositive — always valid, always free:</p>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--ink)", fontFamily: "monospace" }}>
+              Not assessed by Team A → Not admitted before 08:00
+            </p>
+          </div>
+          <div style={{ borderTop: "1px solid var(--line)", padding: "10px 16px" }}>
+            <p style={{ margin: 0, fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.6 }}>
+              The rule is silent when A is false — "admitted after 08:00" tells you nothing. Only the trigger fires the consequence.
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (topicId === "arguments-assumptions") {
+    return (
+      <>
+        <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>Anatomy of an argument</h2>
+        <div style={{ borderRadius: 12, border: "1px solid var(--line)", overflow: "hidden", marginBottom: 28 }}>
+          <div style={{ display: "flex", alignItems: "center", padding: "16px", gap: 8 }}>
+            <div style={{ flex: 1, textAlign: "center" as const }}>
+              <div style={{ display: "inline-block", padding: "10px 16px", borderRadius: 10, background: t, border: `1px solid ${c}` }}>
+                <p style={{ margin: "0 0 2px", fontSize: 9, fontWeight: 800, color: c, letterSpacing: ".1em", textTransform: "uppercase" as const }}>Evidence</p>
+                <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "var(--ink)" }}>A charge reduces traffic</p>
+              </div>
+            </div>
+            <div style={{ fontSize: 20, color: "var(--ink-soft)", flexShrink: 0 }}>→</div>
+            <div style={{ flex: 1, textAlign: "center" as const }}>
+              <div style={{ display: "inline-block", padding: "10px 16px", borderRadius: 10, background: "#fffbe6", border: "2px dashed #e6a817" }}>
+                <p style={{ margin: "0 0 2px", fontSize: 9, fontWeight: 800, color: "#e6a817", letterSpacing: ".1em", textTransform: "uppercase" as const }}>Hidden gap</p>
+                <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#b8860b" }}>Some drivers change behaviour</p>
+              </div>
+            </div>
+            <div style={{ fontSize: 20, color: "var(--ink-soft)", flexShrink: 0 }}>→</div>
+            <div style={{ flex: 1, textAlign: "center" as const }}>
+              <div style={{ display: "inline-block", padding: "10px 16px", borderRadius: 10, background: "#edfbf3", border: "1px solid #259650" }}>
+                <p style={{ margin: "0 0 2px", fontSize: 9, fontWeight: 800, color: "#259650", letterSpacing: ".1em", textTransform: "uppercase" as const }}>Conclusion</p>
+                <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "var(--ink)" }}>Introduce the charge</p>
+              </div>
+            </div>
+          </div>
+          <div style={{ borderTop: "1px solid var(--line)", padding: "10px 16px", background: "#fafafa" }}>
+            <p style={{ margin: 0, fontSize: 12, color: "var(--ink)", lineHeight: 1.6 }}>
+              The <strong>assumption</strong> fills the gap. Negate it — if the argument collapses without it, you found what the argument silently requires.
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (topicId === "logic-puzzles") {
+    return (
+      <>
+        <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>Set up a grid before you solve</h2>
+        <div style={{ borderRadius: 12, border: "1px solid var(--line)", overflow: "hidden", marginBottom: 28 }}>
+          <div style={{ padding: "14px 16px", overflowX: "auto" as const }}>
+            <table style={{ borderCollapse: "collapse" as const, width: "100%", minWidth: 300 }}>
+              <thead>
+                <tr>
+                  <th style={{ padding: "6px 12px", background: t, border: "1px solid var(--line)", fontSize: 10, fontWeight: 800, color: c, textAlign: "left" as const }}>Slot</th>
+                  {["Mon", "Tue", "Wed", "Thu", "Fri"].map(day => (
+                    <th key={day} style={{ padding: "6px 12px", background: t, border: "1px solid var(--line)", fontSize: 11, fontWeight: 800, color: "var(--ink)", textAlign: "center" as const }}>{day}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style={{ padding: "8px 12px", background: t, border: "1px solid var(--line)", fontSize: 10, fontWeight: 800, color: c }}>Who</td>
+                  <td style={{ padding: "8px 12px", border: "1px solid var(--line)", background: "#edfbf3", fontSize: 13, fontWeight: 900, color: "#259650", textAlign: "center" as const }}>J ✓</td>
+                  <td style={{ padding: "8px 12px", border: "1px solid var(--line)", fontSize: 13, fontWeight: 700, color: "var(--ink)", textAlign: "center" as const }}>L</td>
+                  <td style={{ padding: "8px 12px", border: "1px solid var(--line)", fontSize: 13, fontWeight: 700, color: "var(--ink)", textAlign: "center" as const }}>K</td>
+                  <td style={{ padding: "8px 12px", border: "1px solid var(--line)", background: t, fontSize: 13, fontWeight: 700, color: "var(--ink-soft)", textAlign: "center" as const }}>N *</td>
+                  <td style={{ padding: "8px 12px", border: "1px solid var(--line)", background: t, fontSize: 13, fontWeight: 700, color: "var(--ink-soft)", textAlign: "center" as const }}>M *</td>
+                </tr>
+              </tbody>
+            </table>
+            <p style={{ margin: "8px 0 0", fontSize: 11, color: "var(--ink-soft)" }}>* Fixed directly from the rules. The L-K block (adjacent rule) then forces Mon = J.</p>
+          </div>
+          <div style={{ borderTop: "1px solid var(--line)", padding: "10px 16px", background: "#fafafa" }}>
+            <p style={{ margin: 0, fontSize: 12, color: "var(--ink)", lineHeight: 1.6 }}>
+              Draw the grid before looking at the answer options. Trying to hold positions in your head wastes time and causes errors.
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (topicId === "venn-diagrams") {
+    return (
+      <>
+        <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>The formula in action</h2>
+        <div style={{ borderRadius: 12, border: "1px solid var(--line)", overflow: "hidden", marginBottom: 28 }}>
+          <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column" as const, gap: 10 }}>
+            <code style={{ padding: "11px 14px", borderRadius: 8, background: t, fontSize: 14, fontWeight: 800, color: "var(--ink)", fontFamily: "monospace", display: "block" }}>
+              |A ∪ B| = |A| + |B| − |A ∩ B|
+            </code>
+            <code style={{ padding: "11px 14px", borderRadius: 8, background: "#fafafa", fontSize: 14, fontWeight: 800, color: "var(--ink)", fontFamily: "monospace", display: "block", border: "1px solid var(--line)" }}>
+              77 = 62 + 51 − both → both = 36
+            </code>
+          </div>
+          <div style={{ borderTop: "1px solid var(--line)", padding: "10px 16px" }}>
+            <p style={{ margin: 0, fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.6 }}>
+              Find the union first (100 − 23 = 77), then rearrange to find the overlap. Always check by summing all four regions back to the total.
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (topicId === "probability") {
+    return (
+      <>
+        <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>Convert to a frequency table first</h2>
+        <div style={{ borderRadius: 12, border: "1px solid var(--line)", overflow: "hidden", marginBottom: 28 }}>
+          <div style={{ padding: "14px 16px", overflowX: "auto" as const }}>
+            <table style={{ borderCollapse: "collapse" as const, width: "100%", fontSize: 12 }}>
+              <thead>
+                <tr>
+                  {["", "Defective", "OK", "Total"].map((h, i) => (
+                    <th key={i} style={{ padding: "6px 12px", background: t, border: "1px solid var(--line)", fontSize: 11, fontWeight: 800, color: i === 1 ? "#d94b3e" : i === 3 ? c : "var(--ink)", textAlign: i === 0 ? "left" as const : "center" as const }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { label: "Machine A", def: "120", ok: "5,880", total: "6,000" },
+                  { label: "Machine B", def: "200", ok: "3,800", total: "4,000" },
+                  { label: "Total", def: "320", ok: "9,680", total: "10,000", bold: true },
+                ].map(r => (
+                  <tr key={r.label}>
+                    <td style={{ padding: "8px 12px", border: "1px solid var(--line)", background: t, fontWeight: 800, fontSize: 11, color: c }}>{r.label}</td>
+                    <td style={{ padding: "8px 12px", border: "1px solid var(--line)", textAlign: "center" as const, fontWeight: r.bold ? 800 : 500, background: r.bold ? "#fff5f5" : undefined, color: r.bold ? "#d94b3e" : undefined }}>{r.def}</td>
+                    <td style={{ padding: "8px 12px", border: "1px solid var(--line)", textAlign: "center" as const }}>{r.ok}</td>
+                    <td style={{ padding: "8px 12px", border: "1px solid var(--line)", textAlign: "center" as const, fontWeight: r.bold ? 800 : 500 }}>{r.total}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p style={{ margin: "8px 0 0", fontSize: 11, color: "var(--ink-soft)" }}>
+              P(B | defective) = 200 ÷ 320 = <strong>62.5%</strong> — the answer comes straight off the table.
+            </p>
+          </div>
+          <div style={{ borderTop: "1px solid var(--line)", padding: "10px 16px", background: "#fafafa" }}>
+            <p style={{ margin: 0, fontSize: 12, color: "var(--ink)", lineHeight: 1.6 }}>
+              Use 100, 1,000 or 10,000 as your base — whichever turns the percentages into whole numbers with no messy rounding.
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  return null;
+}
+
 // ─── DM lesson page (all 5 non-syllogism DM topics) ─────────────────────────
 
 function DMLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
@@ -853,18 +1401,7 @@ function DMLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
         ))}
       </div>
 
-      {/* Key concepts */}
-      <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>Key concepts</h2>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 28 }}>
-        {lesson.concepts.map(({ label, symbol, detail }) => (
-          <div key={label} style={{ borderRadius: 12, border: `1px solid ${c}`, background: "white", padding: "14px 16px" }}>
-            <p style={{ margin: "0 0 4px", fontSize: 9, fontWeight: 800, color: c, letterSpacing: ".1em", textTransform: "uppercase" as const }}>Key concept</p>
-            <code style={{ fontSize: 18, fontWeight: 900, color: d, display: "block", marginBottom: 6 }}>{symbol}</code>
-            <strong style={{ fontSize: 11, fontWeight: 800, color: "var(--ink)", display: "block", marginBottom: 3 }}>{label}</strong>
-            <p style={{ margin: 0, fontSize: 11, lineHeight: 1.6, color: "var(--ink-soft)" }}>{detail}</p>
-          </div>
-        ))}
-      </div>
+      <TopicVisual topicId={topic.id} color={c} tint={t} deep={d} />
 
       {/* Worked example */}
       <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>Worked example</h2>
@@ -902,6 +1439,198 @@ function DMLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
       <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>Rules to remember</h2>
       <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 12, overflow: "hidden", border: "1px solid var(--line)", marginBottom: 28 }}>
         {lesson.rules.map(([name, desc], i) => row(i, name, desc))}
+      </div>
+
+      <section className="vrg-bottom-practice">
+        <div>
+          <strong>Ready to practise {topic.title}?</strong>
+          <p>We'll take you to the practice setup so you can choose your session and timing.</p>
+        </div>
+        <button className="vrg-practice-cta" onClick={onPractice} type="button">Set up practice →</button>
+      </section>
+      <GuidePageActions section={section} pageId={pageId} onNavigate={onNavigate} />
+    </>
+  );
+}
+
+// ─── QR lesson page ──────────────────────────────────────────────────────────
+
+function QRLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
+  section: GuideSection;
+  topic: NonNullable<ReturnType<typeof findTopic>>;
+  pageId: string;
+  onNavigate: (id: string) => void;
+  onPractice: () => void;
+}) {
+  const c = section.color, t = section.tint, d = section.deep;
+  const lesson = QR_LESSONS[topic.id];
+  if (!lesson) return null;
+
+  return (
+    <>
+      <GuidePageHeader section={section} pageId={pageId} title={topic.title} eyebrow="QR topic guide" subtitle={topic.description} />
+
+      {/* Core idea */}
+      <p style={{ fontSize: 14, lineHeight: 1.8, color: "var(--ink)", borderLeft: `3px solid ${c}`, background: t, padding: "13px 18px", borderRadius: "0 12px 12px 0", margin: "0 0 26px" }}>
+        {lesson.idea}
+      </p>
+
+      {/* Where you'll see it */}
+      <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>Where this appears in QR questions</h2>
+      <div style={{ borderRadius: 12, border: "1px solid var(--line)", overflow: "hidden", marginBottom: 28 }}>
+        {lesson.where.map((w, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "10px 14px", background: "white", borderTop: i > 0 ? "1px solid var(--line)" : undefined }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: c, flexShrink: 0, marginTop: 6 }} />
+            <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>{w}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Formulas */}
+      <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>Formulas</h2>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
+        {lesson.formulas.map((f, i) => (
+          <div key={i} style={{ borderRadius: 12, border: `1.5px solid ${c}`, overflow: "hidden" }}>
+            <div style={{ padding: "8px 14px", background: c }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: "white", letterSpacing: ".06em", textTransform: "uppercase" as const }}>{f.title}</span>
+            </div>
+            <div style={{ padding: "12px 16px", background: "white" }}>
+              <div style={{ fontFamily: "monospace", fontSize: 14, fontWeight: 700, color: d, background: t, borderRadius: 8, padding: "10px 14px", marginBottom: 8, letterSpacing: ".02em" }}>
+                {f.formula}
+              </div>
+              <p style={{ margin: 0, fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.6 }}>
+                <strong style={{ color: "var(--ink)" }}>Example: </strong>{f.example}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Method */}
+      <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>The method — step by step</h2>
+      <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 12, overflow: "hidden", border: "1px solid var(--line)", marginBottom: 28 }}>
+        {lesson.method.map(([title, detail], i) => (
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "36px 1fr", background: "white", borderTop: i > 0 ? "1px solid var(--line)" : undefined }}>
+            <div style={{ display: "grid", placeItems: "center", background: t, borderRight: "1px solid var(--line)" }}>
+              <strong style={{ fontSize: 13, fontWeight: 900, color: c }}>{i + 1}</strong>
+            </div>
+            <div style={{ padding: "11px 14px" }}>
+              <strong style={{ fontSize: 12, fontWeight: 800, color: d, display: "block", marginBottom: 2 }}>{title}</strong>
+              <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: "var(--ink-soft)" }}>{detail}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Chart demo (charts-graphs topic only) */}
+      {lesson.chartDemo && (
+        <>
+          <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 6px", color: "var(--ink)" }}>{lesson.chartDemo.title}</h2>
+          <p style={{ margin: "0 0 10px", fontSize: 12, color: "var(--ink-soft)" }}>{lesson.chartDemo.caption}</p>
+          <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid var(--line)", marginBottom: 10 }}>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                <thead>
+                  <tr>
+                    {lesson.chartDemo.headers.map((h, i) => (
+                      <th key={i} style={{ padding: "9px 14px", background: c, color: "white", fontWeight: 800, textAlign: "left", whiteSpace: "nowrap", borderRight: i < lesson.chartDemo!.headers.length - 1 ? "1px solid rgba(255,255,255,.2)" : undefined }}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {lesson.chartDemo.rows.map((row, ri) => (
+                    <tr key={ri} style={{ background: ri % 2 === 0 ? "white" : t }}>
+                      {row.map((cell, ci) => (
+                        <td key={ci} style={{ padding: "9px 14px", borderTop: "1px solid var(--line)", borderRight: ci < row.length - 1 ? "1px solid var(--line)" : undefined, fontWeight: ci === 0 ? 700 : 400 }}>
+                          {cell}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div style={{ marginBottom: 28 }}>
+            {lesson.chartDemo.notes.map((n, i) => (
+              <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", padding: "5px 0" }}>
+                <span style={{ fontSize: 11, fontWeight: 800, color: c, flexShrink: 0, marginTop: 2 }}>ⓘ</span>
+                <p style={{ margin: 0, fontSize: 11, color: "var(--ink-soft)", lineHeight: 1.6 }}>{n}</p>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Worked examples */}
+      <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 14px", color: "var(--ink)" }}>Worked examples</h2>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 28 }}>
+        {lesson.worked.map((w, wi) => (
+          <div key={wi} style={{ borderRadius: 14, border: "1px solid var(--line)", background: "white", overflow: "hidden" }}>
+            {/* Header */}
+            <div style={{ padding: "9px 16px", background: t, borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 9px", borderRadius: 20, background: c, color: "white" }}>EXAMPLE {wi + 1}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)" }}>{w.title}</span>
+            </div>
+            {/* Passage */}
+            <div style={{ padding: "11px 16px", borderBottom: "1px solid var(--line)", background: "#fafafa" }}>
+              <p style={{ margin: "0 0 3px", fontSize: 10, fontWeight: 800, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".06em" }}>Given</p>
+              <p style={{ margin: 0, fontSize: 13, color: "var(--ink)", lineHeight: 1.6, fontStyle: "italic" }}>{w.passage}</p>
+            </div>
+            {/* Question */}
+            <div style={{ padding: "9px 16px", borderBottom: "1px solid var(--line)" }}>
+              <p style={{ margin: "0 0 2px", fontSize: 10, fontWeight: 800, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".06em" }}>Question</p>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--ink)" }}>{w.question}</p>
+            </div>
+            {/* Steps */}
+            <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--line)" }}>
+              <p style={{ margin: "0 0 10px", fontSize: 10, fontWeight: 800, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".06em" }}>Working</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 10, overflow: "hidden", border: "1px solid var(--line)" }}>
+                {w.steps.map((s, si) => (
+                  <div key={si} style={{ display: "grid", gridTemplateColumns: "26px 1fr 140px", background: si % 2 === 0 ? "white" : t, borderTop: si > 0 ? "1px solid var(--line)" : undefined }}>
+                    <div style={{ display: "grid", placeItems: "center", borderRight: "1px solid var(--line)", padding: "8px 0" }}>
+                      <span style={{ fontSize: 11, fontWeight: 900, color: c }}>{si + 1}</span>
+                    </div>
+                    <div style={{ padding: "8px 12px", borderRight: "1px solid var(--line)" }}>
+                      <p style={{ margin: "0 0 2px", fontSize: 10, fontWeight: 700, color: "var(--ink-soft)" }}>{s.label}</p>
+                      <p style={{ margin: 0, fontSize: 12, fontFamily: "monospace", color: d, fontWeight: 600 }}>{s.calc}</p>
+                    </div>
+                    <div style={{ padding: "8px 12px", display: "flex", alignItems: "center" }}>
+                      <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: "var(--ink)" }}>= {s.result}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Answer */}
+            <div style={{ padding: "9px 16px", background: "#edfbf3", display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: "#259650", color: "white" }}>Answer</span>
+              <span style={{ fontSize: 13, fontWeight: 800, color: "#259650" }}>{w.answer}</span>
+            </div>
+            {/* Trap */}
+            {w.trap && (
+              <div style={{ padding: "9px 16px", background: "#fff4f3", borderTop: "1px solid #ffd6d3", display: "flex", gap: 8 }}>
+                <span style={{ fontSize: 13, flexShrink: 0 }}>⚠️</span>
+                <p style={{ margin: 0, fontSize: 12, color: "#c0392b", lineHeight: 1.6 }}><strong>Common trap: </strong>{w.trap}</p>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Rules */}
+      <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>Rules to remember</h2>
+      <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 12, overflow: "hidden", border: "1px solid var(--line)", marginBottom: 28 }}>
+        {lesson.rules.map(([name, desc], i) => (
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "160px 1fr", borderTop: i > 0 ? "1px solid var(--line)" : undefined, background: "white" }}>
+            <div style={{ padding: "11px 14px", background: t, borderRight: "1px solid var(--line)" }}>
+              <strong style={{ fontSize: 11, fontWeight: 800, color: c }}>{name}</strong>
+            </div>
+            <p style={{ margin: 0, padding: "11px 14px", fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>{desc}</p>
+          </div>
+        ))}
       </div>
 
       <section className="vrg-bottom-practice">
@@ -1496,6 +2225,8 @@ export default function StudyGuidePage() {
               ? <SyllogismsPage section={section} topic={topic} pageId={pageId} onNavigate={goToPage} onPractice={() => router.push(`/practice/${sectionKey}`)} />
               : topic && sectionKey === "dm" && DM_LESSONS[topic.id]
               ? <DMLessonPage section={section} topic={topic} pageId={pageId} onNavigate={goToPage} onPractice={() => router.push(`/practice/${sectionKey}`)} />
+              : topic && sectionKey === "qr" && QR_LESSONS[topic.id]
+              ? <QRLessonPage section={section} topic={topic} pageId={pageId} onNavigate={goToPage} onPractice={() => router.push(`/practice/${sectionKey}`)} />
               : topic && <TopicPage section={section} topic={topic} pageId={pageId} onNavigate={goToPage} onPractice={() => router.push(`/practice/${sectionKey}`)} />}
           </main>
         </div>
