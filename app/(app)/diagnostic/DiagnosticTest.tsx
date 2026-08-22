@@ -7,7 +7,7 @@ import {
   APPROP_OPTIONS, IMPORT_OPTIONS, TFCT_OPTIONS,
   type DiagQuestion, type DiagSection,
 } from "@/lib/diagnosticData";
-import { GroupedBarChart, LineGraph, PieChartPair, TheatreTable, RoomDataCard } from "./DiagCharts";
+import { GroupedBarChart, LineGraph, PieChartPair, TheatreTable, RoomDataCard, CargoDataCard } from "./DiagCharts";
 import { DiagVenn3 } from "./DiagVenn";
 
 // ─── Section metadata ──────────────────────────────────────────────────────────
@@ -45,6 +45,7 @@ function QuestionFigure({ q }: { q: DiagQuestion }) {
   if (ds.figureType === "line")        return <LineGraph data={ds.figureData as unknown as Parameters<typeof LineGraph>[0]["data"]} />;
   if (ds.figureType === "pie-pair")    return <PieChartPair data={ds.figureData as unknown as Parameters<typeof PieChartPair>[0]["data"]} />;
   if (ds.figureType === "table")       return <TheatreTable data={ds.figureData as unknown as Parameters<typeof TheatreTable>[0]["data"]} />;
+  if (ds.figureType === "cargo")       return <CargoDataCard data={ds.figureData as unknown as Parameters<typeof CargoDataCard>[0]["data"]} />;
   return null;
 }
 

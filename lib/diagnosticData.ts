@@ -66,7 +66,7 @@ export interface QRDataSet {
   id: string;
   title: string;
   description: string;
-  figureType: "room" | "grouped-bar" | "line" | "pie-pair" | "table";
+  figureType: "room" | "grouped-bar" | "line" | "pie-pair" | "table" | "cargo";
   figureData: Record<string, unknown>;
 }
 
@@ -187,17 +187,14 @@ Complete neutrality is unrealistic. A map containing every available fact would 
 export const QR_DATASETS: Record<string, QRDataSet> = {
   "qr-ds1": {
     id: "qr-ds1",
-    title: "Exhibition Room",
-    description: "A rectangular exhibition room is 10 m long, 8 m wide and 3 m high.",
-    figureType: "room",
+    title: "Orbital Cargo Loading",
+    description: "A resupply spacecraft carries rectangular Life-Support Modules (LSMs) to an orbital station. Radiation shielding reduces the cargo bay's usable internal dimensions. LSMs must remain upright but may be rotated 90° on the floor.",
+    figureType: "cargo",
     figureData: {
-      room: { length: 10, width: 8, height: 3 },
-      door: { width: 1, height: 2 },
-      windows: { count: 2, width: 1.5, height: 1 },
-      module: { length: 2, width: 1, height: 0.8 },
-      paintCoverage: 10,
-      coats: 2,
-      tinSize: 5,
+      bay:      { widthM: 2.88, lengthM: 3.60, heightM: 2.40 },
+      shielding: { sidewall: 12, endwall: 9, floor: 15, ceiling: 5 },
+      lsm:      { footprintA: 54, footprintB: 36, height: 40 },
+      massKg:   86,
     },
   },
   "qr-ds2": {
@@ -831,39 +828,42 @@ export const DIAGNOSTIC_QUESTIONS: DiagQuestion[] = [
   },
 
   // ══════════════════════════════════════════════════════════════════════════
-  // QR — Data Set 1: Exhibition Room (Q39–42)
+  // QR — Data Set 1: Orbital Cargo Loading (Q39–42)
   // ══════════════════════════════════════════════════════════════════════════
   {
     id: "DIAG-QR-001", qNum: 39, section: "qr", format: "mcq",
-    subtype: "Geometry — stacking", difficulty: "Gold", dataSetId: "qr-ds1",
-    stem: "Each display module is 0.8 m tall and modules may be stacked directly on top of one another. What is the greatest number of modules that can be stacked in a single tower without exceeding the room's ceiling height?",
-    options: ["2", "3", "4", "5"],
-    correct: 1,
-    explanation: "Room height = 3 m. Each module = 0.8 m tall. Maximum stacked height ≤ 3 m → ⌊3 ÷ 0.8⌋ = ⌊3.75⌋ = 3 modules (3 × 0.8 = 2.4 m, within limit). A tower of 4 would reach 4 × 0.8 = 3.2 m, exceeding the ceiling. Maximum = 3 modules.",
+    subtype: "3D Geometry — integer fitting", difficulty: "Diamond", dataSetId: "qr-ds1",
+    stem: "What is the maximum number of LSMs that can fit inside the shielded cargo bay?",
+    options: ["180", "195", "200", "210"],
+    correct: 3,
+    explanation: "Usable: width = 288 − 24 = 264 cm; length = 360 − 18 = 342 cm; height = 240 − 20 = 220 cm. Layers: ⌊220 ÷ 40⌋ = 5. Best floor orientation — 36 cm across 264 cm: ⌊264 ÷ 36⌋ = 7; 54 cm along 342 cm: ⌊342 ÷ 54⌋ = 6. Per layer: 7 × 6 = 42. Total: 42 × 5 = 210.",
   },
   {
     id: "DIAG-QR-002", qNum: 40, section: "qr", format: "mcq",
-    subtype: "Geometry — surface area", difficulty: "Gold", dataSetId: "qr-ds1",
-    stem: "The door and both windows are not painted. What is the minimum number of 5 L tins required for two coats on the four walls?",
-    options: ["3", "4", "5", "6"],
-    correct: 2,
-    explanation: "Total wall area: 2×(10×3) + 2×(8×3) = 60 + 48 = 108 m². Subtract door (1×2 = 2 m²) and 2 windows (2×1.5×1 = 3 m²) → paintable area = 103 m². Two coats: 206 m². Coverage: 10 m²/L × 5 L = 50 m²/tin. Tins needed: ⌈206/50⌉ = ⌈4.12⌉ = 5 tins.",
+    subtype: "Percentages — rounding direction", difficulty: "Diamond", dataSetId: "qr-ds1",
+    preamble: "For safety, 18% of all LSM positions must remain empty to allow emergency access.",
+    stem: "Using the maximum capacity of 210 LSMs, what is the greatest number of LSMs that may actually be loaded?",
+    options: ["171", "172", "173", "174"],
+    correct: 1,
+    explanation: "82% of 210 = 172.2. The constraint is a ceiling — you cannot exceed 82% occupied — so round down: 172. Loading 173 would give 173/210 = 82.4% > 82%.",
   },
   {
     id: "DIAG-QR-003", qNum: 41, section: "qr", format: "mcq",
-    subtype: "Geometry — area percentage", difficulty: "Gold", dataSetId: "qr-ds1",
-    stem: "If 12 display modules are installed, what percentage of the room's total floor area is physically covered by the modules themselves?",
-    options: ["22.5%", "27.5%", "30.0%", "35.0%"],
-    correct: 2,
-    explanation: "Total floor area: 10×8 = 80 m². Each module footprint: 2×1 = 2 m². 12 modules cover 24 m². Percentage: (24/80)×100 = 30.0%.",
+    subtype: "Mass — correct denominator", difficulty: "Diamond", dataSetId: "qr-ds1",
+    preamble: "Each LSM has a mass of 86 kg. The spacecraft's own mass (before loading) is 7.84 tonnes. 172 LSMs are loaded.",
+    stem: "What percentage of the spacecraft's final total mass is contributed by the LSMs? (Nearest whole %)",
+    options: ["61%", "65%", "68%", "72%"],
+    correct: 1,
+    explanation: "LSM mass: 172 × 86 = 14,792 kg. Spacecraft: 7.84 t = 7,840 kg. Final mass: 22,632 kg. LSM share = 14,792 ÷ 22,632 × 100 ≈ 65.4% → 65%.",
   },
   {
     id: "DIAG-QR-004", qNum: 42, section: "qr", format: "mcq",
-    subtype: "Rates and measurements", difficulty: "Gold", dataSetId: "qr-ds1",
-    stem: "The room's ventilation system moves 200 m³ of air per hour. How long would it take the system to move a volume of air equal to the room's volume?",
-    options: ["54 minutes", "60 minutes", "72 minutes", "80 minutes"],
-    correct: 2,
-    explanation: "Room volume: 10×8×3 = 240 m³. Rate: 200 m³/hr. Time = 240/200 hours = 1.2 hours = 1.2×60 = 72 minutes.",
+    subtype: "Multi-constraint optimisation", difficulty: "Diamond", dataSetId: "qr-ds1",
+    preamble: "Engineers propose a redesigned LSM with the same external dimensions (so 210 positions still fit), 12% greater mass than the original 86 kg module, and the emergency-access requirement reduced from 18% empty to 10% empty. A launch restriction limits total cargo-module mass to 15.0 tonnes.",
+    stem: "What is the maximum number of redesigned LSMs that can be loaded without exceeding either the space or the 15.0-tonne mass limit?",
+    options: ["155", "156", "175", "189"],
+    correct: 0,
+    explanation: "New module mass: 86 × 1.12 = 96.32 kg. Space limit: 210 × 0.90 = 189 modules. Mass limit: 15,000 ÷ 96.32 ≈ 155.73 → floor to 155 (156 × 96.32 = 15,026 kg exceeds 15,000 kg). Binding constraint = mass → 155.",
   },
 
   // ══════════════════════════════════════════════════════════════════════════

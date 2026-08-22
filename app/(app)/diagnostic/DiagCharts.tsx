@@ -505,3 +505,63 @@ export function RoomDataCard({ data }: { data: RoomData }) {
     </div>
   );
 }
+
+// ─── Orbital Cargo Bay (Space Geometry dataset) ────────────────────────────────
+
+export interface CargoData {
+  bay: { widthM: number; lengthM: number; heightM: number };
+  shielding: { sidewall: number; endwall: number; floor: number; ceiling: number }; // cm
+  lsm: { footprintA: number; footprintB: number; height: number }; // cm
+  massKg: number;
+}
+
+export function CargoDataCard({ data }: { data: CargoData }) {
+  const { bay, shielding, lsm, massKg } = data;
+  const usableW  = bay.widthM  * 100 - shielding.sidewall * 2;
+  const usableL  = bay.lengthM * 100 - shielding.endwall  * 2;
+  const usableH  = bay.heightM * 100 - shielding.floor - shielding.ceiling;
+
+  const row = (label: string, val: string, hi?: boolean) => (
+    <div key={label} style={{ display: "grid", gridTemplateColumns: "1fr auto", padding: "7px 12px", borderTop: "1px solid var(--line)", background: hi ? "#edfbf3" : "white" }}>
+      <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{label}</span>
+      <strong style={{ fontSize: 12, color: hi ? "#259650" : "var(--ink)", fontFamily: "monospace" }}>{val}</strong>
+    </div>
+  );
+
+  return (
+    <div style={{ background: "#f8fafc", borderRadius: 10, border: "1px solid var(--line)", padding: "12px 10px", display: "flex", flexDirection: "column", gap: 10 }}>
+      <p style={{ textAlign: "center", fontSize: 13, fontWeight: 800, color: "var(--ink)", margin: 0 }}>Orbital Cargo Bay — Specifications</p>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        {/* Cargo bay */}
+        <div style={{ borderRadius: 8, border: "1px solid var(--line)", overflow: "hidden" }}>
+          <div style={{ padding: "6px 12px", background: "#1b6b43", color: "white", fontSize: 10, fontWeight: 800, letterSpacing: ".06em" }}>CARGO BAY</div>
+          {row("External width",  `${bay.widthM} m`)}
+          {row("External length", `${bay.lengthM} m`)}
+          {row("External height", `${bay.heightM} m`)}
+          {row("Side shielding (×2)", `${shielding.sidewall} cm each`)}
+          {row("End shielding (×2)",  `${shielding.endwall} cm each`)}
+          {row("Floor shielding",     `${shielding.floor} cm`)}
+          {row("Ceiling shielding",   `${shielding.ceiling} cm`)}
+          {row("Usable width",  `${usableW} cm`, true)}
+          {row("Usable length", `${usableL} cm`, true)}
+          {row("Usable height", `${usableH} cm`, true)}
+        </div>
+
+        {/* LSM */}
+        <div style={{ borderRadius: 8, border: "1px solid var(--line)", overflow: "hidden" }}>
+          <div style={{ padding: "6px 12px", background: "#2d7ff9", color: "white", fontSize: 10, fontWeight: 800, letterSpacing: ".06em" }}>LIFE-SUPPORT MODULE (LSM)</div>
+          {row("Footprint option A", `${lsm.footprintA} cm × ${lsm.footprintB} cm`)}
+          {row("Footprint option B", `${lsm.footprintB} cm × ${lsm.footprintA} cm`)}
+          {row("Height (fixed)", `${lsm.height} cm`)}
+          {row("Mass per module", `${massKg} kg`)}
+          <div style={{ padding: "7px 12px", borderTop: "1px solid var(--line)", background: "#fff8e1" }}>
+            <p style={{ margin: 0, fontSize: 11, color: "#7c5a00", lineHeight: 1.5 }}>
+              LSMs <strong>must remain upright</strong>. May be rotated 90° on the floor only — cannot be stacked on their sides.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
