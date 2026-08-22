@@ -29,7 +29,7 @@ export default async function TutorPage() {
   // Admin sees ALL students; tutor sees only their own
   const studentsQuery = serviceSupabase
     .from("students")
-    .select("id, name, username, exam_date, created_at")
+    .select("id, name, username, password_plain, exam_date, created_at")
     .order("created_at", { ascending: false });
 
   if (tutorId) studentsQuery.eq("tutor_id", tutorId);

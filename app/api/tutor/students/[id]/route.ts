@@ -131,6 +131,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 
   const password_hash = await bcrypt.hash(password, 10);
-  await serviceSupabase.from("students").update({ password_hash }).eq("id", id);
+  await serviceSupabase.from("students").update({ password_hash, password_plain: password }).eq("id", id);
   return NextResponse.json({ ok: true });
 }

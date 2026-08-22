@@ -7,6 +7,7 @@ type Student = {
   id: string;
   name: string;
   username: string;
+  password_plain: string | null;
   exam_date: string | null;
   created_at: string;
   sessions: number;
@@ -193,6 +194,18 @@ export default function TutorDashboard({ tutor, students: initial }: { tutor: { 
                     ))}
                   </div>
                 )}
+
+                {/* Login credentials */}
+                <div style={{ background: "#f8fafd", borderRadius: 9, padding: "8px 11px", marginBottom: 10, display: "flex", gap: 14 }}>
+                  <div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: "#a0aec0", marginBottom: 1 }}>USERNAME</div>
+                    <div style={{ fontSize: 12, fontWeight: 800, fontFamily: "monospace", color: "#1a2a3a" }}>{s.username}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: "#a0aec0", marginBottom: 1 }}>PASSWORD</div>
+                    <div style={{ fontSize: 12, fontWeight: 800, fontFamily: "monospace", color: "#1a2a3a" }}>{s.password_plain ?? "—"}</div>
+                  </div>
+                </div>
 
                 {/* Footer */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 10, borderTop: "1px solid #f0f3f8" }}>

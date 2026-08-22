@@ -29,7 +29,7 @@ export async function GET() {
 
   const q = serviceSupabase
     .from("students")
-    .select("id, name, username, exam_date, created_at")
+    .select("id, name, username, password_plain, exam_date, created_at")
     .order("created_at", { ascending: false });
 
   if (tutorId !== "admin") q.eq("tutor_id", tutorId);
@@ -118,8 +118,8 @@ export async function POST(req: NextRequest) {
   const password_hash = await bcrypt.hash(password, 10);
   const { data: student, error } = await serviceSupabase
     .from("students")
-    .insert({ name: name.trim(), username: cleanUsername, password_hash, tutor_id: tutorId === "admin" ? null : tutorId, exam_date: exam_date ?? null })
-    .select("id, name, username, exam_date, created_at")
+    .insert({ name: name.trim(), username: cleanUsername, password_hash, password_plain: password, tutor_id: tutorId === "admin" ? null : tutorId, exam_date: exam_date ?? null })
+    .select("id, name, username, password_plain, exam_date, created_at")
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
   } catch (_) {}
 
   return NextResponse.json({
-    student: { ...student, sessions: 0, avg_score: null, last_active: null, avg_time_s: null, section_bests: {} },
+    student: { ...student, sessions: 0, avg_score: null, last_active: null, avg_time_s: null, section_bests: {}, password_plain: password },
   });
 }
 

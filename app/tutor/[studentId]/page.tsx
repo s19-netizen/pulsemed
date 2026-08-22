@@ -24,7 +24,7 @@ export default async function StudentDetailPage({ params }: { params: { studentI
 
   const { data: student } = await serviceSupabase
     .from("students")
-    .select("id, name, username, exam_date, tutor_id, created_at")
+    .select("id, name, username, password_plain, exam_date, tutor_id, created_at")
     .eq("id", studentId)
     .single();
 

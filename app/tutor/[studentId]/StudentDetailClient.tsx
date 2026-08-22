@@ -5,7 +5,7 @@ import Link from "next/link";
 type Session    = { section: string; correct: number; total: number; predicted_score: number | null; sjt_band: number | null; created_at: string; ai_insights: string | null };
 type Response   = { is_correct: boolean; question_tag: string | null; time_taken_ms: number | null; created_at: string };
 type Diagnostic = { total_score: number | null; vr_score: number | null; dm_score: number | null; qr_score: number | null; sjt_band: number | null; created_at: string } | null;
-type Student    = { id: string; name: string; username: string; exam_date: string | null; created_at: string };
+type Student    = { id: string; name: string; username: string; password_plain: string | null; exam_date: string | null; created_at: string };
 
 const SECTION_COLORS: Record<string, string> = { vr: "#2d7ff9", dm: "#8b6bff", qr: "#3dbe6c", sjt: "#ff6b5c" };
 const SECTION_LABELS: Record<string, string> = { vr: "Verbal Reasoning", dm: "Decision Making", qr: "Quantitative Reasoning", sjt: "Situational Judgement" };
@@ -161,6 +161,21 @@ export default function StudentDetailClient({
                 </div>
               </Card>
             )}
+
+            {/* Login credentials */}
+            <Card title="Login Credentials">
+              <div style={{ display: "flex", gap: 12 }}>
+                {[
+                  { label: "USERNAME", value: student.username },
+                  { label: "PASSWORD", value: student.password_plain ?? "—" },
+                ].map(({ label, value }) => (
+                  <div key={label} style={{ flex: 1, background: "#f8fafd", borderRadius: 10, padding: "11px 14px" }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#a0aec0", marginBottom: 4 }}>{label}</div>
+                    <div style={{ fontSize: 18, fontWeight: 800, fontFamily: "monospace", color: "#1a2a3a", letterSpacing: "0.05em" }}>{value}</div>
+                  </div>
+                ))}
+              </div>
+            </Card>
 
             {/* Reset password */}
             <Card title="Reset Password">
