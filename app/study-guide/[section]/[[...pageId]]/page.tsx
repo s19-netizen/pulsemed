@@ -1355,6 +1355,162 @@ function TopicVisual({ topicId, color: c, tint: t, deep: d }: { topicId: string;
   return null;
 }
 
+// ─── DM visual worked example components ─────────────────────────────────────
+
+function VennWorkedExample({ c, t, d }: { c: string; t: string; d: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <svg viewBox="0 0 320 165" style={{ width: "100%", maxWidth: 380, margin: "0 auto", display: "block" }} aria-label="Two-circle Venn diagram">
+        <rect x="4" y="4" width="312" height="154" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5"/>
+        <text x="24" y="22" fontSize="8" fontWeight="700" fill="#64748b">NEITHER</text>
+        <text x="24" y="40" fontSize="16" fontWeight="900" fill="#64748b">23</text>
+        <defs><clipPath id="vwx"><circle cx="117" cy="82" r="63"/></clipPath></defs>
+        <circle cx="117" cy="82" r="63" fill={t} stroke={c} strokeWidth="2.5" fillOpacity="0.9"/>
+        <circle cx="203" cy="82" r="63" fill={t} stroke={c} strokeWidth="2.5" fillOpacity="0.9"/>
+        <circle cx="203" cy="82" r="63" fill={c} fillOpacity="0.3" clipPath="url(#vwx)" stroke="none"/>
+        <text x="82" y="75" textAnchor="middle" fontSize="9" fontWeight="700" fill={d}>X ONLY</text>
+        <text x="82" y="97" textAnchor="middle" fontSize="26" fontWeight="900" fill={d}>26</text>
+        <text x="160" y="75" textAnchor="middle" fontSize="9" fontWeight="700" fill={d}>BOTH</text>
+        <text x="160" y="97" textAnchor="middle" fontSize="26" fontWeight="900" fill={d}>36</text>
+        <text x="238" y="75" textAnchor="middle" fontSize="9" fontWeight="700" fill={d}>Y ONLY</text>
+        <text x="238" y="97" textAnchor="middle" fontSize="26" fontWeight="900" fill={d}>15</text>
+        <text x="88" y="157" textAnchor="middle" fontSize="9" fontWeight="700" fill={c}>Symptom X (total 62)</text>
+        <text x="232" y="157" textAnchor="middle" fontSize="9" fontWeight="700" fill={c}>Symptom Y (total 51)</text>
+      </svg>
+      <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--line)" }}>
+        {[
+          { label: "Find the union",    calc: "= Total − Neither",          result: "100 − 23 = 77" },
+          { label: "Union formula",     calc: "|X∪Y| = |X| + |Y| − both",  result: "77 = 62 + 51 − both" },
+          { label: "Solve for both",    calc: "both = 62 + 51 − 77",        result: "= 36  ← answer" },
+          { label: "X-only region",     calc: "|X| − both",                 result: "62 − 36 = 26" },
+          { label: "Y-only region",     calc: "|Y| − both",                 result: "51 − 36 = 15" },
+          { label: "Verify total",      calc: "26 + 36 + 15 + 23",          result: "= 100 ✓" },
+        ].map((row, i) => (
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "130px 1fr 130px", borderTop: i > 0 ? "1px solid var(--line)" : undefined, background: i === 2 ? t : i === 5 ? "#edfbf3" : "white" }}>
+            <div style={{ padding: "9px 12px", background: i === 2 ? c : i === 5 ? "#259650" : t, borderRight: "1px solid var(--line)" }}>
+              <strong style={{ fontSize: 11, fontWeight: 800, color: i <= 1 ? d : "white" }}>{row.label}</strong>
+            </div>
+            <div style={{ padding: "9px 12px", borderRight: "1px solid var(--line)" }}>
+              <code style={{ fontSize: 12, color: "var(--ink-soft)", fontFamily: "monospace" }}>{row.calc}</code>
+            </div>
+            <div style={{ padding: "9px 12px" }}>
+              <strong style={{ fontSize: 12, fontWeight: 800, fontFamily: "monospace", color: i === 2 ? d : i === 5 ? "#259650" : "var(--ink)" }}>{row.result}</strong>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LogicGridWorked({ c, t, d }: { c: string; t: string; d: string }) {
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+  const states: { label: string; note: string; grid: string[]; getStyle: (ci: number) => React.CSSProperties; answer?: boolean }[] = [
+    {
+      label: "Place fixed facts first",
+      note: "Thu = N and Fri = M are both stated directly in the rules. Fill these before touching anything else.",
+      grid: ["?", "?", "?", "N", "M"],
+      getStyle: ci => ci >= 3
+        ? { background: t, color: d, fontWeight: 900 }
+        : { background: "white", color: "#cbd5e1", fontWeight: 700 },
+    },
+    {
+      label: "Identify the L-K block",
+      note: "K is immediately after L → L-K must move together as one block. If L = Mon there is no room for J (J must come before L), so L-K must be Tue-Wed.",
+      grid: ["?", "L", "K", "N", "M"],
+      getStyle: ci => ci === 1 || ci === 2
+        ? { background: c, color: "white", fontWeight: 900 }
+        : ci >= 3 ? { background: t, color: d, fontWeight: 900 }
+        : { background: "white", color: "#cbd5e1", fontWeight: 700 },
+    },
+    {
+      label: "J is forced to Monday",
+      note: "Only Mon remains. J before L is satisfied because Mon < Tue. Final order: Mon=J, Tue=L, Wed=K, Thu=N, Fri=M. Answer: A.",
+      grid: ["J", "L", "K", "N", "M"],
+      getStyle: ci => ci === 0
+        ? { background: "#259650", color: "white", fontWeight: 900 }
+        : ci === 1 || ci === 2 ? { background: c, color: "white", fontWeight: 900 }
+        : { background: t, color: d, fontWeight: 900 },
+      answer: true,
+    },
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {states.map((state, si) => (
+        <div key={si}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <span style={{ width: 22, height: 22, borderRadius: 6, background: state.answer ? "#259650" : c, color: "white", fontSize: 11, fontWeight: 800, display: "grid", placeItems: "center", flexShrink: 0 }}>{si + 1}</span>
+            <strong style={{ fontSize: 13, color: state.answer ? "#259650" : d }}>{state.label}</strong>
+          </div>
+          <table style={{ borderCollapse: "collapse" as const, width: "100%", marginBottom: 7 }}>
+            <thead>
+              <tr>{days.map(day => <th key={day} style={{ padding: "7px 0", background: t, border: "1px solid var(--line)", fontSize: 11, fontWeight: 800, color: d, textAlign: "center" as const, width: "20%" }}>{day}</th>)}</tr>
+            </thead>
+            <tbody>
+              <tr>{state.grid.map((cell, ci) => <td key={ci} style={{ padding: "12px 0", border: "1px solid var(--line)", textAlign: "center" as const, fontSize: 18, ...state.getStyle(ci) }}>{cell}</td>)}</tr>
+            </tbody>
+          </table>
+          <p style={{ margin: 0, fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.6 }}>{state.note}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function InterpInfoWorked({ c, t, d }: { c: string; t: string; d: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      <div>
+        <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 800, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".06em" }}>Trace each rule — Maya admitted 07:45</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {[
+            { trigger: "Admitted before 08:00",      consequence: "Assessed by Team A",            fires: true,  note: "07:45 < 08:00 ✓  Rule fires" },
+            { trigger: "Team A + requires imaging",   consequence: "Transferred to Unit 3",         fires: false, note: "Imaging never stated — blocked" },
+            { trigger: "In Unit 3",                   consequence: "No discharge before imaging",   fires: false, note: "Rule 2 blocked → Unit 3 not reached" },
+          ].map((r, i) => (
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 18px 1fr 18px 1fr", alignItems: "center", gap: 6, opacity: r.fires ? 1 : 0.5 }}>
+              <div style={{ padding: "8px 10px", borderRadius: 8, background: r.fires ? t : "#f8fafc", border: `1.5px solid ${r.fires ? c : "#cbd5e1"}` }}>
+                <p style={{ margin: "0 0 1px", fontSize: 8, fontWeight: 800, color: r.fires ? c : "#94a3b8", letterSpacing: ".06em", textTransform: "uppercase" as const }}>Trigger</p>
+                <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "var(--ink)" }}>{r.trigger}</p>
+              </div>
+              <span style={{ textAlign: "center" as const, fontSize: 16, fontWeight: 900, color: r.fires ? c : "#cbd5e1" }}>→</span>
+              <div style={{ padding: "8px 10px", borderRadius: 8, background: r.fires ? "#edfbf3" : "#f8fafc", border: `1.5px solid ${r.fires ? "#3DBE6C" : "#cbd5e1"}` }}>
+                <p style={{ margin: "0 0 1px", fontSize: 8, fontWeight: 800, color: r.fires ? "#259650" : "#94a3b8", letterSpacing: ".06em", textTransform: "uppercase" as const }}>Consequence</p>
+                <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "var(--ink)" }}>{r.consequence}</p>
+              </div>
+              <span style={{ textAlign: "center" as const, fontSize: 14 }}>{r.fires ? "✓" : "✗"}</span>
+              <div style={{ padding: "7px 10px", borderRadius: 7, background: r.fires ? "#edfbf3" : "#fff5f5" }}>
+                <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: r.fires ? "#259650" : "#d94b3e", lineHeight: 1.4 }}>{r.note}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 800, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".06em" }}>Test each option</p>
+        <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--line)" }}>
+          {[
+            { label: "A", text: "Maya required imaging",              forced: false, reason: "Never stated — Rule 1 doesn't mention imaging" },
+            { label: "B", text: "Maya was assessed by Team A",        forced: true,  reason: "Rule 1 fired: 07:45 < 08:00 → Team A. Forced." },
+            { label: "C", text: "Maya was transferred to Unit 3",     forced: false, reason: "Rule 2 needs imaging confirmed — not the case" },
+            { label: "D", text: "Imaging completed before 11:30",     forced: false, reason: "Unit 3 never reached, so Rule 3 never fires" },
+          ].map((o, oi) => (
+            <div key={o.label} style={{ display: "grid", gridTemplateColumns: "28px 1fr auto", alignItems: "center", gap: 10, padding: "9px 12px", borderTop: oi > 0 ? "1px solid var(--line)" : undefined, background: o.forced ? "#edfbf3" : "white" }}>
+              <span style={{ fontWeight: 900, fontSize: 14, color: o.forced ? "#259650" : "var(--ink-soft)" }}>{o.label}</span>
+              <div>
+                <p style={{ margin: "0 0 1px", fontSize: 12, fontWeight: 700, color: "var(--ink)" }}>{o.text}</p>
+                <p style={{ margin: 0, fontSize: 11, color: o.forced ? "#259650" : "#d94b3e" }}>{o.reason}</p>
+              </div>
+              <span style={{ fontSize: 10, fontWeight: 800, padding: "3px 9px", borderRadius: 20, background: o.forced ? "#259650" : "#d94b3e", color: "white", flexShrink: 0, whiteSpace: "nowrap" as const }}>{o.forced ? "MUST be true" : "Not forced"}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── DM lesson page (all 5 non-syllogism DM topics) ─────────────────────────
 
 function DMLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
@@ -1422,13 +1578,20 @@ function DMLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
           <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{lesson.example.q}</p>
         </div>
         <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
-          <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Working</p>
-          {lesson.example.steps.map((s, i) => (
-            <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 7 }}>
-              <span style={{ width: 20, height: 20, borderRadius: 6, background: t, color: c, fontSize: 10, fontWeight: 800, display: "grid", placeItems: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
-              <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>{s}</p>
-            </div>
-          ))}
+          <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Working</p>
+          {topic.id === "venn-diagrams"
+            ? <VennWorkedExample c={c} t={t} d={d} />
+            : topic.id === "logic-puzzles"
+            ? <LogicGridWorked c={c} t={t} d={d} />
+            : topic.id === "interpreting-information"
+            ? <InterpInfoWorked c={c} t={t} d={d} />
+            : lesson.example.steps.map((s, i) => (
+              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 7 }}>
+                <span style={{ width: 20, height: 20, borderRadius: 6, background: t, color: c, fontSize: 10, fontWeight: 800, display: "grid", placeItems: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
+                <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>{s}</p>
+              </div>
+            ))
+          }
         </div>
         <div style={{ padding: "10px 16px", background: "#edfbf3", display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: "#259650", color: "white" }}>Answer</span>
@@ -2759,18 +2922,46 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
             <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>Some lizards are not warm-blooded.</p>
           </div>
           <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
-            <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Working</p>
+            <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Working — build the chain then draw the diagram</p>
+            {/* Chain notation */}
+            <div style={{ padding: "10px 14px", borderRadius: 8, background: t, border: `1.5px solid ${c}`, marginBottom: 14, fontFamily: "monospace", fontSize: 13, fontWeight: 700, color: d }}>
+              Lizards →(some) Reptiles ⇒ Cold-blooded ✕ Warm-blooded
+            </div>
+            {/* Circle diagram */}
+            <svg viewBox="0 0 320 165" style={{ width: "100%", marginBottom: 14 }} aria-label="Syllogism circle diagram — reptiles inside cold-blooded, separate from warm-blooded">
+              {/* Warm-blooded (separate, right) */}
+              <circle cx="282" cy="82" r="34" fill="#ffedea" stroke="#FF6B5C" strokeWidth="2"/>
+              <text x="282" y="78" textAnchor="middle" fontSize="9" fontWeight="700" fill="#d94b3e">Warm-</text>
+              <text x="282" y="91" textAnchor="middle" fontSize="9" fontWeight="700" fill="#d94b3e">blooded</text>
+              {/* ✕ separator */}
+              <line x1="237" y1="73" x2="247" y2="91" stroke="#d94b3e" strokeWidth="2.5" strokeLinecap="round"/>
+              <line x1="247" y1="73" x2="237" y2="91" stroke="#d94b3e" strokeWidth="2.5" strokeLinecap="round"/>
+              {/* Cold-blooded (large) */}
+              <circle cx="112" cy="85" r="92" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.55"/>
+              <text x="112" y="18" textAnchor="middle" fontSize="10" fontWeight="800" fill={d}>Cold-blooded</text>
+              {/* Reptiles (inside Cold-blooded) */}
+              <circle cx="120" cy="92" r="52" fill={c} fillOpacity="0.2" stroke={c} strokeWidth="1.5"/>
+              <text x="120" y="114" textAnchor="middle" fontSize="9" fontWeight="700" fill={d}>Reptiles</text>
+              {/* Lizards (partly overlapping Reptiles) */}
+              <circle cx="100" cy="80" r="36" fill="#8B6BFF" fillOpacity="0.12" stroke="#8B6BFF" strokeWidth="1.5" strokeDasharray="4,2.5"/>
+              <text x="62" y="58" textAnchor="middle" fontSize="9" fontWeight="700" fill="#8B6BFF">Lizards</text>
+              {/* Some lizard dots inside Reptiles ∩ Cold-blooded */}
+              <circle cx="110" cy="84" r="4.5" fill="#8B6BFF"/>
+              <circle cx="125" cy="76" r="4.5" fill="#8B6BFF"/>
+              <text x="118" y="67" textAnchor="middle" fontSize="8" fill="#8B6BFF">(some lizards)</text>
+            </svg>
+            {/* Step-by-step reading of the diagram */}
             {[
-              "Translate: Reptiles ⇒ Cold-blooded. Cold-blooded ✕ Warm-blooded. Lizards →(some) Reptiles.",
-              "From P1: everything in the Reptiles circle is also in Cold-blooded.",
-              "From P2: Cold-blooded and Warm-blooded are completely separate circles — so Reptiles are also outside Warm-blooded.",
-              "From P3: some lizards sit inside the Reptiles circle.",
-              "Those lizards are therefore inside Cold-blooded, and therefore outside Warm-blooded.",
-              "Chain: Lizards →(some) Reptiles ⇒ Cold-blooded ✕ Warm-blooded → some lizards are not warm-blooded.",
-            ].map((s, i) => (
-              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 7 }}>
-                <span style={{ width: 20, height: 20, borderRadius: 6, background: t, color: c, fontSize: 10, fontWeight: 800, display: "grid", placeItems: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
-                <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>{s}</p>
+              ["P1", "Reptiles ⇒ Cold-blooded — draw Reptiles circle entirely inside the Cold-blooded circle."],
+              ["P2", "Cold-blooded ✕ Warm-blooded — completely separate circles. The ✕ marks no overlap whatsoever."],
+              ["P3", "Some lizards are Reptiles — draw a dashed Lizards circle partly overlapping Reptiles. The two dots sit inside both Lizards and Reptiles."],
+              ["∴",  "Those dots are also inside Cold-blooded and outside Warm-blooded → some lizards are not warm-blooded. ✓"],
+            ].map(([label, note], i) => (
+              <div key={i} style={{ display: "grid", gridTemplateColumns: "36px 1fr", borderTop: "1px solid var(--line)", background: i === 3 ? "#edfbf3" : "white" }}>
+                <div style={{ padding: "9px 10px", display: "grid", placeItems: "center", background: i === 3 ? "#259650" : t, borderRight: "1px solid var(--line)" }}>
+                  <strong style={{ fontSize: 11, fontWeight: 900, color: i === 3 ? "white" : c, fontFamily: "monospace" }}>{label}</strong>
+                </div>
+                <p style={{ margin: 0, padding: "9px 12px", fontSize: 12, lineHeight: 1.6, color: i === 3 ? "#259650" : "var(--ink)" }}>{note}</p>
               </div>
             ))}
           </div>
@@ -2797,17 +2988,44 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
             <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>James is a pilot.</p>
           </div>
           <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
-            <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Working</p>
+            <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Working — draw the diagram first</p>
+            {/* Translation line */}
+            <div style={{ padding: "10px 14px", borderRadius: 8, background: "#fff5f5", border: "1.5px solid #FF6B5C", marginBottom: 14 }}>
+              <p style={{ margin: "0 0 3px", fontSize: 9, fontWeight: 800, color: "#d94b3e", letterSpacing: ".06em", textTransform: "uppercase" as const }}>Translation</p>
+              <code style={{ fontSize: 13, fontWeight: 700, color: "#d94b3e", fontFamily: "monospace" }}>Pilots ⇒ Licensed   |   James ∈ Licensed</code>
+            </div>
+            {/* Converse trap SVG */}
+            <svg viewBox="0 0 300 165" style={{ width: "100%", maxWidth: 340, margin: "0 auto 14px", display: "block" }} aria-label="Converse trap — Licensed to fly circle contains Pilots circle, James could be anywhere in Licensed">
+              {/* Licensed to fly (large) */}
+              <circle cx="138" cy="82" r="72" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.7"/>
+              <text x="138" y="22" textAnchor="middle" fontSize="10" fontWeight="800" fill={d}>Licensed to fly</text>
+              {/* Pilots (smaller, inside) */}
+              <circle cx="126" cy="90" r="37" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
+              <text x="126" y="94" textAnchor="middle" fontSize="10" fontWeight="700" fill={d}>Pilots</text>
+              {/* James dot — inside Licensed but OUTSIDE Pilots */}
+              <circle cx="182" cy="60" r="5.5" fill="#8B6BFF"/>
+              <text x="196" y="58" fontSize="11" fontWeight="700" fill="#8B6BFF">James ?</text>
+              <text x="196" y="72" fontSize="9" fill="#64748b">Could be anywhere here</text>
+              {/* Dashed line showing James might or might not be in Pilots */}
+              <line x1="181" y1="66" x2="166" y2="82" stroke="#8B6BFF" strokeWidth="1.5" strokeDasharray="3,2"/>
+              {/* Ghost James inside Pilots */}
+              <circle cx="126" cy="80" r="4" fill="#8B6BFF" fillOpacity="0.35"/>
+              <text x="142" y="78" fontSize="8" fill="#94a3b8">…or here</text>
+              {/* Valid direction label */}
+              <text x="138" y="157" textAnchor="middle" fontSize="9" fontWeight="800" fill={c}>Pilots ⇒ Licensed ✓  (all pilots are licensed)</text>
+            </svg>
+            {/* Step annotations */}
             {[
-              "Translate: Pilots ⇒ Licensed-to-fly. James ∈ Licensed-to-fly.",
-              "Draw: Licensed-to-fly is a large set. Pilots is a smaller circle inside it. James is somewhere in Licensed-to-fly.",
-              "Ask: must James be inside the Pilots circle? No — James could be a flight instructor, a drone operator, a student with a training licence. Many arrangements are valid.",
-              "This is the converse error. A ⇒ B (All pilots are licensed) does not mean B ⇒ A (all licensed people are pilots).",
-              "One valid counterexample — James is a flight instructor, not a pilot — is enough to prove the conclusion does not must follow.",
-            ].map((s, i) => (
-              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 7 }}>
-                <span style={{ width: 20, height: 20, borderRadius: 6, background: "#fff0f0", color: "#d94b3e", fontSize: 10, fontWeight: 800, display: "grid", placeItems: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
-                <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>{s}</p>
+              ["Draw",    `"Licensed to fly" is the large circle. "Pilots" is a smaller circle that sits entirely inside it. James is placed somewhere in Licensed-to-fly.`],
+              ["Ask",     "Must James be inside the Pilots circle? He is in Licensed-to-fly, but that circle is bigger than Pilots — he could be anywhere in it."],
+              ["Counter", "James could be a flight instructor, drone operator, or student licence holder — all licensed, but none a pilot. One counterexample is enough."],
+              ["Error",   "Converse error: A ⇒ B ≠ B ⇒ A. All pilots are licensed does not mean all licensed people are pilots. ✗"],
+            ].map(([label, note], i) => (
+              <div key={i} style={{ display: "grid", gridTemplateColumns: "56px 1fr", borderTop: "1px solid var(--line)", background: i === 3 ? "#fff5f5" : "white" }}>
+                <div style={{ padding: "9px 10px", display: "grid", placeItems: "center", background: i === 3 ? "#d94b3e" : "#fff5f5", borderRight: "1px solid var(--line)" }}>
+                  <strong style={{ fontSize: 10, fontWeight: 900, color: i === 3 ? "white" : "#d94b3e" }}>{label}</strong>
+                </div>
+                <p style={{ margin: 0, padding: "9px 12px", fontSize: 12, lineHeight: 1.6, color: i === 3 ? "#d94b3e" : "var(--ink)" }}>{note}</p>
               </div>
             ))}
           </div>
