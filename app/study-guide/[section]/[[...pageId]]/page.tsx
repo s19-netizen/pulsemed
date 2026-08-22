@@ -1360,7 +1360,7 @@ function TopicVisual({ topicId, color: c, tint: t, deep: d }: { topicId: string;
 function VennWorkedExample({ c, t, d }: { c: string; t: string; d: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <svg viewBox="0 0 320 165" style={{ width: "100%", maxWidth: 380, margin: "0 auto", display: "block" }} aria-label="Two-circle Venn diagram">
+      <svg viewBox="0 0 320 165" style={{ width: "100%" }} aria-label="Two-circle Venn diagram with regions filled">
         <rect x="4" y="4" width="312" height="154" rx="10" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="1.5"/>
         <text x="24" y="22" fontSize="8" fontWeight="700" fill="#64748b">NEITHER</text>
         <text x="24" y="40" fontSize="16" fontWeight="900" fill="#64748b">23</text>
@@ -1379,25 +1379,78 @@ function VennWorkedExample({ c, t, d }: { c: string; t: string; d: string }) {
       </svg>
       <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--line)" }}>
         {[
-          { label: "Find the union",    calc: "= Total − Neither",          result: "100 − 23 = 77" },
-          { label: "Union formula",     calc: "|X∪Y| = |X| + |Y| − both",  result: "77 = 62 + 51 − both" },
-          { label: "Solve for both",    calc: "both = 62 + 51 − 77",        result: "= 36  ← answer" },
-          { label: "X-only region",     calc: "|X| − both",                 result: "62 − 36 = 26" },
-          { label: "Y-only region",     calc: "|Y| − both",                 result: "51 − 36 = 15" },
-          { label: "Verify total",      calc: "26 + 36 + 15 + 23",          result: "= 100 ✓" },
+          { step: "How many patients are in at least one circle?  →  100 total minus 23 with neither",                                                                                result: "= 77" },
+          { step: "Count up all of X and all of Y separately  →  62 + 51",                                                                                                           result: "= 113" },
+          { step: "But only 77 people are actually in the circles — 113 is more than 77 because people with BOTH were counted twice. The extra 36 are those double-counted people.",  result: "= 36 ← answer", highlight: true },
+          { step: "X only: take the X total and remove the 36 who also have Y  →  62 − 36",                                                                                          result: "= 26" },
+          { step: "Y only: take the Y total and remove the 36 who also have X  →  51 − 36",                                                                                          result: "= 15" },
+          { step: "Check — all four groups must add back to 100  →  26 + 36 + 15 + 23",                                                                                              result: "= 100 ✓", green: true },
         ].map((row, i) => (
-          <div key={i} style={{ display: "grid", gridTemplateColumns: "130px 1fr 130px", borderTop: i > 0 ? "1px solid var(--line)" : undefined, background: i === 2 ? t : i === 5 ? "#edfbf3" : "white" }}>
-            <div style={{ padding: "9px 12px", background: i === 2 ? c : i === 5 ? "#259650" : t, borderRight: "1px solid var(--line)" }}>
-              <strong style={{ fontSize: 11, fontWeight: 800, color: i <= 1 ? d : "white" }}>{row.label}</strong>
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 90px", borderTop: i > 0 ? "1px solid var(--line)" : undefined, background: row.green ? "#edfbf3" : row.highlight ? t : "white" }}>
+            <div style={{ padding: "10px 14px" }}>
+              <p style={{ margin: 0, fontSize: 12, lineHeight: 1.55, color: "var(--ink)", fontWeight: row.highlight ? 700 : 400 }}>{row.step}</p>
             </div>
-            <div style={{ padding: "9px 12px", borderRight: "1px solid var(--line)" }}>
-              <code style={{ fontSize: 12, color: "var(--ink-soft)", fontFamily: "monospace" }}>{row.calc}</code>
-            </div>
-            <div style={{ padding: "9px 12px" }}>
-              <strong style={{ fontSize: 12, fontWeight: 800, fontFamily: "monospace", color: i === 2 ? d : i === 5 ? "#259650" : "var(--ink)" }}>{row.result}</strong>
+            <div style={{ padding: "10px 12px", background: row.green ? "#259650" : row.highlight ? c : t, display: "flex", alignItems: "center", justifyContent: "center", borderLeft: "1px solid var(--line)" }}>
+              <strong style={{ fontSize: 13, fontWeight: 900, fontFamily: "monospace", color: (row.highlight || row.green) ? "white" : d }}>{row.result}</strong>
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function ProbabilityWorked({ c, t, d }: { c: string; t: string; d: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {/* Frequency table */}
+      <div>
+        <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 800, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".06em" }}>Step 1 — turn percentages into real counts (use 10,000 as the base)</p>
+        <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--line)" }}>
+          <table style={{ borderCollapse: "collapse" as const, width: "100%", fontSize: 12 }}>
+            <thead>
+              <tr>
+                {["Machine", "Parts made", "% defective", "Defective count"].map((h, i) => (
+                  <th key={i} style={{ padding: "8px 12px", background: c, color: "white", fontWeight: 800, textAlign: "left" as const, fontSize: 11 }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { machine: "Machine A", parts: "6,000", pct: "2%",  def: "120" },
+                { machine: "Machine B", parts: "4,000", pct: "5%",  def: "200" },
+                { machine: "Total",     parts: "10,000", pct: "—", def: "320", bold: true },
+              ].map(r => (
+                <tr key={r.machine} style={{ background: r.bold ? t : "white" }}>
+                  <td style={{ padding: "9px 12px", border: "1px solid var(--line)", fontWeight: 700, color: r.bold ? d : "var(--ink)" }}>{r.machine}</td>
+                  <td style={{ padding: "9px 12px", border: "1px solid var(--line)" }}>{r.parts}</td>
+                  <td style={{ padding: "9px 12px", border: "1px solid var(--line)" }}>{r.pct}</td>
+                  <td style={{ padding: "9px 12px", border: "1px solid var(--line)", fontWeight: r.bold ? 900 : 600, color: r.bold ? "#d94b3e" : "var(--ink)" }}>{r.def}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {/* Reasoning steps */}
+      <div>
+        <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 800, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".06em" }}>Step 2 — we already know it's defective, so only look at those 320</p>
+        <div style={{ borderRadius: 10, overflow: "hidden", border: "1px solid var(--line)" }}>
+          {[
+            { step: "Ignore all 9,680 non-defective parts — they're ruled out. Focus only on the 320 defective ones.", result: "320 defective" },
+            { step: "Of those 320 defective parts: 120 came from Machine A, 200 came from Machine B.",               result: "120 + 200" },
+            { step: "Chance it came from Machine B → 200 out of 320 defective parts  →  200 ÷ 320",                 result: "= 62.5%", green: true },
+          ].map((row, i) => (
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 100px", borderTop: i > 0 ? "1px solid var(--line)" : undefined, background: row.green ? "#edfbf3" : "white" }}>
+              <div style={{ padding: "10px 14px" }}>
+                <p style={{ margin: 0, fontSize: 12, lineHeight: 1.55, color: "var(--ink)", fontWeight: row.green ? 700 : 400 }}>{row.step}</p>
+              </div>
+              <div style={{ padding: "10px 12px", background: row.green ? "#259650" : t, display: "flex", alignItems: "center", justifyContent: "center", borderLeft: "1px solid var(--line)" }}>
+                <strong style={{ fontSize: 12, fontWeight: 900, fontFamily: "monospace", color: row.green ? "white" : d }}>{row.result}</strong>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -1585,6 +1638,8 @@ function DMLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
             ? <LogicGridWorked c={c} t={t} d={d} />
             : topic.id === "interpreting-information"
             ? <InterpInfoWorked c={c} t={t} d={d} />
+            : topic.id === "probability"
+            ? <ProbabilityWorked c={c} t={t} d={d} />
             : lesson.example.steps.map((s, i) => (
               <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 7 }}>
                 <span style={{ width: 20, height: 20, borderRadius: 6, background: t, color: c, fontSize: 10, fontWeight: 800, display: "grid", placeItems: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
@@ -2924,39 +2979,39 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
           <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
             <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".05em" }}>Working — build the diagram one premise at a time</p>
 
-            {/* P1 */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <span style={{ padding: "3px 10px", borderRadius: 20, background: c, color: "white", fontSize: 10, fontWeight: 800 }}>P1</span>
-                <strong style={{ fontSize: 12, color: d }}>All reptiles are cold-blooded → Reptiles ⇒ Cold-blooded</strong>
+            {/* P1 + P2 side by side */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                  <span style={{ padding: "2px 8px", borderRadius: 20, background: c, color: "white", fontSize: 10, fontWeight: 800 }}>P1</span>
+                  <span style={{ fontSize: 11, color: d, fontWeight: 700 }}>Reptiles ⇒ Cold-blooded</span>
+                </div>
+                <svg viewBox="0 0 200 130" style={{ width: "100%", borderRadius: 10, border: `1.5px solid ${c}`, background: "white" }} aria-label="Reptiles circle nested inside Cold-blooded circle">
+                  <circle cx="100" cy="62" r="52" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.7"/>
+                  <text x="100" y="18" textAnchor="middle" fontSize="12" fontWeight="800" fill={d}>Cold-blooded</text>
+                  <circle cx="100" cy="68" r="27" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
+                  <text x="100" y="72" textAnchor="middle" fontSize="11" fontWeight="700" fill={d}>Reptiles</text>
+                  <text x="100" y="120" textAnchor="middle" fontSize="9" fill="#64748b">Reptiles inside Cold-blooded</text>
+                </svg>
               </div>
-              <svg viewBox="0 0 280 130" style={{ width: "100%", borderRadius: 10, border: `1.5px solid ${c}`, background: "white" }} aria-label="Reptiles circle nested inside Cold-blooded circle">
-                <circle cx="140" cy="62" r="56" fill={t} stroke={c} strokeWidth="2.5" fillOpacity="0.7"/>
-                <text x="140" y="18" textAnchor="middle" fontSize="13" fontWeight="800" fill={d}>Cold-blooded</text>
-                <circle cx="140" cy="68" r="30" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="2"/>
-                <text x="140" y="72" textAnchor="middle" fontSize="12" fontWeight="700" fill={d}>Reptiles</text>
-                <text x="140" y="118" textAnchor="middle" fontSize="10" fill="#64748b">Reptiles sits entirely inside Cold-blooded — every reptile is cold-blooded</text>
-              </svg>
-            </div>
-
-            {/* P2 */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <span style={{ padding: "3px 10px", borderRadius: 20, background: c, color: "white", fontSize: 10, fontWeight: 800 }}>P2</span>
-                <strong style={{ fontSize: 12, color: d }}>No cold-blooded animals are warm-blooded → Cold-blooded ✕ Warm-blooded</strong>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                  <span style={{ padding: "2px 8px", borderRadius: 20, background: c, color: "white", fontSize: 10, fontWeight: 800 }}>P2</span>
+                  <span style={{ fontSize: 11, color: d, fontWeight: 700 }}>Cold-blooded ✕ Warm-blooded</span>
+                </div>
+                <svg viewBox="0 0 220 130" style={{ width: "100%", borderRadius: 10, border: `1.5px solid ${c}`, background: "white" }} aria-label="Cold-blooded and Warm-blooded as completely separate circles">
+                  <circle cx="72" cy="62" r="48" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.7"/>
+                  <text x="72" y="18" textAnchor="middle" fontSize="10" fontWeight="800" fill={d}>Cold-blooded</text>
+                  <circle cx="72" cy="67" r="24" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
+                  <text x="72" y="71" textAnchor="middle" fontSize="9" fontWeight="700" fill={d}>Reptiles</text>
+                  <line x1="131" y1="50" x2="143" y2="68" stroke="#d94b3e" strokeWidth="3" strokeLinecap="round"/>
+                  <line x1="143" y1="50" x2="131" y2="68" stroke="#d94b3e" strokeWidth="3" strokeLinecap="round"/>
+                  <circle cx="183" cy="62" r="38" fill="#ffedea" stroke="#FF6B5C" strokeWidth="2"/>
+                  <text x="183" y="58" textAnchor="middle" fontSize="10" fontWeight="700" fill="#d94b3e">Warm-</text>
+                  <text x="183" y="72" textAnchor="middle" fontSize="10" fontWeight="700" fill="#d94b3e">blooded</text>
+                  <text x="110" y="120" textAnchor="middle" fontSize="9" fill="#d94b3e" fontWeight="600">✕ no overlap — completely separate</text>
+                </svg>
               </div>
-              <svg viewBox="0 0 320 130" style={{ width: "100%", borderRadius: 10, border: `1.5px solid ${c}`, background: "white" }} aria-label="Cold-blooded and Warm-blooded as completely separate circles">
-                <circle cx="108" cy="62" r="56" fill={t} stroke={c} strokeWidth="2.5" fillOpacity="0.7"/>
-                <text x="108" y="18" textAnchor="middle" fontSize="12" fontWeight="800" fill={d}>Cold-blooded</text>
-                <circle cx="108" cy="68" r="30" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
-                <text x="108" y="72" textAnchor="middle" fontSize="11" fontWeight="700" fill={d}>Reptiles</text>
-                <line x1="178" y1="52" x2="192" y2="72" stroke="#d94b3e" strokeWidth="3.5" strokeLinecap="round"/>
-                <line x1="192" y1="52" x2="178" y2="72" stroke="#d94b3e" strokeWidth="3.5" strokeLinecap="round"/>
-                <circle cx="254" cy="62" r="48" fill="#ffedea" stroke="#FF6B5C" strokeWidth="2.5"/>
-                <text x="254" y="58" textAnchor="middle" fontSize="12" fontWeight="700" fill="#d94b3e">Warm-</text>
-                <text x="254" y="74" textAnchor="middle" fontSize="12" fontWeight="700" fill="#d94b3e">blooded</text>
-                <text x="160" y="118" textAnchor="middle" fontSize="10" fill="#d94b3e" fontWeight="600">✕ = no overlap — Cold-blooded and Warm-blooded are completely separate</text>
-              </svg>
             </div>
 
             {/* P3 + conclusion */}
