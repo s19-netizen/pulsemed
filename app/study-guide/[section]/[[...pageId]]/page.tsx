@@ -1098,9 +1098,9 @@ const DM_LESSONS: Record<string, {
     method: [
       ["Draw the circles", "Two sets = two overlapping circles. Three sets = three circles, each pair overlapping."],
       ["Place universal facts", "'All A are B' → A sits inside B. 'No A are B' → circles are completely separate."],
-      ["Place existential facts", "'Some A are B' → at least one person sits in the A∩B region. Mark it, but don't invent a number."],
-      ["Fill the centre region first", "In three-set counting problems, always place A∩B∩C before working on pairwise overlaps."],
-      ["Subtract outward", "Each pairwise overlap given includes the centre. Subtract A∩B∩C to find the A∩B-only region."],
+      ["Place existential facts", "'Some A are B' → at least one person sits in the overlap region. Mark it, but don't invent a number."],
+      ["Fill the centre region first", "In three-set counting problems, always place the triple overlap (centre) before working on pairwise overlaps."],
+      ["Subtract outward", "Each pairwise overlap given includes the centre. Subtract the triple overlap to find the A-and-B-only region."],
     ],
     concepts: [
       { label: "Two-set union", symbol: "|A∪B| = |A|+|B|−|A∩B|", detail: "The union counts everyone in at least one set. Subtract the overlap to avoid double-counting." },
@@ -1125,10 +1125,10 @@ const DM_LESSONS: Record<string, {
     },
     rules: [
       ["Circle size is irrelevant", "Unless numbers are given, a larger drawn circle does not represent a larger group."],
-      ["'Some' guarantees a shared region", "'Some A are B' means at least one person sits in A∩B — but gives no count."],
-      ["Work centre-outward for counts", "In three-set problems: find A∩B∩C first, then pairwise-only, then exclusive regions."],
-      ["Double-subtraction trap", "The A∩B figure given usually includes A∩B∩C. Subtract the triple overlap to get A∩B-only."],
-      ["Rearrange the union formula", "|A∩B| = |A| + |B| − |A∪B|. You can find any term if you know the other three."],
+      ["'Some' guarantees a shared region", "'Some A are B' means at least one person is in the overlap — but gives no count."],
+      ["Work centre-outward for counts", "In three-set problems: find the triple overlap first, then pairwise-only regions, then exclusive regions."],
+      ["Double-subtraction trap", "The overlap figure given usually includes the centre. Subtract the triple overlap to get the A-and-B-only count."],
+      ["Rearrange the idea", "Overlap = A total + B total − union. You can find any one of these if you know the other three."],
     ],
   },
 
@@ -1289,21 +1289,20 @@ function TopicVisual({ topicId, color: c, tint: t, deep: d }: { topicId: string;
   if (topicId === "venn-diagrams") {
     return (
       <>
-        <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>The formula in action</h2>
+        <h2 style={{ fontSize: 15, fontWeight: 800, margin: "0 0 10px", color: "var(--ink)" }}>The key idea in action</h2>
         <div style={{ borderRadius: 12, border: "1px solid var(--line)", overflow: "hidden", marginBottom: 28 }}>
-          <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column" as const, gap: 10 }}>
-            <code style={{ padding: "11px 14px", borderRadius: 8, background: t, fontSize: 14, fontWeight: 800, color: "var(--ink)", fontFamily: "monospace", display: "block" }}>
-              |A ∪ B| = |A| + |B| − |A ∩ B|
-            </code>
-            <code style={{ padding: "11px 14px", borderRadius: 8, background: "#fafafa", fontSize: 14, fontWeight: 800, color: "var(--ink)", fontFamily: "monospace", display: "block", border: "1px solid var(--line)" }}>
-              77 = 62 + 51 − both → both = 36
-            </code>
-          </div>
-          <div style={{ borderTop: "1px solid var(--line)", padding: "10px 16px" }}>
-            <p style={{ margin: 0, fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.6 }}>
-              Find the union first (100 − 23 = 77), then rearrange to find the overlap. Always check by summing all four regions back to the total.
-            </p>
-          </div>
+          {[
+            { label: "Step 1", text: "Patients in at least one circle  =  total − neither  =  100 − 23  =  77", bg: t, color: d },
+            { label: "Step 2", text: "Add the two circles separately  →  62 + 51  =  113. That's more than 77, because people with BOTH were counted twice.", bg: "white", color: "var(--ink)" },
+            { label: "Step 3", text: "The extra  =  those double-counted people  →  113 − 77  =  36 have BOTH symptoms", bg: "#edfbf3", color: "#259650" },
+          ].map((r, i) => (
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "70px 1fr", borderTop: i > 0 ? "1px solid var(--line)" : undefined }}>
+              <div style={{ padding: "12px 14px", background: i === 2 ? "#259650" : c, display: "grid", placeItems: "center" }}>
+                <strong style={{ fontSize: 11, fontWeight: 800, color: "white" }}>{r.label}</strong>
+              </div>
+              <p style={{ margin: 0, padding: "12px 14px", fontSize: 12, lineHeight: 1.6, color: r.color, background: r.bg, fontWeight: i === 2 ? 700 : 400 }}>{r.text}</p>
+            </div>
+          ))}
         </div>
       </>
     );
