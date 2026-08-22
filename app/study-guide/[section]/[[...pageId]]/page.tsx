@@ -653,66 +653,70 @@ const QR_LESSONS: Record<string, QRLesson> = {
     ],
     worked: [
       {
-        title: "2-part ratio split",
-        passage: "A sports drink is made by mixing concentrate and water in the ratio 3 : 8. A finished batch contains 770 litres.",
-        question: "How many litres of water are in the batch?",
+        title: "2-part ratio — splitting a production tank",
+        passage: "A sports nutrition company manufactures an electrolyte drink by mixing fruit concentrate and still water in the ratio 3 : 8 by volume. During an overnight production run, the blending plant fills a single large stainless-steel holding tank. The production manager confirms in the morning log that the completed tank contains exactly 770 litres of finished drink, ready for the bottling line.",
+        question: "How many litres of water were used to fill the tank?",
         steps: [
-          { label: "Add ratio parts", calc: "3 + 8", result: "11 total parts" },
-          { label: "Find one part", calc: "770 ÷ 11", result: "70 L per part" },
-          { label: "Water share (8 parts)", calc: "70 × 8", result: "560 L" },
-          { label: "Check: concentrate + water", calc: "210 + 560", result: "770 ✓" },
+          { label: "Write the ratio with labels", calc: "Concentrate : Water  =  3 : 8", result: "Keep this order — reversing it is the most common error" },
+          { label: "Add ALL ratio parts to find the total number of shares", calc: "3 + 8", result: "11 total parts in every 770 L" },
+          { label: "Find the value of one part", calc: "770 ÷ 11", result: "70 L per part" },
+          { label: "Water receives 8 of those parts", calc: "70 × 8", result: "560 L of water" },
+          { label: "Sense-check: both shares must add back to the total", calc: "Concentrate (70×3=210) + Water (560)", result: "770 L ✓" },
         ],
-        answer: "560 litres",
-        trap: "Don't divide 770 by 8 directly — that ignores the 3 parts for concentrate.",
+        answer: "560 litres of water",
+        trap: "Dividing 770 ÷ 8 directly gives 96.25 — wrong. You must first divide by the total number of parts (11), not just the water's individual share (8).",
       },
       {
-        title: "3-part ratio",
-        passage: "An alloy is made from copper, zinc and nickel in the ratio 5 : 3 : 2. A sample weighs 640 g.",
-        question: "How much zinc does the sample contain?",
+        title: "3-part ratio — marine alloy composition",
+        passage: "A metallurgical laboratory is testing a corrosion-resistant alloy designed for use in subsea pipeline fittings. The alloy specification requires copper, zinc and nickel to be blended in the ratio 5 : 3 : 2 by mass. A quality control technician cuts a representative sample from the latest production batch and places it on a precision analytical balance. The digital readout shows a total sample mass of 640 grams.",
+        question: "What mass of zinc is present in the 640 g sample?",
         steps: [
-          { label: "Add all 3 ratio parts", calc: "5 + 3 + 2", result: "10 total parts" },
-          { label: "Find one part", calc: "640 ÷ 10", result: "64 g per part" },
-          { label: "Zinc share (3 parts)", calc: "64 × 3", result: "192 g" },
-          { label: "Check all three: 5+3+2 = 10 parts", calc: "320 + 192 + 128", result: "640 g ✓" },
+          { label: "Write the ratio with labels for all three metals", calc: "Copper : Zinc : Nickel  =  5 : 3 : 2", result: "Three components — must include all three in the sum" },
+          { label: "Add ALL three ratio parts", calc: "5 + 3 + 2", result: "10 total parts" },
+          { label: "Find the value of one part", calc: "640 g ÷ 10", result: "64 g per part" },
+          { label: "Zinc receives 3 parts", calc: "64 × 3", result: "192 g of zinc" },
+          { label: "Verify: all three shares sum to 640 g", calc: "Copper (64×5=320) + Zinc (192) + Nickel (64×2=128)", result: "640 g ✓" },
         ],
-        answer: "192 g",
-        trap: "Adding only two of the three parts when calculating the sum (e.g. 5 + 3 = 8) — always add every part.",
+        answer: "192 g of zinc",
+        trap: "Adding only two of the three metals — e.g. copper + zinc = 5 + 3 = 8 parts — gives 640 ÷ 8 = 80 g per part, and therefore 240 g of zinc. This is wrong. Always include every component in the ratio sum.",
       },
       {
-        title: "Direct proportion — recipe scaling",
-        passage: "A recipe for 12 portions uses 1.8 kg of rice, 1.2 kg of vegetables and 0.6 L of sauce. A caterer needs to prepare 35 portions.",
-        question: "How much sauce is required for 35 portions?",
+        title: "Direct proportion — hospital ward catering",
+        passage: "A hospital kitchen follows a nutritionally approved recipe for a vegetable rice dish served on medical wards. The recipe is calibrated to yield exactly 12 standard portions and requires 1.8 kg of long-grain rice, 1.2 kg of mixed seasonal vegetables, and 0.6 litres of tomato-based sauce. The catering manager receives a request from the ward coordinator: tomorrow's ward luncheon will seat 35 patients, each to receive one full portion of the dish. The kitchen must scale the recipe accordingly.",
+        question: "How many litres of tomato sauce must the catering manager prepare for 35 portions?",
         steps: [
-          { label: "Sauce per portion", calc: "0.6 ÷ 12", result: "0.05 L per portion" },
-          { label: "Scale to 35 portions", calc: "0.05 × 35", result: "1.75 L" },
-          { label: "Or in one step: multiply by scale factor", calc: "0.6 × (35 ÷ 12)", result: "0.6 × 2.917 = 1.75 L" },
+          { label: "Find the sauce needed for one single portion", calc: "0.6 L ÷ 12 portions", result: "0.05 L per portion" },
+          { label: "Scale up to 35 portions", calc: "0.05 × 35", result: "1.75 L of sauce" },
+          { label: "Alternative — calculate the scale factor directly", calc: "35 ÷ 12  =  2.917 (scale factor)", result: "0.6 L × 2.917  =  1.75 L ✓" },
+          { label: "Reasonableness check", calc: "35 is roughly 3× the original 12 portions", result: "3 × 0.6 = 1.8 L — so 1.75 L is plausible ✓" },
         ],
-        answer: "1.75 L",
-        trap: "Using the ratio 12 : 35 directly without finding the per-portion amount first.",
+        answer: "1.75 litres of tomato sauce",
+        trap: "Multiplying 0.6 × 35 = 21 L — this treats the entire 0.6 L as if it were the quantity for a single portion instead of for all 12. Always establish the per-unit quantity first, then scale to the target.",
       },
       {
-        title: "Inverse proportion — pumps and time",
-        passage: "Four identical pumps can empty a 14,400-litre tank in 9 hours.",
-        question: "How long would it take 6 pumps to empty the same tank?",
+        title: "Inverse proportion — water treatment pumps",
+        passage: "A water treatment plant uses a bank of identical electric submersible pumps to drain its primary settling tanks between treatment cycles. Plant maintenance records confirm that when four pumps operate simultaneously at full rated capacity, they can completely drain a 14,400-litre settling tank in exactly 9 hours. A fault develops on two of the pumps and they are taken offline for repair; however, the plant manager brings in two replacement pumps from a secondary facility. All six pumps in service are identical models operating at the same constant flow rate.",
+        question: "If all six pumps run simultaneously, how long will it take to completely drain the same 14,400-litre tank?",
         steps: [
-          { label: "Find rate per pump", calc: "14,400 ÷ 9 ÷ 4", result: "400 L/h per pump" },
-          { label: "Combined rate of 6 pumps", calc: "400 × 6", result: "2,400 L/h" },
-          { label: "Time for 6 pumps", calc: "14,400 ÷ 2,400", result: "6 hours" },
-          { label: "Or use inverse rule: 4 × 9 = 6 × T₂", calc: "36 ÷ 6", result: "6 hours ✓" },
+          { label: "Find the output rate of one individual pump", calc: "14,400 L ÷ 9 h ÷ 4 pumps", result: "400 litres per hour per pump" },
+          { label: "Combined output rate with all 6 pumps", calc: "400 L/h × 6 pumps", result: "2,400 litres per hour total" },
+          { label: "Time to empty the tank at that combined rate", calc: "14,400 L ÷ 2,400 L/h", result: "6 hours" },
+          { label: "Verify using the inverse proportion rule (rate × time = constant)", calc: "4 pumps × 9 h  =  6 pumps × T   →   36 = 6T", result: "T = 6 hours ✓" },
         ],
         answer: "6 hours",
-        trap: "More pumps = less time (inverse), not more time. Direct proportion gives the wrong answer here.",
+        trap: "More pumps means LESS time — this is inverse proportion. Adding 50% more pumps (4 → 6) reduces the time by a factor of 2/3 (9 × 2/3 = 6 h). Do not add time proportionally as you would in a direct proportion question.",
       },
       {
-        title: "Processing loss — reverse calculation",
-        passage: "During production, 7% of raw concentrate is lost. A recipe requires 210 litres of usable concentrate.",
-        question: "How many litres of raw concentrate must enter the process?",
+        title: "Reverse a processing loss — pharmaceutical purification",
+        passage: "A pharmaceutical manufacturing plant produces a concentrated oral antibiotic solution used in a paediatric preparation. During the purification and microfiltering stage, automated quality sensors detect and discard contaminated portions of the incoming raw concentrate; on average, exactly 7% of the raw input is rejected and removed at this stage. The production schedule for tomorrow's batch requires the plant to have exactly 210 litres of purified, quality-approved concentrate available at the start of the bottling and filling line.",
+        question: "How many litres of raw concentrate must be loaded into the purification system at the start of the production run?",
         steps: [
-          { label: "Survival rate after 7% loss", calc: "100% − 7%", result: "93% = 0.93 survives" },
-          { label: "210 L is 93% of the raw input — reverse it", calc: "210 ÷ 0.93", result: "225.8 L raw needed" },
+          { label: "Establish what fraction of the raw input actually survives", calc: "100% − 7% rejected", result: "93% = 0.93 of the raw input passes through" },
+          { label: "210 L is 93% of the unknown raw input — reverse the relationship", calc: "210 ÷ 0.93", result: "225.8 L of raw concentrate needed" },
+          { label: "Verify the answer by working forwards", calc: "225.8 × 0.93", result: "≈ 210 L usable ✓" },
         ],
-        answer: "225.8 L",
-        trap: "Multiplying 210 × 1.07 = 224.7 — close but wrong. To reverse a loss you divide by the survival rate, not multiply by (1 + loss rate).",
+        answer: "225.8 litres of raw concentrate (round up to 226 L in practice)",
+        trap: "Calculating 210 × 1.07 = 224.7 L is close but mathematically incorrect. Multiplying by (1 + loss rate) only approximates the answer for small losses. The exact method is always to divide by the survival rate: 210 ÷ 0.93. The difference matters in precision manufacturing and in UCAT marking.",
       },
     ],
     rules: [
@@ -769,41 +773,62 @@ const QR_LESSONS: Record<string, QRLesson> = {
     ],
     worked: [
       {
-        title: "Reading a table — finding the right cell",
-        passage: "A table shows average daily water use (litres) by region and year.",
-        question: "Using the table below, what was the total water use across all three regions in 2024?",
+        title: "Reading a table — correct column, correct unit",
+        passage: "A regional water utility publishes an annual demand report containing the following table. The table title reads: 'Average daily household water consumption (litres per metered household per day) by supply region.' There are two data columns — 2023 and 2024. North region: 2023 = 136 L, 2024 = 142 L. East region: 2023 = 149 L, 2024 = 155 L. South region: 2023 = 141 L, 2024 = 138 L. A footnote at the base of the table states: 'Figures represent metered household consumption only. Commercial premises, schools and hospitals are excluded from this dataset.'",
+        question: "What was the combined average daily consumption across all three regions in 2024, and by how many litres did this total change compared with 2023?",
         steps: [
-          { label: "Read the table title and units", calc: "Units: litres per day per household", result: "Noted — don't add raw numbers yet" },
-          { label: "Read 2024 column for each region", calc: "North: 142 L  |  East: 155 L  |  South: 138 L", result: "Three values extracted" },
-          { label: "Sum all three regions", calc: "142 + 155 + 138", result: "435 L per day across the three regions" },
+          { label: "Read the title and footnote before extracting any numbers", calc: "Unit = litres per household per day, 2024 column only, household consumption only", result: "Orientation complete — now extract values" },
+          { label: "Extract the three 2024 values (trace each column heading carefully)", calc: "North: 142 L   East: 155 L   South: 138 L", result: "Three 2024 figures confirmed" },
+          { label: "Sum the 2024 figures", calc: "142 + 155 + 138", result: "435 L total across three regions in 2024" },
+          { label: "Extract the three 2023 figures for comparison", calc: "North: 136 L   East: 149 L   South: 141 L", result: "Three 2023 figures confirmed" },
+          { label: "Sum the 2023 figures", calc: "136 + 149 + 141", result: "426 L total in 2023" },
+          { label: "Calculate year-on-year change", calc: "435 − 426", result: "+9 L increase from 2023 to 2024" },
         ],
-        answer: "435 litres per day",
-        trap: "Reading the 2023 column instead of 2024 — always trace the column heading, not just left-to-right order.",
+        answer: "435 L per day in 2024 — an increase of 9 L compared with the 2023 total of 426 L",
+        trap: "Accidentally reading the 2023 column instead of 2024 — when two similar columns sit side by side, always trace the column heading to the top of the table before reading values.",
       },
       {
-        title: "Bar chart — percentage change",
-        passage: "A bar chart shows quarterly revenue. Q1 = £40,000. Q3 = £52,000.",
-        question: "What is the percentage increase from Q1 to Q3?",
+        title: "Bar chart — percentage change between two bars",
+        passage: "A hospital trust's quarterly finance report includes a bar chart with the title 'Outpatient service income by quarter, 2025 (£000s)'. The chart's vertical axis runs from 0 to 60, with horizontal gridlines every 10 units. The chart key confirms that all values are in thousands of pounds. Reading the four bars left to right: Q1 reaches the 40 gridline; Q2 reaches 44; Q3 reaches 52; Q4 reaches 49. The trust's finance director asks two questions from this chart.",
+        question: "What was the percentage increase in outpatient income from Q1 to Q3, and what was the actual cash value of that increase in full pounds?",
         steps: [
-          { label: "Identify old and new values", calc: "Old = £40,000  |  New = £52,000", result: "From Q1 and Q3 bars" },
-          { label: "Calculate the change", calc: "52,000 − 40,000", result: "£12,000 increase" },
-          { label: "Divide by the ORIGINAL (Q1)", calc: "12,000 ÷ 40,000", result: "0.30" },
-          { label: "Convert to percentage", calc: "0.30 × 100", result: "30% increase" },
+          { label: "Read Q1 bar — trace to the gridline, apply the unit", calc: "Bar at 40  →  40 × £1,000", result: "Q1 income = £40,000" },
+          { label: "Read Q3 bar — trace to the gridline, apply the unit", calc: "Bar at 52  →  52 × £1,000", result: "Q3 income = £52,000" },
+          { label: "Calculate the absolute change", calc: "£52,000 − £40,000", result: "£12,000 increase in cash terms" },
+          { label: "Percentage change — divide by the ORIGINAL value (Q1)", calc: "£12,000 ÷ £40,000", result: "0.30" },
+          { label: "Convert to a percentage", calc: "0.30 × 100", result: "30% increase from Q1 to Q3" },
         ],
-        answer: "30%",
-        trap: "Dividing by the new value (52,000) gives 23% — wrong. Always divide by the original (starting) value.",
+        answer: "30% increase; actual cash increase = £12,000",
+        trap: "Dividing by the new value (£52,000) instead of the original (£40,000) gives 23.1% — wrong. Percentage change always uses the starting value as the denominator.",
       },
       {
-        title: "Stacked bar — reading one segment",
-        passage: "A stacked bar chart shows total sales split into Online and In-store. In Year 2, the bar reaches 80. The Online segment runs from 50 to 80.",
-        question: "What were the In-store sales in Year 2?",
+        title: "Stacked bar — isolating one segment",
+        passage: "A national retailer's annual report includes a stacked bar chart titled 'Total sales revenue by channel (£ millions), Years 1–4'. The Y-axis runs from £0 m to £120 m, with gridlines every £20 m. Two segments are stacked in each bar: the bottom segment (light blue) represents In-store sales, and the top segment (dark blue) represents Online sales. In Year 2, the top of the complete bar sits at the £80 m gridline. The boundary between the In-store and Online segments sits exactly at the £30 m gridline. A chart footnote reads: 'Online figures include click-and-collect orders fulfilled from store stock.'",
+        question: "In Year 2, what were the Online sales and the In-store sales as separate figures, and what percentage of total Year 2 revenue did each channel represent?",
         steps: [
-          { label: "Total bar height", calc: "Bar top = 80", result: "Total = 80 units" },
-          { label: "Online segment", calc: "Top: 80  −  Bottom: 50", result: "Online = 30 units" },
-          { label: "In-store = remainder", calc: "80 − 30", result: "In-store = 50 units (bottom segment)" },
+          { label: "Total Year 2 revenue — read the top of the complete bar", calc: "Bar top = £80 m gridline", result: "Total = £80 m" },
+          { label: "In-store segment — bottom of bar to the segment boundary", calc: "From £0 m to £30 m boundary", result: "In-store = £30 m" },
+          { label: "Online segment — segment boundary to top of bar", calc: "£80 m top − £30 m boundary", result: "Online = £50 m" },
+          { label: "In-store as a percentage of total", calc: "£30 m ÷ £80 m × 100", result: "37.5%" },
+          { label: "Online as a percentage of total", calc: "£50 m ÷ £80 m × 100", result: "62.5%" },
+          { label: "Check: both percentages must sum to 100%", calc: "37.5% + 62.5%", result: "100% ✓" },
         ],
-        answer: "50 units",
-        trap: "Reading just the top number (80) as the In-store value — the bar shows the total, not the segment.",
+        answer: "In-store = £30 m (37.5% of total); Online = £50 m (62.5% of total)",
+        trap: "Reading the top value of the total bar (£80 m) as the Online segment figure — that is the entire combined bar. A stacked segment's value is always top-of-that-segment minus bottom-of-that-segment.",
+      },
+      {
+        title: "Pie chart — value from sector angle",
+        passage: "A healthcare trust's annual budget report contains a pie chart titled 'Operating budget allocation, 2025–26 (total = £4,800,000)'. The chart key lists each department's sector angle: Administration = 54°; Nursing staff = 126°; Medical equipment = 90°; Pharmaceuticals = 72°; Estates and facilities = 18°. A footnote beneath the chart states: 'Angle measurements are rounded to the nearest whole degree. Minor rounding differences may cause the sum to differ from exactly 360°.' The trust's director of finance wants to know the precise budget allocation for each of two departments.",
+        question: "What is the budget allocated to Medical equipment, and what is the budget for Pharmaceuticals? Express both as a pound value and as a percentage of the total.",
+        steps: [
+          { label: "Sanity-check: do all angles sum to 360°?", calc: "54 + 126 + 90 + 72 + 18", result: "360° ✓  — no rounding issue here" },
+          { label: "Medical equipment: fraction of the full circle", calc: "90° ÷ 360°", result: "0.25  →  one quarter" },
+          { label: "Medical equipment: budget value", calc: "0.25 × £4,800,000", result: "£1,200,000  (25% of total)" },
+          { label: "Pharmaceuticals: fraction of the full circle", calc: "72° ÷ 360°", result: "0.20  →  one fifth" },
+          { label: "Pharmaceuticals: budget value", calc: "0.20 × £4,800,000", result: "£960,000  (20% of total)" },
+        ],
+        answer: "Medical equipment = £1,200,000 (25%); Pharmaceuticals = £960,000 (20%)",
+        trap: "Using the sector angle directly as a percentage — a 90° sector is not 90% of the total, it is 90/360 = 25%. Always divide the angle by 360 before multiplying by the total.",
       },
     ],
     chartDemo: {
@@ -876,28 +901,44 @@ const QR_LESSONS: Record<string, QRLesson> = {
     ],
     worked: [
       {
-        title: "Reverse a percentage — find the original price",
-        passage: "A laptop is reduced by 15%. VAT at 20% is then added to the discounted price. Delivery costs £24. The final bill is £840.",
-        question: "What was the original price of the laptop before the discount?",
+        title: "Reverse a multi-step percentage — find the original price",
+        passage: "A consumer electronics retailer is running a seasonal clearance event. A laptop model is reduced by 15% from its standard retail price. UK VAT at 20% is then applied to the discounted price — VAT is not charged on the full original price, only on the post-discount figure. In addition, the retailer applies a fixed delivery and installation charge of £24, which is added to the bill after VAT has been applied. A customer completes the purchase online and later checks her digital receipt; the total shown is £840.",
+        question: "What was the laptop's original retail price before any discount was applied?",
         steps: [
-          { label: "Remove delivery charge", calc: "840 − 24", result: "£816 is the price after discount + VAT" },
-          { label: "Reverse the 20% VAT (÷ 1.20)", calc: "816 ÷ 1.20", result: "£680 is the discounted price before VAT" },
-          { label: "Reverse the 15% discount (÷ 0.85)", calc: "680 ÷ 0.85", result: "£800 original price" },
+          { label: "The £24 delivery charge was added last — remove it first", calc: "£840 − £24", result: "£816 = price after discount and after VAT" },
+          { label: "Reverse the 20% VAT — divide by 1.20 (don't subtract 20%)", calc: "£816 ÷ 1.20", result: "£680 = the discounted price before VAT was added" },
+          { label: "Reverse the 15% discount — divide by 0.85 (don't add 15%)", calc: "£680 ÷ 0.85", result: "£800 = the original retail price" },
+          { label: "Verify by applying all three steps forwards from £800", calc: "£800 × 0.85 = £680   →   £680 × 1.20 = £816   →   £816 + £24", result: "£840 ✓" },
         ],
-        answer: "£800",
-        trap: "Adding 15% back to £680 gives £782 — wrong. To reverse a discount you divide by the survival rate, not add the percentage.",
+        answer: "£800 was the original retail price",
+        trap: "Two classic wrong moves: (1) adding 15% back to £680 gives £782 — wrong, because you reversed the discount by addition instead of division. (2) Subtracting 20% from £816 gives £652.80 — wrong for the same reason. Always reverse a percentage by dividing by the multiplier.",
       },
       {
-        title: "Percentage change between two values",
-        passage: "A clinic recorded 18,000 appointments in 2025 and 19,800 in 2026.",
-        question: "What is the percentage increase in appointments from 2025 to 2026?",
+        title: "Percentage change — GP surgery appointment growth",
+        passage: "A GP surgery's practice manager is compiling the annual activity report. In 2025, the practice handled a total of 18,000 patient appointments across all its clinicians — GPs, advanced nurse practitioners and physiotherapists. In 2026, the practice expanded its clinical team by hiring two additional salaried GPs and converting a storage room into a third consulting room, which increased its daily appointment capacity. The practice manager's records for 2026 show a total of 19,800 appointments completed across the year.",
+        question: "What was the percentage increase in total appointments from 2025 to 2026, and how many additional appointments does this represent in absolute terms?",
         steps: [
-          { label: "Calculate the change", calc: "19,800 − 18,000", result: "1,800 more appointments" },
-          { label: "Divide by the ORIGINAL (2025)", calc: "1,800 ÷ 18,000", result: "0.10" },
-          { label: "Convert to percentage", calc: "0.10 × 100", result: "10% increase" },
+          { label: "Identify the starting value and the new value", calc: "2025 (original): 18,000   2026 (new): 19,800", result: "Starting value is 18,000 — this goes in the denominator" },
+          { label: "Calculate the absolute change", calc: "19,800 − 18,000", result: "1,800 additional appointments" },
+          { label: "Percentage change: divide the change by the ORIGINAL value", calc: "1,800 ÷ 18,000", result: "0.10" },
+          { label: "Convert to a percentage", calc: "0.10 × 100", result: "10% increase" },
         ],
-        answer: "10%",
-        trap: "Dividing by 19,800 gives 9.09% — wrong. Always divide by the starting value, not the new one.",
+        answer: "10% increase; 1,800 more appointments in absolute terms",
+        trap: "Dividing by the new value (1,800 ÷ 19,800 = 9.09%) gives the wrong answer. The denominator in a percentage change calculation is always the original starting value — here, the 2025 figure of 18,000.",
+      },
+      {
+        title: "Successive percentage changes — the cancellation trap",
+        passage: "A medical supplies company purchases disposable examination gloves at a trade cost price. In January, the company applies a 20% price reduction across the glove range to clear end-of-season stock ahead of a new product line arriving. In February, following strong demand from a new NHS contract, the company re-prices the remaining gloves upward by 20% from the January reduced price. The company's procurement officer tells a colleague that 'the January reduction and the February increase cancel each other out perfectly, so the price is back to where we started.'",
+        question: "Is the procurement officer correct? If the original trade cost was £500 per box, what is the price after both changes, and what is the net percentage change from the original?",
+        steps: [
+          { label: "Apply the 20% January reduction using a multiplier", calc: "£500 × 0.80", result: "£400 after the January reduction" },
+          { label: "Apply the 20% February increase from the new lower base", calc: "£400 × 1.20", result: "£480 after the February increase" },
+          { label: "Compare the final price to the original", calc: "£480 vs the original £500", result: "£20 below original — they do NOT cancel" },
+          { label: "Net percentage change from original", calc: "(£480 − £500) ÷ £500 × 100", result: "−4% overall — a net loss of 4%" },
+          { label: "Why? The February 20% operates on a smaller base than January's 20%", calc: "20% of £400 = £80 recovered   vs   20% of £500 = £100 lost", result: "The recovery (£80) is smaller than the original loss (£100)" },
+        ],
+        answer: "No — the final price is £480, which is 4% below the original £500. The two changes do NOT cancel.",
+        trap: "Intuition says −20% then +20% returns to the start. It doesn't: the percentage increase in February is applied to a smaller base than the percentage decrease in January was applied to. The combined multiplier is 0.80 × 1.20 = 0.96 — always a net 4% loss regardless of the starting price.",
       },
     ],
     rules: [
@@ -939,17 +980,50 @@ const QR_LESSONS: Record<string, QRLesson> = {
     ],
     worked: [
       {
-        title: "Extract and combine from a table",
-        passage: "A water company table shows average daily consumption (litres per household) for three regions: North 142 L, East 155 L, South 138 L. North has 48,000 households, East 36,000, South 52,000.",
-        question: "What is the total volume of water used daily across all three regions?",
+        title: "Multi-cell extraction — leakage-adjusted supply",
+        passage: "A water company's operations table contains the following data for its three supply regions. North: 48,000 metered households, average consumption 142 litres per household per day, network leakage rate 18%. East: 36,000 households, 155 litres per day, leakage rate 12%. South: 52,000 households, 138 litres per day, leakage rate 15%. A footnote at the bottom of the table defines leakage rate as: 'The proportion of water injected into the distribution network that is lost through pipe bursts and seepage before reaching any household. Net supply needed = (households × consumption per household) ÷ (1 − leakage rate).'",
+        question: "What total volume of water must the company inject into its distribution network each day across all three regions, accounting for leakage losses?",
         steps: [
-          { label: "North: households × use", calc: "48,000 × 142", result: "6,816,000 L" },
-          { label: "East: households × use", calc: "36,000 × 155", result: "5,580,000 L" },
-          { label: "South: households × use", calc: "52,000 × 138", result: "7,176,000 L" },
-          { label: "Sum all three", calc: "6,816,000 + 5,580,000 + 7,176,000", result: "19,572,000 L per day" },
+          { label: "Read the footnote formula before calculating anything", calc: "Net supply = household demand ÷ (1 − leakage rate)", result: "Formula confirmed — leakage is applied per region" },
+          { label: "North: household demand", calc: "48,000 × 142", result: "6,816,000 L needed at household taps" },
+          { label: "North: gross network supply needed (÷ 0.82)", calc: "6,816,000 ÷ 0.82", result: "8,312,195 L must enter North's network" },
+          { label: "East: household demand", calc: "36,000 × 155", result: "5,580,000 L needed at household taps" },
+          { label: "East: gross network supply needed (÷ 0.88)", calc: "5,580,000 ÷ 0.88", result: "6,340,909 L must enter East's network" },
+          { label: "South: household demand", calc: "52,000 × 138", result: "7,176,000 L needed at household taps" },
+          { label: "South: gross network supply needed (÷ 0.85)", calc: "7,176,000 ÷ 0.85", result: "8,442,353 L must enter South's network" },
+          { label: "Total injection across all three regions", calc: "8,312,195 + 6,340,909 + 8,442,353", result: "≈ 23,095,457 L per day" },
         ],
-        answer: "19,572,000 litres per day",
-        trap: "Adding just the 'use per household' figures (142 + 155 + 138 = 435) — that ignores the different household counts in each region.",
+        answer: "Approximately 23,095,000 litres must be injected daily across all three regions",
+        trap: "Summing only household demands (6,816,000 + 5,580,000 + 7,176,000 = 19,572,000 L) ignores leakage. The company must pump over 3.5 million extra litres per day just to cover network losses — a critical distinction highlighted by the table footnote.",
+      },
+      {
+        title: "Percentage column — converting rates to absolute counts",
+        passage: "A hospital's outpatient department records the following quarterly data. The table has four rows — one per specialty — with columns for total appointments and follow-up referral rate (%). Cardiology: 3,200 appointments, 34% follow-up rate. Respiratory medicine: 2,750 appointments, 41% follow-up rate. Orthopaedics: 4,100 appointments, 28% follow-up rate. Neurology: 1,850 appointments, 52% follow-up rate. A footnote defines follow-up referral rate as: 'Number of appointments that generated an onward referral letter divided by total appointments in that specialty. One patient attending multiple appointments may be counted multiple times.' The department manager needs the total referral count to plan the letters team's workload.",
+        question: "How many follow-up referral letters were generated in total across all four specialties during the quarter?",
+        steps: [
+          { label: "Read the footnote — 'rate' means per appointment, not per patient", calc: "Apply each percentage to its own row's appointment total only", result: "Do NOT sum the percentages (34+41+28+52 = 155% is meaningless)" },
+          { label: "Cardiology referrals", calc: "3,200 × 0.34", result: "1,088 letters" },
+          { label: "Respiratory referrals", calc: "2,750 × 0.41", result: "1,127.5  →  1,128 letters (round to whole letters)" },
+          { label: "Orthopaedics referrals", calc: "4,100 × 0.28", result: "1,148 letters" },
+          { label: "Neurology referrals", calc: "1,850 × 0.52", result: "962 letters" },
+          { label: "Total referral letters across all four specialties", calc: "1,088 + 1,128 + 1,148 + 962", result: "4,326 letters" },
+        ],
+        answer: "4,326 follow-up referral letters in total",
+        trap: "Adding all four percentages (34 + 41 + 28 + 52 = 155%) and then multiplying by a combined total is meaningless. Each percentage rate must be applied separately to its own specialty's appointment count.",
+      },
+      {
+        title: "Footnote changes the unit — thousands trap",
+        passage: "A pharmaceutical company's annual cost breakdown report contains the following table extract. Beneath the table, in small text, a footnote reads: 'All figures are expressed in thousands of pounds (£000s).' The table shows five cost categories and their values: Raw materials = 4,820; Manufacturing labour = 2,315; Quality control = 890; Distribution = 1,475; Regulatory compliance = 640. A second footnote adds: 'The raw materials figure includes import duty charged at a blended rate of 8.5% of the pre-duty purchase price of the materials.' The company's CFO asks two questions: what is the total cost across all five categories, and what was the pre-duty cost of raw materials before duty was applied?",
+        question: "What is the total expenditure across all five cost categories, and what was the pre-duty cost of raw materials?",
+        steps: [
+          { label: "Apply the footnote immediately — every figure is in £000s", calc: "4,820 in the table = £4,820,000 in reality", result: "Multiply every value by 1,000 (or keep in £000s and state units clearly)" },
+          { label: "Sum all five categories", calc: "4,820 + 2,315 + 890 + 1,475 + 640", result: "10,140 (£000s)  =  £10,140,000 total" },
+          { label: "Interpret the import duty footnote — 8.5% duty was added to the pre-duty price", calc: "Raw materials total (4,820) = pre-duty cost × 1.085", result: "To find pre-duty cost, divide by the duty multiplier" },
+          { label: "Pre-duty raw materials cost", calc: "4,820 ÷ 1.085", result: "4,441.5 (£000s)  =  £4,441,500" },
+          { label: "Duty paid", calc: "£4,820,000 − £4,441,500", result: "£378,500 paid in import duty" },
+        ],
+        answer: "Total expenditure = £10,140,000; pre-duty raw materials = £4,441,500 (duty = £378,500)",
+        trap: "Ignoring the footnote and treating 4,820 as £4,820 rather than £4,820,000 understates every single figure by a factor of 1,000. On tables questions, reading footnotes before touching the data is not optional — it is the first step.",
       },
     ],
     rules: [
@@ -2993,11 +3067,11 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
                   <span style={{ padding: "2px 8px", borderRadius: 20, background: c, color: "white", fontSize: 10, fontWeight: 800 }}>P1</span>
                   <span style={{ fontSize: 11, color: d, fontWeight: 700 }}>Reptiles ⇒ Cold-blooded</span>
                 </div>
-                <svg viewBox="0 0 200 110" style={{ width: "100%", maxWidth: 200, display: "block", borderRadius: 10, border: `1.5px solid ${c}`, background: "white" }} aria-label="Reptiles circle nested inside Cold-blooded circle">
-                  <circle cx="100" cy="58" r="46" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.7"/>
-                  <text x="100" y="16" textAnchor="middle" fontSize="12" fontWeight="800" fill={d}>Cold-blooded</text>
-                  <circle cx="100" cy="63" r="24" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
-                  <text x="100" y="67" textAnchor="middle" fontSize="11" fontWeight="700" fill={d}>Reptiles</text>
+                <svg viewBox="0 0 200 140" style={{ width: "100%", maxWidth: 200, display: "block", borderRadius: 10, border: `1.5px solid ${c}`, background: "white" }} aria-label="Reptiles circle nested inside Cold-blooded circle">
+                  <circle cx="100" cy="78" r="52" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.7"/>
+                  <text x="100" y="46" textAnchor="middle" fontSize="12" fontWeight="800" fill={d}>Cold-blooded</text>
+                  <circle cx="100" cy="85" r="27" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
+                  <text x="100" y="89" textAnchor="middle" fontSize="11" fontWeight="700" fill={d}>Reptiles</text>
                 </svg>
                 <p style={{ margin: "5px 0 0", fontSize: 10, color: "#64748b", textAlign: "center" as const }}>Reptiles sits entirely inside Cold-blooded</p>
               </div>
@@ -3006,16 +3080,16 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
                   <span style={{ padding: "2px 8px", borderRadius: 20, background: c, color: "white", fontSize: 10, fontWeight: 800 }}>P2</span>
                   <span style={{ fontSize: 11, color: d, fontWeight: 700 }}>Cold-blooded ✕ Warm-blooded</span>
                 </div>
-                <svg viewBox="0 0 220 110" style={{ width: "100%", maxWidth: 220, display: "block", borderRadius: 10, border: `1.5px solid ${c}`, background: "white" }} aria-label="Cold-blooded and Warm-blooded as completely separate circles">
-                  <circle cx="72" cy="55" r="44" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.7"/>
-                  <text x="72" y="14" textAnchor="middle" fontSize="10" fontWeight="800" fill={d}>Cold-blooded</text>
-                  <circle cx="72" cy="60" r="22" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
-                  <text x="72" y="64" textAnchor="middle" fontSize="9" fontWeight="700" fill={d}>Reptiles</text>
-                  <line x1="129" y1="44" x2="141" y2="62" stroke="#d94b3e" strokeWidth="3" strokeLinecap="round"/>
-                  <line x1="141" y1="44" x2="129" y2="62" stroke="#d94b3e" strokeWidth="3" strokeLinecap="round"/>
-                  <circle cx="182" cy="55" r="36" fill="#ffedea" stroke="#FF6B5C" strokeWidth="2"/>
-                  <text x="182" y="51" textAnchor="middle" fontSize="10" fontWeight="700" fill="#d94b3e">Warm-</text>
-                  <text x="182" y="64" textAnchor="middle" fontSize="10" fontWeight="700" fill="#d94b3e">blooded</text>
+                <svg viewBox="0 0 220 140" style={{ width: "100%", maxWidth: 220, display: "block", borderRadius: 10, border: `1.5px solid ${c}`, background: "white" }} aria-label="Cold-blooded and Warm-blooded as completely separate circles">
+                  <circle cx="72" cy="74" r="44" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.7"/>
+                  <text x="72" y="42" textAnchor="middle" fontSize="10" fontWeight="800" fill={d}>Cold-blooded</text>
+                  <circle cx="72" cy="80" r="22" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
+                  <text x="72" y="84" textAnchor="middle" fontSize="9" fontWeight="700" fill={d}>Reptiles</text>
+                  <line x1="126" y1="64" x2="138" y2="82" stroke="#d94b3e" strokeWidth="3" strokeLinecap="round"/>
+                  <line x1="138" y1="64" x2="126" y2="82" stroke="#d94b3e" strokeWidth="3" strokeLinecap="round"/>
+                  <circle cx="182" cy="74" r="36" fill="#ffedea" stroke="#FF6B5C" strokeWidth="2"/>
+                  <text x="182" y="69" textAnchor="middle" fontSize="10" fontWeight="700" fill="#d94b3e">Warm-</text>
+                  <text x="182" y="82" textAnchor="middle" fontSize="10" fontWeight="700" fill="#d94b3e">blooded</text>
                 </svg>
                 <p style={{ margin: "5px 0 0", fontSize: 10, color: "#d94b3e", textAlign: "center" as const }}>✕ no overlap — completely separate</p>
               </div>
@@ -3027,20 +3101,20 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
                 <span style={{ padding: "3px 10px", borderRadius: 20, background: "#259650", color: "white", fontSize: 10, fontWeight: 800 }}>P3 + ∴</span>
                 <strong style={{ fontSize: 12, color: "#259650" }}>Some lizards are reptiles → those lizards are inside Cold-blooded and outside Warm-blooded</strong>
               </div>
-              <svg viewBox="0 0 320 120" style={{ width: "100%", maxWidth: 360, display: "block", borderRadius: 10, border: "1.5px solid #3DBE6C", background: "white" }} aria-label="Full diagram — some lizard dots inside Reptiles and Cold-blooded, outside Warm-blooded">
-                <circle cx="108" cy="60" r="52" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.55"/>
-                <text x="108" y="14" textAnchor="middle" fontSize="12" fontWeight="800" fill={d}>Cold-blooded</text>
-                <circle cx="108" cy="65" r="28" fill={c} fillOpacity="0.22" stroke={c} strokeWidth="1.5"/>
-                <text x="108" y="88" textAnchor="middle" fontSize="10" fontWeight="700" fill={d}>Reptiles</text>
-                <circle cx="92" cy="56" r="22" fill="#8B6BFF" fillOpacity="0.12" stroke="#8B6BFF" strokeWidth="2" strokeDasharray="5,3"/>
-                <text x="66" y="38" textAnchor="middle" fontSize="10" fontWeight="700" fill="#8B6BFF">Lizards</text>
-                <circle cx="103" cy="61" r="6" fill="#259650"/>
-                <circle cx="117" cy="55" r="6" fill="#259650"/>
-                <line x1="178" y1="48" x2="190" y2="68" stroke="#d94b3e" strokeWidth="3.5" strokeLinecap="round"/>
-                <line x1="190" y1="48" x2="178" y2="68" stroke="#d94b3e" strokeWidth="3.5" strokeLinecap="round"/>
-                <circle cx="256" cy="60" r="46" fill="#ffedea" stroke="#FF6B5C" strokeWidth="2"/>
-                <text x="256" y="55" textAnchor="middle" fontSize="11" fontWeight="700" fill="#d94b3e">Warm-</text>
-                <text x="256" y="69" textAnchor="middle" fontSize="11" fontWeight="700" fill="#d94b3e">blooded</text>
+              <svg viewBox="0 0 320 150" style={{ width: "100%", maxWidth: 360, display: "block", borderRadius: 10, border: "1.5px solid #3DBE6C", background: "white" }} aria-label="Full diagram — some lizard dots inside Reptiles and Cold-blooded, outside Warm-blooded">
+                <circle cx="108" cy="80" r="52" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.55"/>
+                <text x="108" y="40" textAnchor="middle" fontSize="12" fontWeight="800" fill={d}>Cold-blooded</text>
+                <circle cx="108" cy="86" r="28" fill={c} fillOpacity="0.22" stroke={c} strokeWidth="1.5"/>
+                <text x="108" y="108" textAnchor="middle" fontSize="10" fontWeight="700" fill={d}>Reptiles</text>
+                <circle cx="92" cy="76" r="22" fill="#8B6BFF" fillOpacity="0.12" stroke="#8B6BFF" strokeWidth="2" strokeDasharray="5,3"/>
+                <text x="66" y="55" textAnchor="middle" fontSize="10" fontWeight="700" fill="#8B6BFF">Lizards</text>
+                <circle cx="103" cy="81" r="6" fill="#259650"/>
+                <circle cx="117" cy="75" r="6" fill="#259650"/>
+                <line x1="178" y1="68" x2="190" y2="88" stroke="#d94b3e" strokeWidth="3.5" strokeLinecap="round"/>
+                <line x1="190" y1="68" x2="178" y2="88" stroke="#d94b3e" strokeWidth="3.5" strokeLinecap="round"/>
+                <circle cx="256" cy="80" r="46" fill="#ffedea" stroke="#FF6B5C" strokeWidth="2"/>
+                <text x="256" y="74" textAnchor="middle" fontSize="11" fontWeight="700" fill="#d94b3e">Warm-</text>
+                <text x="256" y="88" textAnchor="middle" fontSize="11" fontWeight="700" fill="#d94b3e">blooded</text>
               </svg>
               <p style={{ margin: "6px 0 0", fontSize: 10, color: "#259650", fontWeight: 700 }}>Green dots = some lizards — inside Reptiles and Cold-blooded, outside Warm-blooded ✓</p>
             </div>
@@ -3076,11 +3150,11 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
                 <span style={{ padding: "3px 10px", borderRadius: 20, background: c, color: "white", fontSize: 10, fontWeight: 800 }}>Step 1</span>
                 <strong style={{ fontSize: 12, color: d }}>Pilots ⇒ Licensed → draw Pilots as a smaller circle sitting inside Licensed to fly</strong>
               </div>
-              <svg viewBox="0 0 240 110" style={{ width: "100%", maxWidth: 280, display: "block", borderRadius: 10, border: `1.5px solid ${c}`, background: "white" }} aria-label="Pilots circle inside Licensed to fly circle">
-                <circle cx="120" cy="57" r="50" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.7"/>
-                <text x="120" y="14" textAnchor="middle" fontSize="12" fontWeight="800" fill={d}>Licensed to fly</text>
-                <circle cx="120" cy="62" r="26" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
-                <text x="120" y="66" textAnchor="middle" fontSize="11" fontWeight="700" fill={d}>Pilots</text>
+              <svg viewBox="0 0 240 140" style={{ width: "100%", maxWidth: 280, display: "block", borderRadius: 10, border: `1.5px solid ${c}`, background: "white" }} aria-label="Pilots circle inside Licensed to fly circle">
+                <circle cx="120" cy="78" r="50" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.7"/>
+                <text x="120" y="40" textAnchor="middle" fontSize="12" fontWeight="800" fill={d}>Licensed to fly</text>
+                <circle cx="120" cy="84" r="26" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
+                <text x="120" y="88" textAnchor="middle" fontSize="11" fontWeight="700" fill={d}>Pilots</text>
               </svg>
               <p style={{ margin: "5px 0 0", fontSize: 10, color: "#64748b" }}>Pilots sits entirely inside Licensed to fly</p>
             </div>
@@ -3091,17 +3165,17 @@ function SyllogismsPage({ section, topic, pageId, onNavigate, onPractice }: {
                 <span style={{ padding: "3px 10px", borderRadius: 20, background: "#d94b3e", color: "white", fontSize: 10, fontWeight: 800 }}>Step 2</span>
                 <strong style={{ fontSize: 12, color: "#d94b3e" }}>James ∈ Licensed — place him in the diagram. Does he have to be inside Pilots?</strong>
               </div>
-              <svg viewBox="0 0 300 120" style={{ width: "100%", maxWidth: 340, display: "block", borderRadius: 10, border: "1.5px solid #d94b3e", background: "white" }} aria-label="James placed in Licensed to fly but not necessarily inside Pilots">
-                <circle cx="130" cy="60" r="54" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.65"/>
-                <text x="130" y="14" textAnchor="middle" fontSize="12" fontWeight="800" fill={d}>Licensed to fly</text>
-                <circle cx="118" cy="66" r="27" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
-                <text x="118" y="70" textAnchor="middle" fontSize="11" fontWeight="700" fill={d}>Pilots</text>
-                <circle cx="180" cy="46" r="7" fill="#d94b3e"/>
-                <text x="196" y="43" fontSize="11" fontWeight="800" fill="#d94b3e">James</text>
-                <text x="196" y="56" fontSize="9" fill="#d94b3e" fontWeight="600">(flight instructor)</text>
-                <circle cx="118" cy="57" r="5" fill="#8B6BFF" fillOpacity="0.4"/>
-                <text x="138" y="55" fontSize="8" fill="#94a3b8">could also be here</text>
-                <text x="180" y="92" fontSize="26" fontWeight="900" fill="#d94b3e" fillOpacity="0.2">?</text>
+              <svg viewBox="0 0 300 150" style={{ width: "100%", maxWidth: 340, display: "block", borderRadius: 10, border: "1.5px solid #d94b3e", background: "white" }} aria-label="James placed in Licensed to fly but not necessarily inside Pilots">
+                <circle cx="130" cy="82" r="54" fill={t} stroke={c} strokeWidth="2" fillOpacity="0.65"/>
+                <text x="130" y="40" textAnchor="middle" fontSize="12" fontWeight="800" fill={d}>Licensed to fly</text>
+                <circle cx="118" cy="88" r="27" fill={c} fillOpacity="0.28" stroke={c} strokeWidth="1.5"/>
+                <text x="118" y="92" textAnchor="middle" fontSize="11" fontWeight="700" fill={d}>Pilots</text>
+                <circle cx="180" cy="64" r="7" fill="#d94b3e"/>
+                <text x="196" y="61" fontSize="11" fontWeight="800" fill="#d94b3e">James</text>
+                <text x="196" y="74" fontSize="9" fill="#d94b3e" fontWeight="600">(flight instructor)</text>
+                <circle cx="118" cy="76" r="5" fill="#8B6BFF" fillOpacity="0.4"/>
+                <text x="136" y="74" fontSize="8" fill="#94a3b8">could also be here</text>
+                <text x="178" y="118" fontSize="28" fontWeight="900" fill="#d94b3e" fillOpacity="0.18">?</text>
               </svg>
               <p style={{ margin: "5px 0 0", fontSize: 10, color: "#d94b3e", fontWeight: 700 }}>James is somewhere inside Licensed — he does NOT have to be inside Pilots ✗</p>
             </div>
