@@ -2216,19 +2216,15 @@ function VROverviewPage({ section, pageId, onNavigate }: { section: GuideSection
 
       {/* PROVE method */}
       <section style={{ marginBottom: 28 }}>
+        <p className="section-kicker" style={{ marginBottom: 4 }}>Core method</p>
         <h2 style={{ margin: "0 0 6px", fontSize: 17 }}>One method for almost every question — PROVE</h2>
         <p style={{ margin: "0 0 14px", fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.6 }}>Use this five-step check instead of trying to remember separate approaches for each question type.</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 8 }}>
-          {PROVE_FULL.map(p => (
-            <div key={p.letter} style={{ borderRadius: 12, overflow: "hidden", border: "1px solid var(--line)" }}>
-              <div style={{ background: p.color, padding: "10px 12px" }}>
-                <span style={{ fontFamily: "monospace", fontSize: 22, fontWeight: 900, color: "white", lineHeight: 1 }}>{p.letter}</span>
-                <span style={{ display: "block", fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.85)", marginTop: 2, letterSpacing: "0.04em", textTransform: "uppercase" }}>{p.name}</span>
-              </div>
-              <div style={{ padding: "10px 12px", background: "white" }}>
-                <p style={{ margin: 0, fontSize: 11.5, lineHeight: 1.65, color: "var(--ink)" }}>{p.body}</p>
-              </div>
-            </div>
+        <div className="vrg-rich-grid three">
+          {PROVE_FULL.map((p, i) => (
+            <article key={p.letter} className={`vrg-panel ${TONES[i]}`}>
+              <span className="vrg-panel-label">{p.letter} — {p.name}</span>
+              <p>{p.body}</p>
+            </article>
           ))}
         </div>
       </section>
@@ -2236,48 +2232,39 @@ function VROverviewPage({ section, pageId, onNavigate }: { section: GuideSection
       {/* Two formats */}
       <section style={{ marginBottom: 28 }}>
         <h2 style={{ margin: "0 0 14px", fontSize: 17 }}>Two question formats</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          {[
-            { label: "True / False / Can't Tell", short: "T/F/CT", color: "#2D7FF9", bg: "#EAF2FF", desc: "A statement is given. Decide whether the passage supports it, contradicts it, or leaves it unresolved. The most important rule: no evidence ≠ False. Silence means Can't Tell." },
-            { label: "Multiple Choice", short: "A–D", color: "#8B6BFF", bg: "#F1ECFF", desc: "Four options. One is best supported by the passage. Distractors borrow real details and quietly change a word, person, time or strength. Eliminate by evidence, not by feel." },
-          ].map(f => (
-            <div key={f.label} style={{ borderRadius: 12, border: `2px solid ${f.color}`, background: f.bg, padding: "16px 18px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                <span style={{ fontFamily: "monospace", fontSize: 18, fontWeight: 900, color: f.color, background: "white", borderRadius: 8, padding: "4px 10px", border: `1.5px solid ${f.color}` }}>{f.short}</span>
-                <strong style={{ fontSize: 14, fontWeight: 800, color: f.color }}>{f.label}</strong>
-              </div>
-              <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: "var(--ink)" }}>{f.desc}</p>
-            </div>
-          ))}
+        <div className="vrg-card-grid two">
+          <div className="vrg-panel tint">
+            <span className="vrg-panel-label">T/F/CT</span>
+            <h3>True / False / Can't Tell</h3>
+            <p>A statement is given. Decide whether the passage supports it, contradicts it, or leaves it unresolved. The most important rule: no evidence ≠ False. Silence means Can't Tell.</p>
+          </div>
+          <div className="vrg-panel lilac">
+            <span className="vrg-panel-label">A–D</span>
+            <h3>Multiple Choice</h3>
+            <p>Four options. One is best supported by the passage. Distractors borrow real details and quietly change a word, person, time or strength. Eliminate by evidence, not by feel.</p>
+          </div>
         </div>
       </section>
 
       {/* TFCT subtypes */}
       <section style={{ marginBottom: 28 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-          <span style={{ fontFamily: "monospace", fontWeight: 900, fontSize: 13, color: "#2D7FF9", background: "#EAF2FF", padding: "3px 9px", borderRadius: 6 }}>T/F/CT</span>
-          <h2 style={{ margin: 0, fontSize: 16 }}>True / False / Can't Tell subtypes</h2>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <p className="section-kicker" style={{ marginBottom: 4 }}>T/F/CT subtypes</p>
+        <h2 style={{ margin: "0 0 14px", fontSize: 16 }}>True / False / Can't Tell subtypes</h2>
+        <div className="vrg-card-grid two">
           {tfct.map((s, i) => (
             <article
               key={s.id}
+              className={`vrg-link-card tone-${i % 5}`}
               onClick={() => onNavigate(s.id)}
-              style={{ borderRadius: 12, border: "1.5px solid var(--line)", background: "white", padding: "18px 20px", cursor: "pointer", transition: "box-shadow 0.15s" }}
-              onMouseOver={e => (e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.10)")}
-              onMouseOut={e => (e.currentTarget.style.boxShadow = "")}
-              tabIndex={0}
               onKeyDown={e => e.key === "Enter" && onNavigate(s.id)}
+              tabIndex={0}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#2D7FF9", background: "#EAF2FF", padding: "2px 8px", borderRadius: 4 }}>TFCT {i + 1}</span>
-                <span style={{ fontSize: 11, color: "var(--ink-soft)" }}>→</span>
-              </div>
-              <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 800 }}>{s.title}</h3>
-              <p style={{ margin: "0 0 10px", fontSize: 12.5, lineHeight: 1.6, color: "var(--ink)" }}>{s.spot}</p>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 10px", background: "#EAF2FF", borderRadius: 7 }}>
-                <span style={{ fontSize: 10, fontWeight: 800, color: "#2D7FF9" }}>QUICK CHECK</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#1a5fd0", fontStyle: "italic" }}>{s.quick}</span>
+              <span className="vrg-card-icon">{i + 1}</span>
+              <h3>{s.title}</h3>
+              <p>{s.spot}</p>
+              <div className="vrg-card-action">
+                <span style={{ fontSize: 10, fontStyle: "italic", fontWeight: 600 }}>&ldquo;{s.quick}&rdquo;</span>
+                <span>Open →</span>
               </div>
             </article>
           ))}
@@ -2286,30 +2273,23 @@ function VROverviewPage({ section, pageId, onNavigate }: { section: GuideSection
 
       {/* MCQ subtypes */}
       <section style={{ marginBottom: 28 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-          <span style={{ fontFamily: "monospace", fontWeight: 900, fontSize: 13, color: "#8B6BFF", background: "#F1ECFF", padding: "3px 9px", borderRadius: 6 }}>A–D</span>
-          <h2 style={{ margin: 0, fontSize: 16 }}>Multiple Choice subtypes</h2>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <p className="section-kicker" style={{ marginBottom: 4 }}>MCQ subtypes</p>
+        <h2 style={{ margin: "0 0 14px", fontSize: 16 }}>Multiple Choice subtypes</h2>
+        <div className="vrg-card-grid two">
           {mcq.map((s, i) => (
             <article
               key={s.id}
+              className={`vrg-link-card tone-${(i + 2) % 5}`}
               onClick={() => onNavigate(s.id)}
-              style={{ borderRadius: 12, border: "1.5px solid var(--line)", background: "white", padding: "18px 20px", cursor: "pointer", transition: "box-shadow 0.15s" }}
-              onMouseOver={e => (e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.10)")}
-              onMouseOut={e => (e.currentTarget.style.boxShadow = "")}
-              tabIndex={0}
               onKeyDown={e => e.key === "Enter" && onNavigate(s.id)}
+              tabIndex={0}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#8B6BFF", background: "#F1ECFF", padding: "2px 8px", borderRadius: 4 }}>MCQ {i + 1}</span>
-                <span style={{ fontSize: 11, color: "var(--ink-soft)" }}>→</span>
-              </div>
-              <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 800 }}>{s.title}</h3>
-              <p style={{ margin: "0 0 10px", fontSize: 12.5, lineHeight: 1.6, color: "var(--ink)" }}>{s.spot}</p>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 10px", background: "#F1ECFF", borderRadius: 7 }}>
-                <span style={{ fontSize: 10, fontWeight: 800, color: "#8B6BFF" }}>QUICK CHECK</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#6747d8", fontStyle: "italic" }}>{s.quick}</span>
+              <span className="vrg-card-icon">{i + 1}</span>
+              <h3>{s.title}</h3>
+              <p>{s.spot}</p>
+              <div className="vrg-card-action">
+                <span style={{ fontSize: 10, fontStyle: "italic", fontWeight: 600 }}>&ldquo;{s.quick}&rdquo;</span>
+                <span>Open →</span>
               </div>
             </article>
           ))}
@@ -2319,16 +2299,16 @@ function VROverviewPage({ section, pageId, onNavigate }: { section: GuideSection
       {/* TFCT decision rules */}
       <section style={{ marginBottom: 28 }}>
         <h2 style={{ margin: "0 0 12px", fontSize: 17 }}>T/F/CT — the three decisions</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+        <div className="vrg-rich-grid three">
           {[
-            { label: "TRUE", color: "#3DBE6C", bg: "#EDFBF3", desc: "The passage states or clearly implies it. You can point to the sentence." },
-            { label: "FALSE", color: "#FF6B5C", bg: "#FFEDEA", desc: "The passage gives evidence against it. Silence alone is never enough for False." },
-            { label: "CAN'T TELL", color: "#FF9500", bg: "#FFF8EC", desc: "The passage neither proves nor contradicts it. When in doubt, this is usually right." },
+            { label: "TRUE", tone: "mint", desc: "The passage states or clearly implies it. You can point to the sentence." },
+            { label: "FALSE", tone: "coral", desc: "The passage gives evidence against it. Silence alone is never enough for False." },
+            { label: "CAN'T TELL", tone: "sun", desc: "The passage neither proves nor contradicts it. When in doubt, this is usually right." },
           ].map(d => (
-            <div key={d.label} style={{ borderRadius: 12, background: d.bg, border: `1.5px solid ${d.color}`, padding: "16px 18px" }}>
-              <strong style={{ display: "block", fontSize: 13, fontWeight: 900, color: d.color, marginBottom: 8 }}>{d.label}</strong>
-              <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.6, color: "var(--ink)" }}>{d.desc}</p>
-            </div>
+            <article key={d.label} className={`vrg-panel ${d.tone}`}>
+              <span className="vrg-panel-label">{d.label}</span>
+              <p>{d.desc}</p>
+            </article>
           ))}
         </div>
       </section>
@@ -2345,8 +2325,8 @@ function VROverviewPage({ section, pageId, onNavigate }: { section: GuideSection
             ["Outside knowledge", "Something true in real life is irrelevant unless this passage says it. Passage only."],
           ].map(([name, desc], i) => (
             <div key={name as string} style={{ display: "grid", gridTemplateColumns: "160px 1fr", borderTop: i > 0 ? "1px solid var(--line)" : undefined, background: "white" }}>
-              <div style={{ padding: "12px 14px", background: "#EAF2FF", borderRight: "1px solid var(--line)" }}>
-                <strong style={{ fontSize: 12, fontWeight: 800, color: "#2D7FF9" }}>{name}</strong>
+              <div style={{ padding: "12px 14px", background: "var(--vr-tint)", borderRight: "1px solid var(--line)" }}>
+                <strong style={{ fontSize: 12, fontWeight: 800, color: "var(--vr-deep)" }}>{name}</strong>
               </div>
               <p style={{ margin: 0, padding: "12px 14px", fontSize: 12, lineHeight: 1.6, color: "var(--ink)" }}>{desc}</p>
             </div>
@@ -2368,31 +2348,30 @@ function VRLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
   const lesson = VR_LESSONS[topic.id];
   if (!lesson) return <TopicPage section={section} topic={topic} pageId={pageId} onNavigate={onNavigate} onPractice={onPractice} />;
 
-  const fmtColor = lesson.format === "tfct" ? "#2D7FF9" : "#8B6BFF";
-  const fmtBg    = lesson.format === "tfct" ? "#EAF2FF" : "#F1ECFF";
-  const fmtLabel = lesson.format === "tfct" ? "True / False / Can't Tell" : "Multiple Choice";
+  const isTfct   = lesson.format === "tfct";
+  const panelTone = isTfct ? "tint" : "lilac";
+  const fmtLabel  = isTfct ? "True / False / Can't Tell" : "Multiple Choice";
+  const badgeLabel = isTfct ? "T/F/CT" : "A–D";
+  const fmtBg    = isTfct ? "var(--vr-tint)" : "#f1ecff";
+  const fmtColor = isTfct ? "var(--vr-deep)" : "#5b3fd4";
 
   return (
     <>
       <GuidePageHeader section={section} pageId={pageId} title={topic.title} eyebrow={`VR — ${fmtLabel}`} subtitle={topic.description} />
 
-      {/* Format badge + big idea */}
-      <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 20 }}>
-        <span style={{ fontFamily: "monospace", fontWeight: 900, fontSize: 12, color: fmtColor, background: fmtBg, padding: "4px 10px", borderRadius: 6, flexShrink: 0, marginTop: 2 }}>
-          {lesson.format === "tfct" ? "T/F/CT" : "A–D"}
-        </span>
-        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: "var(--ink)", background: fmtBg, borderLeft: `3px solid ${fmtColor}`, padding: "12px 16px", borderRadius: "0 10px 10px 0", flex: 1 }}>
-          {lesson.idea}
-        </p>
-      </div>
+      {/* Big idea */}
+      <section className={`vrg-panel ${panelTone}`} style={{ marginBottom: 18 }}>
+        <span className="vrg-panel-label">{badgeLabel} — Big idea</span>
+        <p style={{ fontSize: 14, lineHeight: 1.75 }}>{lesson.idea}</p>
+      </section>
 
       {/* How to identify */}
-      <section style={{ marginBottom: 22 }}>
+      <section style={{ marginBottom: 18 }}>
         <h2 style={{ margin: "0 0 10px", fontSize: 16 }}>How to identify this type</h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+        <div className="vrg-panel" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {lesson.identify.map((item, i) => (
             <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-              <span style={{ width: 20, height: 20, borderRadius: 6, background: fmtBg, color: fmtColor, fontSize: 10, fontWeight: 800, display: "grid", placeItems: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
+              <span style={{ width: 22, height: 22, borderRadius: 6, background: fmtBg, color: fmtColor, fontSize: 10, fontWeight: 800, display: "grid", placeItems: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</span>
               <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: "var(--ink)" }}>{item}</p>
             </div>
           ))}
@@ -2400,19 +2379,19 @@ function VRLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
       </section>
 
       {/* Signal words */}
-      <section style={{ marginBottom: 22 }}>
+      <section style={{ marginBottom: 18 }}>
         <h2 style={{ margin: "0 0 10px", fontSize: 16 }}>Signal wording in question stems</h2>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           {lesson.signals.map((s, i) => (
-            <span key={i} style={{ background: fmtBg, color: fmtColor, border: `1px solid ${fmtColor}`, borderRadius: 6, padding: "4px 10px", fontSize: 12, fontWeight: 700 }}>{s}</span>
+            <span key={i} className="vrg-panel-label" style={{ marginBottom: 0 }}>{s}</span>
           ))}
         </div>
       </section>
 
       {/* PROVE breakdown */}
-      <section style={{ marginBottom: 22 }}>
+      <section style={{ marginBottom: 18 }}>
         <h2 style={{ margin: "0 0 10px", fontSize: 16 }}>PROVE for this question type</h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 12, overflow: "hidden", border: "1px solid var(--line)" }}>
+        <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid var(--line)" }}>
           {lesson.proveNotes.map(([label, note], i) => (
             <div key={label} style={{ display: "grid", gridTemplateColumns: "160px 1fr", borderTop: i > 0 ? "1px solid var(--line)" : undefined, background: "white" }}>
               <div style={{ padding: "11px 14px", background: fmtBg, borderRight: "1px solid var(--line)" }}>
@@ -2425,36 +2404,30 @@ function VRLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
       </section>
 
       {/* Worked examples */}
-      <section style={{ marginBottom: 22 }}>
+      <section style={{ marginBottom: 18 }}>
         <h2 style={{ margin: "0 0 14px", fontSize: 16 }}>Worked examples</h2>
         {lesson.worked.map((w, wi) => (
-          <div key={wi} style={{ marginBottom: 18, borderRadius: 12, border: "1.5px solid var(--line)", overflow: "hidden" }}>
-            {/* Header */}
-            <div style={{ padding: "12px 16px", background: fmtBg, borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 10, fontWeight: 900, color: fmtColor, background: "white", border: `1px solid ${fmtColor}`, borderRadius: 5, padding: "2px 8px" }}>
-                Example {wi + 1}
-              </span>
+          <div key={wi} style={{ marginBottom: 16, borderRadius: 14, border: "1px solid var(--line)", overflow: "hidden" }}>
+            <div style={{ padding: "11px 16px", background: fmtBg, borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 10 }}>
+              <span className="vrg-panel-label" style={{ marginBottom: 0 }}>Example {wi + 1}</span>
               <strong style={{ fontSize: 13, color: "var(--ink)" }}>{w.title}</strong>
             </div>
-
             <div style={{ padding: "16px 18px", background: "white" }}>
               {/* Passage */}
               <div style={{ background: "#f8fafc", borderRadius: 8, padding: "12px 16px", marginBottom: 12, borderLeft: "3px solid #cbd5e1" }}>
-                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ink-soft)", display: "block", marginBottom: 6 }}>Passage</span>
+                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--ink-soft)", display: "block", marginBottom: 6 }}>Passage</span>
                 <p style={{ margin: 0, fontSize: 13, lineHeight: 1.75, color: "var(--ink)", fontStyle: "italic" }}>{w.passage}</p>
               </div>
-
               {/* Question */}
               <div style={{ marginBottom: 12 }}>
-                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ink-soft)", display: "block", marginBottom: 5 }}>Question</span>
+                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--ink-soft)", display: "block", marginBottom: 5 }}>Question</span>
                 <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "var(--ink)", lineHeight: 1.5 }}>{w.question}</p>
               </div>
-
-              {/* MCQ options if present */}
+              {/* MCQ options */}
               {w.options && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 12 }}>
                   {w.options.map((opt, oi) => (
-                    <div key={oi} style={{ display: "flex", gap: 8, alignItems: "center", padding: "7px 12px", borderRadius: 7, background: oi === w.correctIdx ? "#EDFBF3" : "#f8fafc", border: `1px solid ${oi === w.correctIdx ? "#3DBE6C" : "var(--line)"}` }}>
+                    <div key={oi} style={{ display: "flex", gap: 8, alignItems: "center", padding: "7px 12px", borderRadius: 7, background: oi === w.correctIdx ? "#edfbf3" : "#f8fafc", border: `1px solid ${oi === w.correctIdx ? "#3DBE6C" : "var(--line)"}` }}>
                       <span style={{ fontWeight: 900, fontSize: 12, color: oi === w.correctIdx ? "#3DBE6C" : "var(--ink-soft)", flexShrink: 0 }}>{String.fromCharCode(65 + oi)}.</span>
                       <span style={{ fontSize: 12.5, color: "var(--ink)" }}>{opt}</span>
                       {oi === w.correctIdx && <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 800, color: "#3DBE6C" }}>✓ CORRECT</span>}
@@ -2462,13 +2435,12 @@ function VRLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
                   ))}
                 </div>
               )}
-
               {/* Steps */}
               <div style={{ marginBottom: 12 }}>
-                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ink-soft)", display: "block", marginBottom: 8 }}>Working through it</span>
+                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "var(--ink-soft)", display: "block", marginBottom: 8 }}>Working through it</span>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {w.steps.map((s, si) => (
-                    <div key={si} style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: 0, borderRadius: 8, overflow: "hidden", border: "1px solid var(--line)" }}>
+                    <div key={si} style={{ display: "grid", gridTemplateColumns: "120px 1fr", borderRadius: 8, overflow: "hidden", border: "1px solid var(--line)" }}>
                       <div style={{ padding: "9px 12px", background: fmtBg }}>
                         <strong style={{ fontSize: 11.5, fontWeight: 800, color: fmtColor }}>{s.label}</strong>
                       </div>
@@ -2479,24 +2451,21 @@ function VRLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
                   ))}
                 </div>
               </div>
-
-              {/* Evidence highlight */}
-              <div style={{ background: "#fffbeb", border: "1px solid #fcd34d", borderRadius: 8, padding: "10px 14px", marginBottom: 10 }}>
-                <span style={{ fontSize: 10, fontWeight: 800, color: "#78350f", display: "block", marginBottom: 4 }}>KEY EVIDENCE</span>
-                <p style={{ margin: 0, fontSize: 12.5, fontStyle: "italic", color: "#78350f", lineHeight: 1.6 }}>"{w.highlight}"</p>
+              {/* Evidence */}
+              <div className="vrg-panel sun" style={{ marginBottom: 10 }}>
+                <span className="vrg-panel-label" style={{ marginBottom: 6 }}>Key evidence</span>
+                <p style={{ fontStyle: "italic" }}>&ldquo;{w.highlight}&rdquo;</p>
               </div>
-
               {/* Answer */}
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ background: "#3DBE6C", color: "white", fontWeight: 900, fontSize: 11, padding: "4px 12px", borderRadius: 6 }}>ANSWER</span>
                 <strong style={{ fontSize: 13, color: "#259650" }}>{w.answer}</strong>
               </div>
-
               {/* Trap */}
               {w.trap && (
-                <div style={{ marginTop: 10, background: "#FFEDEA", border: "1px solid #FF6B5C", borderRadius: 8, padding: "9px 14px" }}>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: "#d94b3e", display: "block", marginBottom: 3 }}>COMMON TRAP HERE</span>
-                  <p style={{ margin: 0, fontSize: 12, color: "#d94b3e", lineHeight: 1.6 }}>{w.trap}</p>
+                <div className="vrg-panel coral" style={{ marginTop: 10 }}>
+                  <span className="vrg-panel-label" style={{ marginBottom: 6 }}>Common trap here</span>
+                  <p>{w.trap}</p>
                 </div>
               )}
             </div>
@@ -2505,9 +2474,9 @@ function VRLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
       </section>
 
       {/* Traps */}
-      <section style={{ marginBottom: 22 }}>
+      <section style={{ marginBottom: 18 }}>
         <h2 style={{ margin: "0 0 10px", fontSize: 16 }}>Traps specific to this type</h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: 1, borderRadius: 12, overflow: "hidden", border: "1px solid var(--line)" }}>
+        <div style={{ borderRadius: 12, overflow: "hidden", border: "1px solid var(--line)" }}>
           {lesson.traps.map(([name, desc], i) => (
             <div key={name} style={{ display: "grid", gridTemplateColumns: "150px 1fr", borderTop: i > 0 ? "1px solid var(--line)" : undefined, background: "white" }}>
               <div style={{ padding: "11px 14px", background: fmtBg, borderRight: "1px solid var(--line)" }}>
@@ -2519,15 +2488,17 @@ function VRLessonPage({ section, topic, pageId, onNavigate, onPractice }: {
         </div>
       </section>
 
-      <section className="vrg-panel tint" style={{ marginBottom: 14 }}>
-        <span className="vrg-panel-label">Practice tip</span>
-        <h3>{topic.spot}</h3>
-        <p>Remember the quick check: <em>{topic.rules[0]}</em></p>
-      </section>
+      <div className="vrg-callout" style={{ marginBottom: 14 }}>
+        <span className="vrg-callout-icon">✓</span>
+        <div>
+          <h3>Practice tip</h3>
+          <p>{topic.spot} Remember the quick check: <em>{topic.rules[0]}</em></p>
+        </div>
+      </div>
 
-      <section style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+      <div style={{ marginBottom: 14 }}>
         <button className="vrg-practice-cta" onClick={onPractice} type="button">Practice VR questions →</button>
-      </section>
+      </div>
 
       <GuidePageActions section={section} pageId={pageId} onNavigate={onNavigate} />
     </>
