@@ -510,57 +510,86 @@ export function RoomDataCard({ data }: { data: RoomData }) {
 
 export interface CargoData {
   bay: { widthM: number; lengthM: number; heightM: number };
-  shielding: { sidewall: number; endwall: number; floor: number; ceiling: number }; // cm
-  lsm: { footprintA: number; footprintB: number; height: number }; // cm
+  shielding: { sidewall: number; endwall: number; floor: number; ceiling: number };
+  lsm: { footprintA: number; footprintB: number; height: number };
   massKg: number;
 }
 
 export function CargoDataCard({ data }: { data: CargoData }) {
   const { bay, shielding, lsm, massKg } = data;
-  const usableW  = bay.widthM  * 100 - shielding.sidewall * 2;
-  const usableL  = bay.lengthM * 100 - shielding.endwall  * 2;
-  const usableH  = bay.heightM * 100 - shielding.floor - shielding.ceiling;
+  const uw = bay.widthM  * 100 - shielding.sidewall * 2;  // 264
+  const ul = bay.lengthM * 100 - shielding.endwall  * 2;  // 342
+  const uh = bay.heightM * 100 - shielding.floor - shielding.ceiling; // 220
 
-  const row = (label: string, val: string, hi?: boolean) => (
-    <div key={label} style={{ display: "grid", gridTemplateColumns: "1fr auto", padding: "7px 12px", borderTop: "1px solid var(--line)", background: hi ? "#edfbf3" : "white" }}>
-      <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{label}</span>
-      <strong style={{ fontSize: 12, color: hi ? "#259650" : "var(--ink)", fontFamily: "monospace" }}>{val}</strong>
-    </div>
-  );
+  // Bay plan-view SVG dimensions (scale so it fits nicely)
+  const sc = 0.42;
+  const bW = Math.round(uw * sc); // 111
+  const bL = Math.round(ul * sc); // 144
+  const lmW = Math.round(lsm.footprintA * sc); // 23
+  const lmL = Math.round(lsm.footprintB * sc); // 15
 
   return (
-    <div style={{ background: "#f8fafc", borderRadius: 10, border: "1px solid var(--line)", padding: "12px 10px", display: "flex", flexDirection: "column", gap: 10 }}>
-      <p style={{ textAlign: "center", fontSize: 13, fontWeight: 800, color: "var(--ink)", margin: 0 }}>Orbital Cargo Bay — Specifications</p>
+    <div style={{ background: "#f8fafc", borderRadius: 10, border: "1px solid var(--line)", padding: "14px 12px" }}>
+      <p style={{ textAlign: "center", fontSize: 12, fontWeight: 800, color: "var(--ink)", margin: "0 0 12px", letterSpacing: ".04em", textTransform: "uppercase" }}>Cargo Bay &amp; Module</p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        {/* Cargo bay */}
-        <div style={{ borderRadius: 8, border: "1px solid var(--line)", overflow: "hidden" }}>
-          <div style={{ padding: "6px 12px", background: "#1b6b43", color: "white", fontSize: 10, fontWeight: 800, letterSpacing: ".06em" }}>CARGO BAY</div>
-          {row("External width",  `${bay.widthM} m`)}
-          {row("External length", `${bay.lengthM} m`)}
-          {row("External height", `${bay.heightM} m`)}
-          {row("Side shielding (×2)", `${shielding.sidewall} cm each`)}
-          {row("End shielding (×2)",  `${shielding.endwall} cm each`)}
-          {row("Floor shielding",     `${shielding.floor} cm`)}
-          {row("Ceiling shielding",   `${shielding.ceiling} cm`)}
-          {row("Usable width",  `${usableW} cm`, true)}
-          {row("Usable length", `${usableL} cm`, true)}
-          {row("Usable height", `${usableH} cm`, true)}
+      <div style={{ display: "flex", gap: 18, alignItems: "flex-start", flexWrap: "wrap" as const, justifyContent: "center" }}>
+
+        {/* ── Bay: plan view ── */}
+        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 4 }}>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".08em" }}>Cargo bay (top view)</span>
+          <svg viewBox={`0 0 ${bW + 60} ${bL + 60}`} style={{ width: "100%", maxWidth: bW + 60 }}>
+            {/* bay floor */}
+            <rect x={30} y={10} width={bW} height={bL} fill="#dbeafe" stroke="#2d7ff9" strokeWidth="2" rx="4"/>
+            {/* sample LSM tiles */}
+            {[0,1,2,3,4,5,6].map(c => [0,1,2,3,4,5,6,7,8].map(r => (
+              (c * lmW + lmW + 4 <= bW && r * lmL + lmL + 4 <= bL) &&
+              <rect key={`${c}-${r}`} x={30 + 2 + c*(lmW+2)} y={10 + 2 + r*(lmL+2)} width={lmW} height={lmL} fill="#2d7ff9" fillOpacity="0.22" rx="1"/>
+            )))}
+            {/* width label */}
+            <line x1={30} y1={bL+22} x2={30+bW} y2={bL+22} stroke="#2d7ff9" strokeWidth="1.5"/>
+            <line x1={30} y1={bL+17} x2={30} y2={bL+27} stroke="#2d7ff9" strokeWidth="1.5"/>
+            <line x1={30+bW} y1={bL+17} x2={30+bW} y2={bL+27} stroke="#2d7ff9" strokeWidth="1.5"/>
+            <text x={30+bW/2} y={bL+36} textAnchor="middle" fontSize="10" fontWeight="800" fill="#2d7ff9">{uw} cm</text>
+            {/* length label */}
+            <line x1={30+bW+12} y1={10} x2={30+bW+12} y2={10+bL} stroke="#2d7ff9" strokeWidth="1.5"/>
+            <line x1={30+bW+7} y1={10} x2={30+bW+17} y2={10} stroke="#2d7ff9" strokeWidth="1.5"/>
+            <line x1={30+bW+7} y1={10+bL} x2={30+bW+17} y2={10+bL} stroke="#2d7ff9" strokeWidth="1.5"/>
+            <text x={30+bW+28} y={10+bL/2+4} textAnchor="middle" fontSize="10" fontWeight="800" fill="#2d7ff9" transform={`rotate(-90,${30+bW+28},${10+bL/2})`}>{ul} cm</text>
+            {/* height callout inside */}
+            <text x={30+bW/2} y={10+bL/2-4} textAnchor="middle" fontSize="9" fill="#1a5fd0" fontWeight="700">height</text>
+            <text x={30+bW/2} y={10+bL/2+10} textAnchor="middle" fontSize="12" fill="#1a5fd0" fontWeight="900">{uh} cm</text>
+          </svg>
         </div>
 
-        {/* LSM */}
-        <div style={{ borderRadius: 8, border: "1px solid var(--line)", overflow: "hidden" }}>
-          <div style={{ padding: "6px 12px", background: "#2d7ff9", color: "white", fontSize: 10, fontWeight: 800, letterSpacing: ".06em" }}>LIFE-SUPPORT MODULE (LSM)</div>
-          {row("Footprint option A", `${lsm.footprintA} cm × ${lsm.footprintB} cm`)}
-          {row("Footprint option B", `${lsm.footprintB} cm × ${lsm.footprintA} cm`)}
-          {row("Height (fixed)", `${lsm.height} cm`)}
-          {row("Mass per module", `${massKg} kg`)}
-          <div style={{ padding: "7px 12px", borderTop: "1px solid var(--line)", background: "#fff8e1" }}>
-            <p style={{ margin: 0, fontSize: 11, color: "#7c5a00", lineHeight: 1.5 }}>
-              LSMs <strong>must remain upright</strong>. May be rotated 90° on the floor only — cannot be stacked on their sides.
-            </p>
-          </div>
+        {/* ── LSM ── */}
+        <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 4 }}>
+          <span style={{ fontSize: 9, fontWeight: 700, color: "var(--ink-soft)", textTransform: "uppercase" as const, letterSpacing: ".08em" }}>Life-Support Module (LSM)</span>
+          <svg viewBox="0 0 130 170" style={{ width: "100%", maxWidth: 130 }}>
+            {/* footprint rectangle */}
+            <rect x={15} y={8} width={70} height={48} fill="#d1fae5" stroke="#259650" strokeWidth="2" rx="4"/>
+            <text x={50} y={28} textAnchor="middle" fontSize="10" fontWeight="800" fill="#259650">{lsm.footprintA} cm</text>
+            <text x={50} y={43} textAnchor="middle" fontSize="10" fontWeight="800" fill="#259650">× {lsm.footprintB} cm</text>
+            <text x={50} y={62} textAnchor="middle" fontSize="8" fill="#259650" fontWeight="600">footprint</text>
+
+            {/* height bar */}
+            <rect x={100} y={8} width={18} height={48} fill="#a7f3d0" stroke="#259650" strokeWidth="1.5" rx="3"/>
+            <text x={109} y={30} textAnchor="middle" fontSize="9" fontWeight="800" fill="#259650" transform="rotate(-90,109,30)">{lsm.height} cm</text>
+            <text x={109} y={65} textAnchor="middle" fontSize="8" fill="#259650" fontWeight="600">tall</text>
+
+            {/* divider */}
+            <line x1={10} y1={78} x2={120} y2={78} stroke="#e2e8f0" strokeWidth="1"/>
+
+            {/* mass */}
+            <text x={65} y={100} textAnchor="middle" fontSize="12" fontWeight="900" fill="var(--ink)">{massKg} kg</text>
+            <text x={65} y={115} textAnchor="middle" fontSize="9" fontWeight="600" fill="var(--ink-soft)">per module</text>
+
+            {/* upright rule */}
+            <rect x={10} y={126} width={110} height={34} rx="6" fill="#fff8e1" stroke="#f59e0b" strokeWidth="1.5"/>
+            <text x={65} y={141} textAnchor="middle" fontSize="9" fontWeight="700" fill="#7c5a00">Must stay upright —</text>
+            <text x={65} y={154} textAnchor="middle" fontSize="9" fontWeight="700" fill="#7c5a00">cannot be laid on side</text>
+          </svg>
         </div>
+
       </div>
     </div>
   );
