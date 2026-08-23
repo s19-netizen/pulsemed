@@ -23,7 +23,6 @@ export async function GET(req: NextRequest) {
     .in("difficulty", difficulties);
 
   if (theme !== "any") {
-    // Map theme slug to theme keywords present in professional_theme column
     const THEME_MAP: Record<string, string> = {
       "patient-safety": "Safety",
       "honesty":        "Honesty",
@@ -43,22 +42,21 @@ export async function GET(req: NextRequest) {
 
   const questions = pool.map(q => {
     if (q.format === "most-least") {
-      // most-least kept as-is (rendered separately)
       const mostMatch  = q.correct_answer.match(/most:(\d)/);
       const leastMatch = q.correct_answer.match(/least:(\d)/);
       return {
         id: q.id,
-        tag: "sjt-most-least",
-        contextLabel: "Scenario",
-        context: q.scenario ?? "",
         format: q.format,
-        question: q.question,
-        options: [q.option_a, q.option_b, q.option_c].filter(Boolean),
-        correct: mostMatch ? Number(mostMatch[1]) : 0,
-        explanation: q.walkthrough ?? "",
+        scenario: q.scenario,
+        professionalTheme: q.professional_theme,
         difficulty: q.difficulty,
+        question: q.question,
+        optionA: q.option_a,
+        optionB: q.option_b,
+        optionC: q.option_c,
         mostCor:  mostMatch  ? Number(mostMatch[1])  : 0,
         leastCor: leastMatch ? Number(leastMatch[1]) : 2,
+        walkthrough: q.walkthrough,
       };
     }
 
@@ -77,18 +75,17 @@ export async function GET(req: NextRequest) {
     ];
     const opts = q.format === "importance" ? OPTIONS_IR : OPTIONS_AR;
     const correctIdx = opts.findIndex(o => o.toLowerCase() === q.correct_answer.toLowerCase());
-    const cidx = correctIdx >= 0 ? correctIdx : 0;
 
     return {
       id: q.id,
-      tag: `sjt-${q.format}`,
-      contextLabel: "Scenario",
-      context: q.scenario ?? "",
+      format: q.format,
+      scenario: q.scenario,
+      professionalTheme: q.professional_theme,
+      difficulty: q.difficulty,
       question: q.question,
       options: opts,
-      correct: cidx,
-      explanation: q.walkthrough ?? "",
-      difficulty: q.difficulty,
+      correct: correctIdx >= 0 ? correctIdx : 0,
+      walkthrough: q.walkthrough,
     };
   });
 

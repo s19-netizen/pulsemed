@@ -842,11 +842,10 @@ function QuestionSession() {
   const requestedCount = Number(params.get("count")) || 0;
   const colors = SECTION_COLORS[section] ?? SECTION_COLORS.vr;
 
-  const useVRBank  = section === "vr"  && !isGuest;
-  const useQRBank  = section === "qr"  && !isGuest;
-  const useDMBank  = section === "dm"  && !isGuest;
-  const useSJTBank = section === "sjt" && !isGuest;
-  const useBank    = useVRBank || useQRBank || useDMBank || useSJTBank;
+  const useVRBank = section === "vr" && !isGuest;
+  const useQRBank = section === "qr" && !isGuest;
+  const useDMBank = section === "dm" && !isGuest;
+  const useBank   = useVRBank || useQRBank || useDMBank;
 
   const staticQuestions: GuestQuestion[] = (() => {
     if (useBank) return [];
@@ -873,9 +872,6 @@ function QuestionSession() {
     else if (useDMBank) {
       const family = params.get("type") ?? "";
       endpoint = `/api/questions/dm?difficulty=${encodeURIComponent(difficulty)}&count=${count}${family ? `&family=${encodeURIComponent(family)}` : ""}`;
-    } else if (useSJTBank) {
-      const fmt = params.get("format") ?? "appropriateness";
-      endpoint = `/api/questions/sjt?format=${encodeURIComponent(fmt)}&difficulty=${encodeURIComponent(difficulty)}&count=${count}`;
     } else {
       const subtypeParam = params.get("subtype") ?? "";
       endpoint = `/api/questions/vr?difficulty=${encodeURIComponent(difficulty)}&count=${count}${subtypeParam ? `&subtype=${encodeURIComponent(subtypeParam)}` : ""}`;
