@@ -278,56 +278,127 @@ function findBlocks(rows) {
 
 function parseYN5Block(rows, start, end, family, difficulty, idPrefix, qNum) {
   const stimulusLines = [];
-  let inDataTable     = false;
   const statements    = [];
+  let chart           = null;
 
-  for (let i = start + 1; i < end; i++) {
-    const row = rows[i];
-    const c0  = str(row[0]);
-    const c1  = str(row[1]);
-    const c2  = str(row[2]);
+  const SECTION = new Set(["PREMISES","SHORTHAND / CONSTRUCTION","LOGIC DIAGRAM / MAP","RULES",
+                            "CONCLUSIONS","SOURCE INFORMATION","SCORING","SCORING / FORMAT","METHOD",
+                            "GRID KEY","KEY RULES"]);
 
-    // Detect data table header: "#" then "Statement" or "Conclusion"
-    if ((c0 === "#" || c0 === "No.") && (c1.toLowerCase().includes("statement") || c1.toLowerCase().includes("conclusion"))) {
-      inDataTable = true;
-      continue;
-    }
+  if (family === "Interpreting Information") {
+    // State machine: preamble → source → table-data → rules → statements
+    let phase        = "preamble";
+    let tableHeaders = null;
+    const tableData  = [];
+    let entityName   = "Record";
 
-    if (inDataTable) {
-      const num = Number(row[0]);
-      if (num >= 1 && num <= 5 && c1) {
-        statements.push({
-          num,
-          statement:   c1,
-          answer:      c2.toUpperCase() === "YES" ? "Yes" : "No",
-          explanation: str(row[4]) || str(row[5]) || str(row[3]),
-        });
+    for (let i = start + 1; i < end; i++) {
+      const row = rows[i];
+      const c0  = str(row[0]);
+      const c1  = str(row[1]);
+      const c2  = str(row[2]);
+
+      // Statements section header (#/No.)
+      if ((c0 === "#" || c0 === "No.") &&
+          (c1.toLowerCase().includes("statement") || c1.toLowerCase().includes("conclusion"))) {
+        phase = "statements";
+        continue;
       }
-      continue;
-    }
 
-    // Collect premises (Syllogisms): ["1.", "All robins are birds."]
-    if (/^\d+\.$/.test(c0) && c1) {
-      stimulusLines.push(`${c0} ${c1}`);
-      continue;
-    }
-
-    // Rules for Interpreting: ["Rule 1", "Selected if Signal score ≥ 70."]
-    if (/^Rule\s+\d+$/i.test(c0) && c1) {
-      if (stimulusLines.length > 0 && !stimulusLines.at(-1).startsWith("Rules:")) stimulusLines.push("Rules:");
-      stimulusLines.push(`${c0}: ${c1}`);
-      continue;
-    }
-
-    // Source table rows for Interpreting (header + data rows)
-    const SKIP = new Set(["PREMISES","SHORTHAND / CONSTRUCTION","LOGIC DIAGRAM / MAP","RULES",
-                           "CONCLUSIONS","SOURCE INFORMATION","SCORING","SCORING / FORMAT","METHOD",
-                           "GRID KEY","KEY RULES"]);
-    if (family === "Interpreting Information" && c0 && !SKIP.has(c0.toUpperCase())) {
-      const rowText = row.filter(v => v !== null && v !== undefined && v !== "").join(" | ");
-      if (rowText && !rowText.toLowerCase().includes("use the table") && !rowText.toLowerCase().includes("decide whether")) {
-        stimulusLines.push(rowText);
+      if (phase === "statements") {
+        const num = Number(c0);
+        if (num >= 1 && num <= 5 && c1) {
+          statements.push({
+            num,
+            statement:   c1,
+            answer:      c2.toUpperCase() === "YES" ? "Yes" : "No",
+            explanation: str(row[4]) || str(row[5]) || str(row[3]),
+          });
+        }
+        continue;
       }
+
+      // Section markers drive phase transitions
+      if (SECTION.has(c0.toUpperCase())) {
+        if (c0.toUpperCase() === "SOURCE INFORMATION") phase = "source";
+        else if (c0.toUpperCase() === "RULES")         phase = "rules";
+        continue;
+      }
+
+      // Waiting for table header row after SOURCE INFORMATION
+      if (phase === "source") {
+        const cells = row.filter(v => v !== null && v !== undefined && String(v).trim() !== "");
+        if (cells.length >= 2) {
+          tableHeaders = row.map(v => String(v ?? "").trim()).filter(Boolean);
+          phase = "table-data";
+        }
+        continue;
+      }
+
+      // Collecting table data rows
+      if (phase === "table-data") {
+        if (c0) {
+          // Derive entity label from first data row (e.g. "Candidate A" → "Candidate")
+          if (tableData.length === 0) {
+            entityName = c0.replace(/\s+[A-E]$/, "").trim() || "Record";
+          }
+          const cells = row.slice(0, tableHeaders ? tableHeaders.length : 10)
+                           .map(v => String(v ?? "").trim());
+          if (cells.some(v => v !== "")) tableData.push(cells);
+        }
+        continue;
+      }
+
+      // Collecting rules
+      if (phase === "rules") {
+        if (/^Rule\s+\d+$/i.test(c0) && c1) stimulusLines.push(`${c0}: ${c1}`);
+        continue;
+      }
+    }
+
+    // Replace generic "Record" header with the inferred entity name
+    if (tableHeaders && tableHeaders[0] === "Record") tableHeaders[0] = entityName;
+
+    if (tableHeaders && tableData.length > 0) {
+      chart = { type: "table", headers: tableHeaders, rows: tableData };
+    }
+
+  } else {
+    // Syllogisms (and any other YN-5 types)
+    let inStatements = false;
+
+    for (let i = start + 1; i < end; i++) {
+      const row = rows[i];
+      const c0  = str(row[0]);
+      const c1  = str(row[1]);
+      const c2  = str(row[2]);
+
+      if ((c0 === "#" || c0 === "No.") &&
+          (c1.toLowerCase().includes("statement") || c1.toLowerCase().includes("conclusion"))) {
+        inStatements = true;
+        continue;
+      }
+
+      if (inStatements) {
+        const num = Number(c0);
+        if (num >= 1 && num <= 5 && c1) {
+          statements.push({
+            num,
+            statement:   c1,
+            answer:      c2.toUpperCase() === "YES" ? "Yes" : "No",
+            explanation: str(row[4]) || str(row[5]) || str(row[3]),
+          });
+        }
+        continue;
+      }
+
+      if (SECTION.has(c0.toUpperCase())) continue;
+
+      // Numbered premises: "1.", "2.", …
+      if (/^\d+\.$/.test(c0) && c1) { stimulusLines.push(`${c0} ${c1}`); continue; }
+
+      // Rules (defensive fallback)
+      if (/^Rule\s+\d+$/i.test(c0) && c1) { stimulusLines.push(`${c0}: ${c1}`); continue; }
     }
   }
 
@@ -337,20 +408,21 @@ function parseYN5Block(rows, start, end, family, difficulty, idPrefix, qNum) {
   const set_id   = `${idPrefix}-${String(qNum).padStart(4, "0")}`;
 
   return statements.map(s => ({
-    id:            `${set_id}-${s.num}`,
+    id:             `${set_id}-${s.num}`,
     set_id,
-    format:        "YN-5",
+    format:         "YN-5",
     family,
-    subtype:       family,
+    subtype:        family,
     difficulty,
     stimulus,
-    question:      s.statement,
-    option_a:      "Yes",
-    option_b:      "No",
+    chart,
+    question:       s.statement,
+    option_a:       "Yes",
+    option_b:       "No",
     correct_answer: s.answer,
-    walkthrough:   s.explanation,
-    time_sec:      60,
-    visual_type:   "Text",
+    walkthrough:    s.explanation,
+    time_sec:       60,
+    visual_type:    "Text",
   }));
 }
 
@@ -577,17 +649,109 @@ function parseQROptions(qText) {
   return { question: questionText, options };
 }
 
+// Convert raw "Dataset / Data" text into a renderable chart or table.
+function parseQRChart(topicName, rawData, datasetTitle) {
+  // rawData = preamble paragraph + "\n\n" + structured data string
+  const halves = rawData.split(/\n\n/);
+  const data   = (halves.length >= 2 ? halves[halves.length - 1] : halves[0] ?? "").trim();
+
+  // ── Charts & Graphs ─────────────────────────────────────────────────────────
+  // e.g. "Jan: total 127, secondary series 48; Feb: total 147, secondary 60; …"
+  if (topicName === "Charts & Graphs") {
+    const xLabels = [], totals = [], secondaries = [];
+    for (const entry of data.split(/;\s*/)) {
+      const m = entry.match(/^([^:]+):\s*total\s+([\d,]+),\s*secondary(?:\s+series)?\s+([\d,]+)/i);
+      if (m) {
+        xLabels.push(m[1].trim());
+        totals.push(Number(m[2].replace(/,/g, "")));
+        secondaries.push(Number(m[3].replace(/,/g, "")));
+      }
+    }
+    if (xLabels.length > 0) {
+      return {
+        type: "multiline",
+        title: datasetTitle,
+        xLabels,
+        series: [
+          { label: "Total",     values: totals },
+          { label: "Secondary", values: secondaries },
+        ],
+      };
+    }
+  }
+
+  // ── Averages & Financial Reasoning ──────────────────────────────────────────
+  // e.g. "Daily figures: Mon 28, Tue 34, Wed 30, Thu 38, Fri 34.
+  //       Selling price £9.25/unit; variable cost £4.53/unit; …"
+  if (topicName === "Averages & Financial Reasoning") {
+    const rows = [];
+    const dailyM = data.match(/Daily figures?:\s*([^.]+)\./i);
+    if (dailyM) {
+      for (const day of dailyM[1].split(/,\s*/)) {
+        const dm = day.trim().match(/^(\w+)\s+(.+)$/);
+        if (dm) rows.push([dm[1], dm[2].trim()]);
+      }
+    }
+    const remainder = data.replace(/Daily figures?:\s*[^.]+\.\s*/i, "").trim();
+    for (const seg of remainder.split(/;\s*/)) {
+      const s = seg.trim().replace(/\.$/, "");
+      if (!s) continue;
+      const m = s.match(/^(.+?)\s+(£[\d,.][^\s]*)$/)
+             || s.match(/^(.+?)\s+([\d,.]+(?:\s+\S+)*)$/);
+      if (m) rows.push([m[1].trim(), m[2].trim()]);
+      else   rows.push(["", s]);
+    }
+    return { type: "table", title: datasetTitle, headers: ["Metric", "Value"], rows };
+  }
+
+  // ── Bullet-separated topics ──────────────────────────────────────────────────
+  // Covers: Tables & Data Extraction, Percentages & Change, Ratio/Proportion & Rates
+  // e.g. "Hospital Ward Activity • Cardiology: 120 • Surgery: 145 • Benchmark: 575 • …"
+  if (data.includes("•")) {
+    const parts = data.split(/\s*•\s*/);
+    const title  = parts[0].trim();
+    const rows   = [];
+    for (const part of parts.slice(1)) {
+      const p = part.trim();
+      if (!p) continue;
+      if (p.includes(" = ")) {
+        const eq = p.indexOf(" = ");
+        rows.push([p.slice(0, eq).trim(), p.slice(eq + 3).trim()]);
+      } else if (p.includes(": ")) {
+        const ci = p.indexOf(": ");
+        rows.push([p.slice(0, ci).trim(), p.slice(ci + 2).trim()]);
+      } else {
+        rows.push(["", p]);
+      }
+    }
+    return { type: "table", title: title || datasetTitle, headers: ["Metric", "Value"], rows };
+  }
+
+  // ── Units, Time & Measurement ────────────────────────────────────────────────
+  // e.g. "Main rectangle 9.05 m × 5.62 m; height 2.45 m. Item footprint 0.50 m × 0.35 m. …"
+  const segs = data.split(/[;.]\s*/).map(s => s.trim()).filter(Boolean);
+  const rows  = [];
+  for (const seg of segs) {
+    const m = seg.match(/^([A-Za-z][A-Za-z\s]*?)\s+([\d£×%].*)$/);
+    if (m) rows.push([m[1].trim(), m[2].trim()]);
+    else   rows.push(["", seg]);
+  }
+  return rows.length > 0
+    ? { type: "table", title: datasetTitle, headers: ["Metric", "Value"], rows }
+    : null;
+}
+
 async function importQR() {
   console.log("\n=== Importing QR ===");
   const wb = XLSX.readFile(QR_FILE);
 
   const TOPIC_PREFIX = {
-    "Percentages & Change":          "PC",
-    "Ratio, Proportion & Rates":     "RP",
-    "Tables & Data Extraction":      "TD",
-    "Charts & Graphs":               "CG",
-    "Averages & Financial Reasoning":"AF",
-    "Units, Time & Measurement":     "UT",
+    "Percentages & Change":           "PC",
+    "Ratio, Proportion & Rates":      "RP",
+    "Tables & Data Extraction":       "TD",
+    "Charts & Graphs":                "CG",
+    "Averages & Financial Reasoning": "AF",
+    "Units, Time & Measurement":      "UT",
   };
 
   const datasets  = [];
@@ -599,12 +763,16 @@ async function importQR() {
     const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
 
     rows.forEach((r, idx) => {
-      const dsId = `QR-${prefix}-${String(idx + 1).padStart(3, "0")}`;
+      const dsId    = `QR-${prefix}-${String(idx + 1).padStart(3, "0")}`;
+      const title   = str(r["Dataset Title"]);
+      const rawData = str(r["Dataset / Data"]);
+      const chart   = parseQRChart(topicName, rawData, title);
+
       datasets.push({
         id:           dsId,
-        title:        str(r["Dataset Title"]),
-        scenario:     str(r["Presentation"]),
-        figure_brief: str(r["Dataset / Data"]),
+        title,
+        scenario:     str(r["Presentation"]),        // student-facing description
+        figure_brief: chart ? JSON.stringify(chart) : rawData, // chart JSON (or raw fallback)
       });
 
       const difficulty = str(r["Difficulty"]);

@@ -40,12 +40,18 @@ export async function GET(req: NextRequest) {
   // Fetch dataset text + chart data
   const { data: dsRows } = await supabase
     .from("qr_datasets")
-    .select("id, title, figure_brief, scenario")
+    .select("id, title, scenario, figure_brief")
     .in("id", chosenDatasets);
 
-  const dsMap: Record<string, { title: string; figure_brief: string; scenario: string; chart: object | null }> = {};
+  const dsMap: Record<string, { title: string; scenario: string; chart: object | null }> = {};
   for (const ds of dsRows ?? []) {
-    dsMap[ds.id] = { title: ds.title, figure_brief: ds.figure_brief, scenario: ds.scenario, chart: null };
+    // figure_brief stores chart JSON (if imported by the new script) or raw text (legacy)
+    let chart: object | null = null;
+    try {
+      const parsed = JSON.parse(ds.figure_brief ?? "");
+      if (parsed && typeof parsed.type === "string") chart = parsed;
+    } catch { /* raw text — no chart */ }
+    dsMap[ds.id] = { title: ds.title, scenario: ds.scenario, chart };
   }
 
   // Fetch questions for chosen datasets, filtered to requested difficulties
@@ -61,16 +67,13 @@ export async function GET(req: NextRequest) {
   for (const q of qRows ?? []) {
     const ds = dsMap[q.dataset_id];
     const options = [q.option_a, q.option_b, q.option_c, q.option_d, q.option_e].filter(Boolean);
-    const context = ds
-      ? (ds.figure_brief ? `[${ds.figure_brief}]\n\n${ds.scenario}` : ds.scenario)
-      : "";
 
     sessionQuestions.push({
       id: q.id,
       tag: `qr-${q.topic?.toLowerCase().replace(/\s+/g, "-") ?? "general"}`,
       contextLabel: ds?.title ?? "Data set",
-      context,
-      chartFigure: ds?.chart ?? null,
+      context: ds?.scenario ?? "",   // presentation text (not the raw data dump)
+      chartFigure: ds?.chart ?? null, // parsed chart/table JSON
       question: q.question,
       options,
       correct: correctIndex(q.correct_answer),
