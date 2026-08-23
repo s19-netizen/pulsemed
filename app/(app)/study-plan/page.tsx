@@ -9,8 +9,9 @@ export default async function StudyPlanPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user) redirect("/auth/signin");
 
-  const userId = (session.user as any).id;
-  await requirePaid(userId);
+  const u = session.user as any;
+  const userId = u.id;
+  await requirePaid(userId, u.role ?? "user", u.email ?? "");
 
   const [
     { data: responses },

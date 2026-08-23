@@ -102,7 +102,8 @@ export default async function PracticePage({ params }: { params: { slug: string 
 
   const session = await getServerSession(authOptions);
   if (session?.user) {
-    await requirePaid((session.user as any).id);
+    const u = session.user as any;
+    await requirePaid(u.id, u.role ?? "user", u.email ?? "");
     return (
       <>
         <PracticeJsonLd slug={params.slug} />

@@ -6,8 +6,9 @@ import DashboardClient from "./DashboardClient";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
-  const userId = (session!.user as any).id;
-  await requirePaid(userId);
+  const u = session!.user as any;
+  const userId = u.id;
+  await requirePaid(userId, u.role ?? "user", u.email ?? "");
 
   const [{ data: userRow }, { data: responses }, { data: profile }, { data: diagnosticReport }, { data: practiceSessions }] = await Promise.all([
     supabase.from("users").select("name, exam_date, onboarded").eq("id", userId).single(),
