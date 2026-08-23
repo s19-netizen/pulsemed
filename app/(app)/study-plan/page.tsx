@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { redirect } from "next/navigation";
+import { requirePaid } from "@/lib/isPaid";
 import StudyPlanClient from "./StudyPlanClient";
 
 export default async function StudyPlanPage() {
@@ -9,6 +10,7 @@ export default async function StudyPlanPage() {
   if (!session?.user) redirect("/auth/signin");
 
   const userId = (session.user as any).id;
+  await requirePaid(userId);
 
   const [
     { data: responses },

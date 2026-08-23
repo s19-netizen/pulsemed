@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { authOptions } from "@/lib/auth";
+import { requirePaid } from "@/lib/isPaid";
 import PracticeBuilder from "./PracticeBuilder";
 import GuestDoneCard from "./GuestDoneCard";
 import Link from "next/link";
@@ -100,12 +101,15 @@ export default async function PracticePage({ params }: { params: { slug: string 
   if (!VALID_SLUGS.includes(params.slug)) notFound();
 
   const session = await getServerSession(authOptions);
-  if (session?.user) return (
-    <>
-      <PracticeJsonLd slug={params.slug} />
-      <PracticeBuilder slug={params.slug} />
-    </>
-  );
+  if (session?.user) {
+    await requirePaid((session.user as any).id);
+    return (
+      <>
+        <PracticeJsonLd slug={params.slug} />
+        <PracticeBuilder slug={params.slug} />
+      </>
+    );
+  }
 
   const cookieStore = cookies();
   const doneCookie = cookieStore.get(`pm_done_${params.slug}`);
