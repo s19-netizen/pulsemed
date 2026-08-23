@@ -981,19 +981,22 @@ function QuestionSession() {
     if (answers.length > 0) {
       const times = allTimesRef.current;
       const avgMs = times.length > 0 ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : 0;
+      const totalCorrect = answers.filter(a => a.correct).length;
       await fetch("/api/practice/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           section,
-          correct: answers.filter(a => a.correct).length,
+          correct: totalCorrect,
           total: answers.length,
           avgMs,
           sessionId: sessionIdRef.current,
         }),
       }).catch(() => {});
+      router.push(`/results?section=${section}&total=${answers.length}&correct=${totalCorrect}&avgMs=${avgMs}&sessionId=${encodeURIComponent(sessionIdRef.current)}${isGuest ? "&guest=1" : ""}`);
+    } else {
+      router.push(`/practice/${section}`);
     }
-    router.push(`/practice/${section}`);
   }
 
   function handleBack() {
