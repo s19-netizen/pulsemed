@@ -393,6 +393,72 @@ function ChartRenderer({ fig }: { fig: ChartFigure }) {
   return null;
 }
 
+// ─── DM context formatter ────────────────────────────────────────────────────
+
+function BulletList({ items }: { items: string[] }) {
+  return (
+    <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+      {items.map((line, i) => (
+        <li key={i} style={{ display: "flex", gap: 10, marginBottom: 8, alignItems: "flex-start" }}>
+          <span style={{ color: "#8b6bff", fontWeight: 800, fontSize: 14, lineHeight: "1.6", flexShrink: 0 }}>•</span>
+          <span style={{ fontFamily: "Georgia, serif", fontSize: 14.5, lineHeight: 1.65, color: "#334354" }}>{line}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function DmContextFormatter({ text, tag }: { text: string; tag: string }) {
+  const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+
+  if (tag === "dm-syllogisms") {
+    return (
+      <div>
+        <p style={{ fontFamily: "var(--font-inter), sans-serif", fontSize: 11, fontWeight: 800, letterSpacing: ".08em", color: "#8b6bff", textTransform: "uppercase", marginBottom: 14 }}>
+          Consider the following premises
+        </p>
+        <BulletList items={lines} />
+      </div>
+    );
+  }
+
+  if (tag === "dm-interpreting-information") {
+    return (
+      <div>
+        <p style={{ fontFamily: "var(--font-inter), sans-serif", fontSize: 11, fontWeight: 800, letterSpacing: ".08em", color: "#8b6bff", textTransform: "uppercase", marginBottom: 14 }}>
+          Eligibility rules
+        </p>
+        <BulletList items={lines} />
+      </div>
+    );
+  }
+
+  if (tag === "dm-logical-puzzles") {
+    // First line: the setup sentence; rest: individual constraints
+    const [setup, ...constraints] = lines;
+    // Reformat "5 participants/items — X, Y, Z — must occupy the 5 ordered slots A, B, C, D, E, one per slot."
+    const cleanSetup = setup
+      .replace(/^(\d+)\s+participants\/items\s+/i, "")
+      .replace(/\s+one\s+per\s+slot\.?$/i, ".")
+      .replace(/must\s+occupy\s+the\s+\d+\s+ordered\s+slots\s+/i, "must each occupy one of five ordered positions: ");
+    return (
+      <div>
+        <p style={{ fontFamily: "Georgia, serif", fontSize: 14.5, lineHeight: 1.7, color: "#334354", marginBottom: 16 }}>
+          {cleanSetup}
+        </p>
+        {constraints.length > 0 && <BulletList items={constraints} />}
+      </div>
+    );
+  }
+
+  // Arguments & Assumptions, Probability, Venn Diagrams — plain passage
+  return (
+    <div style={{ fontFamily: "Georgia, serif", fontSize: 14.5, lineHeight: 1.8, color: "#334354", whiteSpace: "pre-line" }}>
+      {text}
+    </div>
+  );
+}
+
 // ─── Section colours ─────────────────────────────────────────────────────────
 
 const SECTION_COLORS: Record<string, { color: string; deep: string; tint: string; short: string }> = {
@@ -1134,16 +1200,20 @@ function QuestionSession() {
               <p style={{ margin: "0 0 8px", color: "var(--section)", letterSpacing: ".1em", fontSize: 10, fontWeight: 800, textTransform: "uppercase" as const }}>{q0.contextLabel}</p>
               {/* Show text if: no chart, OR non-QR section, OR QR-set (show scenario above figure) */}
               {(!(q0 as any).chartFigure || (section !== "qr") || isQrSet) && q0.context && (
-                <div
-                  className={`passage-text ${revealed && effectiveEvidence ? "passage-text--revealed" : ""}`}
-                  style={isQrSet
-                    ? { fontFamily: "var(--font-inter), sans-serif", fontSize: 12, lineHeight: 1.55, color: "#526170", marginBottom: 14 }
-                    : { whiteSpace: "pre-line", fontFamily: "Georgia, serif", fontSize: 15, lineHeight: 1.85, color: "#334354" }}
-                >
-                  {isQrSet
-                    ? q0.context
-                    : <HighlightedPassage text={q0.context} evidence={effectiveEvidence} revealed={revealed} />}
-                </div>
+                section === "dm" ? (
+                  <DmContextFormatter text={q0.context} tag={q0.tag ?? ""} />
+                ) : isQrSet ? (
+                  <p style={{ fontFamily: "var(--font-inter), sans-serif", fontSize: 12, lineHeight: 1.55, color: "#526170", marginBottom: 14, margin: "0 0 14px" }}>
+                    {q0.context}
+                  </p>
+                ) : (
+                  <div
+                    className={`passage-text ${revealed && effectiveEvidence ? "passage-text--revealed" : ""}`}
+                    style={{ whiteSpace: "pre-line", fontFamily: "Georgia, serif", fontSize: 15, lineHeight: 1.85, color: "#334354" }}
+                  >
+                    <HighlightedPassage text={q0.context} evidence={effectiveEvidence} revealed={revealed} />
+                  </div>
+                )
               )}
               {(q0 as any).vennFigure && (
                 <VennDiagram fig={(q0 as any).vennFigure as VennFigure} />
