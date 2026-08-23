@@ -136,7 +136,8 @@ type ChartFigure =
   | { type: "bar";       title?: string; xLabel?: string; yLabel?: string; series: ChartSeries[] }
   | { type: "pie";       title?: string; series: ChartSeries[] }
   | { type: "multiline"; title?: string; xLabel?: string; yLabel?: string; xLabels: string[]; series: MultiSeries[] }
-  | { type: "table";     title?: string; headers: string[]; rows: (string | number)[][] };
+  | { type: "table";     title?: string; headers: string[]; rows: (string | number)[][] }
+  | { type: "prose";     text: string };
 
 function niceStep(raw: number): number {
   const mag = Math.pow(10, Math.floor(Math.log10(Math.max(raw, 0.001))));
@@ -361,12 +362,25 @@ function MultiLineChart({ fig }: { fig: Extract<ChartFigure, { type: "multiline"
   );
 }
 
+function ProseFigure({ fig }: { fig: Extract<ChartFigure, { type: "prose" }> }) {
+  return (
+    <p style={{
+      margin: "10px 0", lineHeight: 1.65, fontSize: 14, color: "#1f2937",
+      background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8,
+      padding: "12px 14px",
+    }}>
+      {fig.text}
+    </p>
+  );
+}
+
 function ChartRenderer({ fig }: { fig: ChartFigure }) {
   if (fig.type === "line")      return <LineChart      fig={fig} />;
   if (fig.type === "bar")       return <BarChart       fig={fig} />;
   if (fig.type === "pie")       return <PieChart       fig={fig} />;
   if (fig.type === "multiline") return <MultiLineChart fig={fig} />;
   if (fig.type === "table")     return <DataTable      fig={fig} />;
+  if (fig.type === "prose")     return <ProseFigure    fig={fig} />;
   return null;
 }
 
@@ -487,7 +501,103 @@ function parseOptionExplanations(explanation: string, options: string[], correct
 
 // ─── Explanation UI ──────────────────────────────────────────────────────────
 
+// ── QR step-by-step explanation renderer ─────────────────────────────────────
+
+function QRExplanation({ q, selected, takenMs }: { q: GuestQuestion; selected: number; takenMs: number }) {
+  const isRight = selected === q.correct;
+  const target = TARGET_S.qr;
+  const timing = timingLabel(takenMs, target);
+  const correctLetter = String.fromCharCode(65 + q.correct);
+  const correctText = q.options[q.correct] ?? "";
+
+  // Strip "What is the question asking? [question] • A) … D) …" preamble
+  let raw = (q.explanation ?? "").trim();
+  const stepStart = raw.search(/Step\s+1\s*[—–\-]/i);
+  if (stepStart > 0) {
+    raw = raw.slice(stepStart);
+  } else {
+    // strip up to last option label e.g. "D) 943.2 "
+    raw = raw.replace(/^[\s\S]*?[D-E]\)\s*[^\n|]+[\s|]*/i, "").trim();
+  }
+
+  // Split into labelled segments: Step N, Calculation, Therefore
+  const segments: { kind: "step" | "calc" | "answer" | "prose"; label?: string; text: string }[] = [];
+  const lines = raw.split(/\n/);
+  let current: (typeof segments)[0] | null = null;
+
+  for (const line of lines) {
+    const s = line.trim();
+    if (!s) continue;
+    const stepM = s.match(/^(Step\s+\d+)\s*[—–\-]\s*(.*)/i);
+    const calcM  = s.match(/^Calculation[:\s—–\-]+(.*)/i);
+    const thereM = s.match(/^Therefore[\s,]+(.*)/i);
+    if (stepM) {
+      if (current) segments.push(current);
+      current = { kind: "step", label: stepM[1], text: stepM[2] };
+    } else if (calcM) {
+      if (current) segments.push(current);
+      current = { kind: "calc", text: calcM[1] };
+    } else if (thereM) {
+      if (current) segments.push(current);
+      current = { kind: "answer", text: thereM[1] };
+    } else if (current) {
+      current.text += " " + s;
+    } else {
+      segments.push({ kind: "prose", text: s });
+    }
+  }
+  if (current) segments.push(current);
+
+  // If no steps were found, just show the raw text cleanly
+  const hasSteps = segments.some(s => s.kind === "step" || s.kind === "calc");
+
+  return (
+    <div className="exp-panel">
+      <div className={`exp-verdict ${isRight ? "exp-verdict--right" : "exp-verdict--wrong"}`}>
+        <span className="exp-verdict-icon">{isRight ? "✓" : "✗"}</span>
+        <strong>{isRight ? "Correct" : "Incorrect"}</strong>
+        <span>
+          {isRight
+            ? `— ${correctLetter}) ${correctText}`
+            : `— the answer is ${correctLetter}) ${correctText}`}
+        </span>
+        <span className={`exp-timing ${timing.cls}`}>
+          {fmtSec(takenMs)} <em>· target {target}s · {timing.label}</em>
+        </span>
+      </div>
+
+      <div style={{ padding: "14px 16px 8px" }}>
+        {hasSteps ? segments.map((seg, i) => {
+          if (seg.kind === "step") return (
+            <div key={i} style={{ marginBottom: 10 }}>
+              <span style={{ display: "inline-block", background: "var(--section-tint)", color: "var(--section-deep)", fontWeight: 800, fontSize: 10, letterSpacing: ".06em", textTransform: "uppercase" as const, borderRadius: 4, padding: "2px 7px", marginBottom: 4 }}>
+                {seg.label}
+              </span>
+              <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: "#334354" }}>{seg.text}</p>
+            </div>
+          );
+          if (seg.kind === "calc") return (
+            <div key={i} style={{ margin: "10px 0", background: "#f1ecff", borderLeft: "3px solid var(--section)", borderRadius: "0 6px 6px 0", padding: "8px 12px" }}>
+              <p style={{ margin: 0, fontFamily: "monospace", fontSize: 13, fontWeight: 700, color: "var(--section-deep)" }}>{seg.text}</p>
+            </div>
+          );
+          if (seg.kind === "answer") return (
+            <p key={i} style={{ margin: "10px 0 0", fontSize: 13, fontWeight: 700, color: isRight ? "#259650" : "var(--section-deep)" }}>{seg.text}</p>
+          );
+          return <p key={i} style={{ margin: "0 0 6px", fontSize: 13, lineHeight: 1.6, color: "#334354" }}>{seg.text}</p>;
+        }) : (
+          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.7, color: "#334354", whiteSpace: "pre-line" }}>{raw || q.explanation}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Standard per-option explanation ──────────────────────────────────────────
+
 function AnswerExplanation({ q, selected, takenMs, section }: { q: GuestQuestion; selected: number; takenMs: number; section: string }) {
+  if (section === "qr") return <QRExplanation q={q} selected={selected} takenMs={takenMs} />;
+
   const isRight = selected === q.correct;
   const rawExplanation = cleanExplanation(q.explanation ?? "");
   const parts = parseOptionExplanations(rawExplanation, q.options, q.correct);
