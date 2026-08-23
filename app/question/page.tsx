@@ -564,15 +564,18 @@ function fmtSec(ms: number) {
 
 type QuestionSlot =
   | { kind: "single"; q: GuestQuestion }
-  | { kind: "yn-set"; questions: GuestQuestion[] };
+  | { kind: "yn-set"; questions: GuestQuestion[] }
+  | { kind: "qr-set"; questions: GuestQuestion[] };
 
-function buildSlots(questions: GuestQuestion[]): QuestionSlot[] {
+function buildSlots(questions: GuestQuestion[], section?: string): QuestionSlot[] {
   const slots: QuestionSlot[] = [];
   let i = 0;
   while (i < questions.length) {
     const q = questions[i];
     const isYN = q.options.length === 2 && q.options[0] === "Yes" && q.options[1] === "No";
     const setId = (q as any).setId as string | undefined;
+    const datasetId = (q as any).datasetId as string | undefined;
+
     if (isYN && setId) {
       // Group by setId — reliable even if stimulus text varies slightly
       const setQs: GuestQuestion[] = [q];
@@ -583,6 +586,15 @@ function buildSlots(questions: GuestQuestion[]): QuestionSlot[] {
         if (nIsYN && (nq as any).setId === setId) { setQs.push(nq); j++; } else break;
       }
       slots.push({ kind: "yn-set", questions: setQs });
+      i = j;
+    } else if (section === "qr" && datasetId) {
+      // Group QR questions by dataset — shown one at a time, sharing the same context pane
+      const setQs: GuestQuestion[] = [q];
+      let j = i + 1;
+      while (j < questions.length && (questions[j] as any).datasetId === datasetId) {
+        setQs.push(questions[j]); j++;
+      }
+      slots.push(setQs.length > 1 ? { kind: "qr-set", questions: setQs } : { kind: "single", q });
       i = j;
     } else {
       slots.push({ kind: "single", q });
@@ -678,7 +690,7 @@ function QuestionSession() {
   }, []);
 
   const questions: GuestQuestion[] = (useVRBank || useQRBank || useDMBank) ? bankQuestions : staticQuestions;
-  const slots = useMemo(() => buildSlots(questions), [questions]);
+  const slots = useMemo(() => buildSlots(questions, section), [questions, section]);
 
   // Slot navigation
   const [slotIdx, setSlotIdx] = useState(0);
@@ -687,6 +699,11 @@ function QuestionSession() {
   const [revealed, setRevealed] = useState(false);
   const [flagged, setFlagged] = useState(false);
   const [answers, setAnswers] = useState<{ correct: boolean }[]>([]);
+
+  // QR set sub-question state
+  const [qrSubIdx, setQrSubIdx] = useState(0);
+  const [qrSubSel, setQrSubSel] = useState<number | null>(null);
+  const [qrSubRevealed, setQrSubRevealed] = useState(false);
 
   // Back navigation
   type QSnap = { selected: number | null; setSelections: (number | null)[]; revealed: boolean; flagged: boolean };
@@ -701,14 +718,21 @@ function QuestionSession() {
     ? slot.kind === "single" ? slot.q : slot.questions[0]
     : undefined;
 
+  // For QR sets: the active sub-question (right panel)
+  const qrCurrQ: GuestQuestion | undefined =
+    slot?.kind === "qr-set" ? slot.questions[qrSubIdx] : undefined;
+
   // Timer target for current slot
   const baseTarget = TARGET_S[section] ?? 40;
   const targetS = slot?.kind === "yn-set" ? baseTarget * slot.questions.length : baseTarget;
 
-  // Reset timer on slot change
+  // Reset timer + qr sub-state on slot change
   useEffect(() => {
     startRef.current = Date.now();
     setElapsed(0);
+    setQrSubIdx(0);
+    setQrSubSel(null);
+    setQrSubRevealed(false);
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setElapsed(Math.floor((Date.now() - startRef.current) / 1000));
@@ -757,7 +781,9 @@ function QuestionSession() {
   // Can we confirm?
   const canConfirm = slot.kind === "single"
     ? selected !== null
-    : slot.questions.every((_, i) => setSelections[i] !== undefined && setSelections[i] !== null);
+    : slot.kind === "qr-set"
+      ? qrSubSel !== null && !qrSubRevealed
+      : slot.questions.every((_, i) => setSelections[i] !== undefined && setSelections[i] !== null);
 
   function saveSlotSnap(i: number) {
     setSnapshots(prev => ({ ...prev, [i]: { selected, setSelections, revealed, flagged } }));
@@ -847,13 +873,42 @@ function QuestionSession() {
     }
   };
 
+  const handleQrSubConfirm = () => {
+    if (qrSubSel === null || qrSubRevealed || slot?.kind !== "qr-set") return;
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    const takenMs = Date.now() - startRef.current;
+    setLastTakenMs(takenMs);
+    allTimesRef.current = [...allTimesRef.current, takenMs];
+    setQrSubRevealed(true);
+    const currQ = slot.questions[qrSubIdx];
+    const isCorrect = qrSubSel === currQ.correct;
+    setAnswers(prev => [...prev, { correct: isCorrect }]);
+    if (!isGuest) {
+      fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: sessionIdRef.current, session_type: "practice",
+          question_index: slotIdx * 10 + qrSubIdx, question_tag: currQ.tag, is_correct: isCorrect,
+          time_taken_ms: takenMs, selected_answer: String(qrSubSel), correct_answer: String(currQ.correct) }),
+      }).catch(() => {});
+    }
+  };
+
+  const handleQrSubNext = () => {
+    setQrSubIdx(i => i + 1);
+    setQrSubSel(null);
+    setQrSubRevealed(false);
+    startRef.current = Date.now();
+    setElapsed(0);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => setElapsed(Math.floor((Date.now() - startRef.current) / 1000)), 500);
+  };
+
   const handleNext = () => {
     const nextSnap = snapshots[slotIdx + 1];
     saveSlotSnap(slotIdx);
 
     if (isLast) {
       const totalCorrect = answers.filter(a => a.correct).length;
-      const totalQs = slots.reduce((acc, s) => acc + (s.kind === "yn-set" ? 2 : 1), 0);
+      const totalQs = slots.reduce((acc, s) => acc + (s.kind === "yn-set" ? 2 : s.kind === "qr-set" ? s.questions.length : 1), 0);
       const times = allTimesRef.current;
       const avgMs = times.length > 0 ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : 0;
       if (isGuest) {
@@ -873,7 +928,7 @@ function QuestionSession() {
 
   // Progress
   const totalSlots = slots.length;
-  const doneSlots = slotIdx + (revealed ? 1 : 0);
+  const doneSlots = slotIdx + (revealed || qrSubRevealed ? 1 : 0);
   const pct = Math.round((doneSlots / totalSlots) * 100);
 
   // VR passage counter
@@ -885,7 +940,8 @@ function QuestionSession() {
     : null;
 
   // Timer class
-  const timerCls = revealed ? "q-timer--done" : elapsed < targetS ? "q-timer--ok" : "q-timer--over";
+  const isAnyRevealed = revealed || qrSubRevealed;
+  const timerCls = isAnyRevealed ? "q-timer--done" : elapsed < targetS ? "q-timer--ok" : "q-timer--over";
 
   // Question type label (from first question in slot)
   const typeLabel = questionTypeLabel(q0);
@@ -905,13 +961,15 @@ function QuestionSession() {
             <span>
               {passageNumber !== null
                 ? `Passage ${passageNumber} of ${totalPassages} · Q${slotIdx + 1} of ${totalSlots}`
-                : `Question ${slotIdx + 1} of ${totalSlots}`}
+                : slot.kind === "qr-set"
+                  ? `Dataset ${slotIdx + 1} of ${totalSlots} · Q${qrSubIdx + 1}/${slot.questions.length}`
+                  : `Question ${slotIdx + 1} of ${totalSlots}`}
             </span>
             <div><i style={{ width: `${pct}%` }} /></div>
           </div>
           <div className="question-tools">
             <span className={`q-timer ${timerCls}`}>
-              ⏱ {revealed ? fmtSec(lastTakenMs) : fmtSec(elapsed * 1000)}
+              ⏱ {isAnyRevealed ? fmtSec(lastTakenMs) : fmtSec(elapsed * 1000)}
             </span>
             <button className={flagged ? "flagged" : ""} onClick={() => setFlagged(f => !f)}>
               {flagged ? "★ Flagged" : "☆ Flag"}
@@ -1012,6 +1070,33 @@ function QuestionSession() {
                     })}
                   </div>
                 </>
+              ) : slot.kind === "qr-set" ? (
+                /* ── QR set: one question at a time, shared dataset context ── */
+                <>
+                  <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".1em", color: "var(--section)", textTransform: "uppercase" as const, margin: "0 0 6px" }}>
+                    Question {qrSubIdx + 1} of {slot.questions.length}
+                  </p>
+                  <h2>{qrCurrQ!.question}</h2>
+                  <div className="answer-list">
+                    {qrCurrQ!.options.map((opt, i) => {
+                      let cls = "";
+                      if (qrSubRevealed) {
+                        if (i === qrCurrQ!.correct) cls = "correct";
+                        else if (i === qrSubSel) cls = "incorrect";
+                      } else if (i === qrSubSel) cls = "selected";
+                      return (
+                        <button key={i} className={cls} onClick={() => { if (!qrSubRevealed) setQrSubSel(i); }}>
+                          <span>{String.fromCharCode(65 + i)}</span>
+                          {opt}
+                          {qrSubRevealed && i === qrCurrQ!.correct && <b>✓</b>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {qrSubRevealed && qrSubSel !== null && (
+                    <AnswerExplanation q={qrCurrQ!} selected={qrSubSel} takenMs={lastTakenMs} section={section} />
+                  )}
+                </>
               ) : (
                 /* ── Single MCQ ── */
                 <>
@@ -1048,7 +1133,21 @@ function QuestionSession() {
               <button className="ghost" onClick={handleBack} disabled={slotIdx === 0} style={{ opacity: slotIdx === 0 ? 0.4 : 1 }}>← Back</button>
               <button className="ghost" onClick={handleExit}>✕ Exit</button>
             </div>
-            {!revealed ? (
+            {slot.kind === "qr-set" ? (
+              !qrSubRevealed ? (
+                <button className="question-primary" disabled={qrSubSel === null} onClick={handleQrSubConfirm}>
+                  Confirm answer
+                </button>
+              ) : qrSubIdx < slot.questions.length - 1 ? (
+                <button className="question-primary" onClick={handleQrSubNext}>
+                  Next question →
+                </button>
+              ) : (
+                <button className="question-primary" onClick={handleNext}>
+                  {isLast ? "See results →" : "Next dataset →"}
+                </button>
+              )
+            ) : !revealed ? (
               <button className="question-primary" disabled={!canConfirm} onClick={handleConfirm}>
                 Confirm {slot.kind === "yn-set" ? "all answers" : "answer"}
               </button>

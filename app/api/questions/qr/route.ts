@@ -62,18 +62,20 @@ export async function GET(req: NextRequest) {
     .in("difficulty", difficulties)
     .order("id");
 
-  const sessionQuestions: unknown[] = [];
+  // Build questions grouped by dataset (shuffle dataset order, keep within-dataset order)
+  const datasetGroups: Record<string, unknown[]> = {};
+  for (const dsId of chosenDatasets) datasetGroups[dsId] = [];
 
   for (const q of qRows ?? []) {
     const ds = dsMap[q.dataset_id];
     const options = [q.option_a, q.option_b, q.option_c, q.option_d, q.option_e].filter(Boolean);
-
-    sessionQuestions.push({
+    (datasetGroups[q.dataset_id] ??= []).push({
       id: q.id,
+      datasetId: q.dataset_id,
       tag: `qr-${q.topic?.toLowerCase().replace(/\s+/g, "-") ?? "general"}`,
       contextLabel: ds?.title ?? "Data set",
-      context: ds?.scenario ?? "",   // presentation text (not the raw data dump)
-      chartFigure: ds?.chart ?? null, // parsed chart/table JSON
+      context: ds?.scenario ?? "",
+      chartFigure: ds?.chart ?? null,
       question: q.question,
       options,
       correct: correctIndex(q.correct_answer),
@@ -83,8 +85,11 @@ export async function GET(req: NextRequest) {
     });
   }
 
+  // Shuffle dataset order, preserve question order within each dataset
+  const orderedQuestions = shuffle(Object.values(datasetGroups)).flat();
+
   return NextResponse.json({
-    questions: shuffle(sessionQuestions),
+    questions: orderedQuestions,
     sessionId: `qr-${Date.now()}`,
   });
 }

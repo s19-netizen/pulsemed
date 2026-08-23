@@ -729,7 +729,8 @@ function parseQRChart(topicName, rawData, datasetTitle) {
 
   // ── Units, Time & Measurement ────────────────────────────────────────────────
   // e.g. "Main rectangle 9.05 m × 5.62 m; height 2.45 m. Item footprint 0.50 m × 0.35 m. …"
-  const segs = data.split(/[;.]\s*/).map(s => s.trim()).filter(Boolean);
+  // Split on ; OR on ". " followed by a letter — never on decimal points inside numbers
+  const segs = data.split(/;\s*|\.\s+(?=[A-Za-z])/u).map(s => s.trim()).filter(Boolean);
   const rows  = [];
   for (const seg of segs) {
     const m = seg.match(/^([A-Za-z][A-Za-z\s]*?)\s+([\d£×%].*)$/);
