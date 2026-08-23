@@ -390,6 +390,9 @@ function ChartRenderer({ fig }: { fig: ChartFigure }) {
   if (fig.type === "multiline") return <MultiLineChart fig={fig} />;
   if (fig.type === "table")     return <DataTable      fig={fig} />;
   if (fig.type === "prose")     return <ProseFigure    fig={fig} />;
+  // DM charts: stored with headers+rows but no type field
+  const f = fig as any;
+  if (f.headers && f.rows)      return <DataTable fig={{ type: "table", headers: f.headers, rows: f.rows, title: f.title }} />;
   return null;
 }
 
