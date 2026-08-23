@@ -363,14 +363,23 @@ function MultiLineChart({ fig }: { fig: Extract<ChartFigure, { type: "multiline"
 }
 
 function ProseFigure({ fig }: { fig: Extract<ChartFigure, { type: "prose" }> }) {
+  // Split on sentence boundaries — ". " followed by a capital, "(", or end of string
+  const sentences = fig.text
+    .split(/\.\s+(?=[A-Z(])/g)
+    .map(s => s.trim().replace(/\.+$/, ""))
+    .filter(Boolean);
   return (
-    <p style={{
-      margin: "10px 0", lineHeight: 1.65, fontSize: 14, color: "#1f2937",
-      background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 8,
-      padding: "12px 14px",
-    }}>
-      {fig.text}
-    </p>
+    <div style={{ marginTop: 4 }}>
+      {sentences.map((s, i) => (
+        <p key={i} style={{
+          margin: i === sentences.length - 1 ? 0 : "0 0 11px",
+          fontFamily: "Georgia, serif", fontSize: 14.5, lineHeight: 1.8,
+          color: "#334354",
+        }}>
+          {s}.
+        </p>
+      ))}
+    </div>
   );
 }
 
@@ -1108,12 +1117,14 @@ function QuestionSession() {
           </div>
 
           {(() => {
+            const isQrSet  = slot.kind === "qr-set";
             const hasChart = !!(q0 as any).chartFigure || !!(q0 as any).vennFigure;
-            const useWide  = section === "vr" || hasChart;
+            // QR-sets: both columns are equal-width cards — don't use wide layout
+            const useWide  = section === "vr" || (hasChart && !isQrSet);
             return (
           <div
             className="question-columns"
-            style={useWide ? { gridTemplateColumns: "1.75fr 1fr" } : undefined}
+            style={useWide ? { gridTemplateColumns: "1.75fr 1fr" } : isQrSet ? { gridTemplateColumns: "1fr 1fr" } : undefined}
           >
             {/* LEFT — Passage / context / chart */}
             <div
@@ -1121,13 +1132,17 @@ function QuestionSession() {
               style={useWide ? { padding: "8px 20px 8px 4px", overflowY: "auto", maxHeight: "calc(100vh - 220px)" } : undefined}
             >
               <p style={{ margin: "0 0 8px", color: "var(--section)", letterSpacing: ".1em", fontSize: 10, fontWeight: 800, textTransform: "uppercase" as const }}>{q0.contextLabel}</p>
-              {/* Show text if: no chart, OR section is DM/SJT where rules + chart coexist */}
-              {(!(q0 as any).chartFigure || (section !== "qr")) && q0.context && (
+              {/* Show text if: no chart, OR non-QR section, OR QR-set (show scenario above figure) */}
+              {(!(q0 as any).chartFigure || (section !== "qr") || isQrSet) && q0.context && (
                 <div
                   className={`passage-text ${revealed && effectiveEvidence ? "passage-text--revealed" : ""}`}
-                  style={{ whiteSpace: "pre-line", fontFamily: "Georgia, serif", fontSize: 15, lineHeight: 1.85, color: "#334354" }}
+                  style={isQrSet
+                    ? { fontFamily: "var(--font-inter), sans-serif", fontSize: 12, lineHeight: 1.55, color: "#526170", marginBottom: 14 }
+                    : { whiteSpace: "pre-line", fontFamily: "Georgia, serif", fontSize: 15, lineHeight: 1.85, color: "#334354" }}
                 >
-                  <HighlightedPassage text={q0.context} evidence={effectiveEvidence} revealed={revealed} />
+                  {isQrSet
+                    ? q0.context
+                    : <HighlightedPassage text={q0.context} evidence={effectiveEvidence} revealed={revealed} />}
                 </div>
               )}
               {(q0 as any).vennFigure && (
