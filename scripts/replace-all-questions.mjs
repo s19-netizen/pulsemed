@@ -659,8 +659,9 @@ function parseQRChart(topicName, rawData, datasetTitle) {
   // e.g. "Jan: total 127, secondary series 48; Feb: total 147, secondary 60; …"
   if (topicName === "Charts & Graphs") {
     const xLabels = [], totals = [], secondaries = [];
-    for (const entry of data.split(/;\s*/)) {
-      const m = entry.match(/^([^:]+):\s*total\s+([\d,]+),\s*secondary(?:\s+series)?\s+([\d,]+)/i);
+    // Split on semicolons OR newlines; use (.+?) so "06:00: total" keeps "06:00" as label
+    for (const entry of data.split(/[;\n]+/)) {
+      const m = entry.trim().match(/^(.+?):\s*total\s+([\d,]+),\s*secondary(?:\s+series)?\s+([\d,]+)/i);
       if (m) {
         xLabels.push(m[1].trim());
         totals.push(Number(m[2].replace(/,/g, "")));
