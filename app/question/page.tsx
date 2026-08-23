@@ -678,7 +678,16 @@ function AnswerExplanation({ q, selected, takenMs, section }: { q: GuestQuestion
 
   const isRight = selected === q.correct;
   const rawExplanation = cleanExplanation(q.explanation ?? "");
-  const parts = parseOptionExplanations(rawExplanation, q.options, q.correct);
+
+  // Use structured per-option explanations when available (VR admin, SJT)
+  const parts: OptionPart[] = q.optionExplanations
+    ? q.options.map((_, i) => ({
+        letter: "ABCD"[i] ?? String.fromCharCode(65 + i),
+        isCorrect: i === q.correct,
+        reason: q.optionExplanations![i] ?? "",
+      }))
+    : parseOptionExplanations(rawExplanation, q.options, q.correct);
+
   const target = TARGET_S[section] ?? 40;
   const timing = timingLabel(takenMs, target);
 
@@ -833,18 +842,20 @@ function QuestionSession() {
   const requestedCount = Number(params.get("count")) || 0;
   const colors = SECTION_COLORS[section] ?? SECTION_COLORS.vr;
 
-  const useVRBank = section === "vr" && !isGuest;
-  const useQRBank = section === "qr" && !isGuest;
-  const useDMBank = section === "dm" && !isGuest;
+  const useVRBank  = section === "vr"  && !isGuest;
+  const useQRBank  = section === "qr"  && !isGuest;
+  const useDMBank  = section === "dm"  && !isGuest;
+  const useSJTBank = section === "sjt" && !isGuest;
+  const useBank    = useVRBank || useQRBank || useDMBank || useSJTBank;
 
   const staticQuestions: GuestQuestion[] = (() => {
-    if (useVRBank || useQRBank || useDMBank) return [];
+    if (useBank) return [];
     const all = GUEST_QUESTIONS[section] ?? GUEST_QUESTIONS.vr;
     return requestedCount > 0 ? all.slice(0, requestedCount) : all;
   })();
 
   const [bankQuestions, setBankQuestions] = useState<GuestQuestion[]>([]);
-  const [bankLoading, setBankLoading] = useState(useVRBank || useQRBank || useDMBank);
+  const [bankLoading, setBankLoading] = useState(useBank);
   const [vrError, setVrError] = useState("");
   const sessionIdRef = useRef<string>("");
 
@@ -855,13 +866,16 @@ function QuestionSession() {
   const allTimesRef = useRef<number[]>([]);
 
   useEffect(() => {
-    if (!useVRBank && !useQRBank && !useDMBank) return;
+    if (!useBank) return;
     const count = requestedCount > 0 ? requestedCount : (useQRBank ? 20 : 15);
     let endpoint = "";
     if (useQRBank) endpoint = `/api/questions/qr?difficulty=${encodeURIComponent(difficulty)}&count=${count}`;
     else if (useDMBank) {
       const family = params.get("type") ?? "";
       endpoint = `/api/questions/dm?difficulty=${encodeURIComponent(difficulty)}&count=${count}${family ? `&family=${encodeURIComponent(family)}` : ""}`;
+    } else if (useSJTBank) {
+      const fmt = params.get("format") ?? "appropriateness";
+      endpoint = `/api/questions/sjt?format=${encodeURIComponent(fmt)}&difficulty=${encodeURIComponent(difficulty)}&count=${count}`;
     } else {
       const subtypeParam = params.get("subtype") ?? "";
       endpoint = `/api/questions/vr?difficulty=${encodeURIComponent(difficulty)}&count=${count}${subtypeParam ? `&subtype=${encodeURIComponent(subtypeParam)}` : ""}`;
@@ -877,7 +891,7 @@ function QuestionSession() {
       .catch(() => { setVrError("Failed to load questions. Please try again."); setBankLoading(false); });
   }, []);
 
-  const questions: GuestQuestion[] = (useVRBank || useQRBank || useDMBank) ? bankQuestions : staticQuestions;
+  const questions: GuestQuestion[] = useBank ? bankQuestions : staticQuestions;
   const slots = useMemo(() => buildSlots(questions, section), [questions, section]);
 
   // Slot navigation

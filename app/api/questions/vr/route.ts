@@ -164,11 +164,14 @@ export async function GET(req: NextRequest) {
       "";
     const { highlight: supportingEvidence, clean: correctExpClean } = parseHighlightTag(correctExpRaw);
 
-    // Build a readable explanation string from all options, stripped of highlight tags
-    const explanationStr =
-      Object.entries(explanationsObj)
-        .map(([k, v]) => `${k}: ${parseHighlightTag(v).clean}`)
-        .join(" | ") || correctExpClean;
+    // Build per-option explanation array so each option box shows its own reason
+    const optionExplanations = options.map(opt => {
+      const raw =
+        explanationsObj[opt] ??
+        Object.entries(explanationsObj).find(([k]) => k.toLowerCase() === opt.toLowerCase())?.[1] ??
+        "";
+      return parseHighlightTag(raw).clean;
+    });
 
     sessionQuestions.push({
       id: aq.id,
@@ -183,7 +186,8 @@ export async function GET(req: NextRequest) {
       question: aq.question_text,
       options,
       correct: correctIdx,
-      explanation: correctExpClean || explanationStr,
+      explanation: correctExpClean,
+      optionExplanations,
       supportingEvidence,
       primarySubtype: aq.subtype ?? "",
       skillFocus: "",

@@ -42,27 +42,23 @@ export async function GET(req: NextRequest) {
   const pool = shuffle(data ?? []).slice(0, count);
 
   const questions = pool.map(q => {
-    const base = {
-      id: q.id,
-      format: q.format,
-      scenario: q.scenario,
-      professionalTheme: q.professional_theme,
-      difficulty: q.difficulty,
-    };
-
     if (q.format === "most-least") {
-      // correct_answer stored as "most:0|least:2"
+      // most-least kept as-is (rendered separately)
       const mostMatch  = q.correct_answer.match(/most:(\d)/);
       const leastMatch = q.correct_answer.match(/least:(\d)/);
       return {
-        ...base,
+        id: q.id,
+        tag: "sjt-most-least",
+        contextLabel: "Scenario",
+        context: q.scenario ?? "",
+        format: q.format,
         question: q.question,
-        optionA: q.option_a,
-        optionB: q.option_b,
-        optionC: q.option_c,
+        options: [q.option_a, q.option_b, q.option_c].filter(Boolean),
+        correct: mostMatch ? Number(mostMatch[1]) : 0,
+        explanation: q.walkthrough ?? "",
+        difficulty: q.difficulty,
         mostCor:  mostMatch  ? Number(mostMatch[1])  : 0,
         leastCor: leastMatch ? Number(leastMatch[1]) : 2,
-        walkthrough: q.walkthrough,
       };
     }
 
@@ -81,13 +77,18 @@ export async function GET(req: NextRequest) {
     ];
     const opts = q.format === "importance" ? OPTIONS_IR : OPTIONS_AR;
     const correctIdx = opts.findIndex(o => o.toLowerCase() === q.correct_answer.toLowerCase());
+    const cidx = correctIdx >= 0 ? correctIdx : 0;
 
     return {
-      ...base,
+      id: q.id,
+      tag: `sjt-${q.format}`,
+      contextLabel: "Scenario",
+      context: q.scenario ?? "",
       question: q.question,
       options: opts,
-      correct: correctIdx >= 0 ? correctIdx : 0,
-      walkthrough: q.walkthrough,
+      correct: cidx,
+      explanation: q.walkthrough ?? "",
+      difficulty: q.difficulty,
     };
   });
 

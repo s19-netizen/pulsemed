@@ -30,7 +30,8 @@ export interface GuestQuestion {
   correct: number;
   explanation: string;
   supportingEvidence?: string;   // passage text to highlight after reveal
-  optionNotes?: string[];        // per-option explanations [A, B, C, D]
+  optionNotes?: string[];        // per-option display overrides [A, B, C, D]
+  optionExplanations?: string[]; // per-option explanation text [A, B, C, D]
   vennFigure?: VennFigure;       // renders a Venn diagram in the context panel
   difficulty?: string;
   questionType?: string;

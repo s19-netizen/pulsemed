@@ -48,8 +48,17 @@ export default function DashboardClient({ user, responses, testDate, diagnosticD
       .catch(() => setPlanLoading(false));
   }, []);
 
-  const totalDone    = responses.length;
-  const totalCorrect = responses.filter(r => r.is_correct).length;
+  // Per-question tracking (may be sparse if track calls failed)
+  const qrTotalDone    = responses.length;
+  const qrTotalCorrect = responses.filter(r => r.is_correct).length;
+
+  // Session-level totals from practice_sessions (always saved on submit)
+  const psTotalDone    = practiceSessions.reduce((a, s) => a + (s.total ?? 0), 0);
+  const psTotalCorrect = practiceSessions.reduce((a, s) => a + (s.correct ?? 0), 0);
+
+  // Prefer question_responses if populated, else fall back to practice_sessions
+  const totalDone    = qrTotalDone > 0 ? qrTotalDone    : psTotalDone;
+  const totalCorrect = qrTotalDone > 0 ? qrTotalCorrect : psTotalCorrect;
   const accuracy     = totalDone > 0 ? Math.round((totalCorrect / totalDone) * 100) : 0;
 
   const examDate          = testDate ? new Date(testDate) : null;
@@ -60,15 +69,22 @@ export default function DashboardClient({ user, responses, testDate, diagnosticD
 
   const sectionStats = SECTIONS.map(s => {
     const sResponses  = responses.filter(r => r.question_tag?.startsWith(s.key + "-"));
-    const correct     = sResponses.filter(r => r.is_correct).length;
-    const pct         = sResponses.length > 0 ? Math.round((correct / sResponses.length) * 100) : 0;
     const sSessions   = practiceSessions.filter(p => p.section === s.key);
+
+    // Per-question accuracy if available, else aggregate from sessions
+    const qrCorrect = sResponses.filter(r => r.is_correct).length;
+    const psCorrect = sSessions.reduce((a, p) => a + (p.correct ?? 0), 0);
+    const psTotal   = sSessions.reduce((a, p) => a + (p.total ?? 0), 0);
+    const correct   = sResponses.length > 0 ? qrCorrect : psCorrect;
+    const sTotal    = sResponses.length > 0 ? sResponses.length : psTotal;
+    const pct       = sTotal > 0 ? Math.round((correct / sTotal) * 100) : 0;
+
     const withScore   = sSessions.filter(p => p.predicted_score != null);
     const avgPredicted = withScore.length > 0
       ? Math.round(withScore.reduce((a, p) => a + p.predicted_score, 0) / withScore.length)
       : null;
     const lastBand    = s.key === "sjt" ? (sSessions.find(p => p.sjt_band != null)?.sjt_band ?? null) : null;
-    return { ...s, total: sResponses.length, accuracy: pct, avgPredicted, lastBand, sessionCount: sSessions.length };
+    return { ...s, total: sTotal, accuracy: pct, avgPredicted, lastBand, sessionCount: sSessions.length };
   });
 
   // ── Working grade ─────────────────────────────────────────────────────────
