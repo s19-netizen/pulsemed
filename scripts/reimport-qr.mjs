@@ -46,18 +46,14 @@ async function batchInsert(table, rows, size = 50) {
 
 const str = v => (v == null ? "" : String(v)).trim();
 
-function parseQROptions(raw) {
-  const lines = raw.split(/\n/).map(l => l.trim()).filter(Boolean);
+function parseQROptions(qText) {
+  const parts = qText.split(/\s*•\s*A\)\s*/);
+  if (parts.length < 2) return { question: qText, options: {} };
+  const questionText = parts[0].trim();
   const options = {};
-  let question = "";
-  let inOpts = false;
-  for (const line of lines) {
-    const m = line.match(/^([A-E])[).]\s*(.+)$/);
-    if (m) { options[m[1].toUpperCase()] = m[2].trim(); inOpts = true; }
-    else if (!inOpts) question += (question ? " " : "") + line;
-  }
-  if (Object.keys(options).length === 0) question = raw.trim();
-  return { question: question.trim(), options };
+  const optMatches = ("A) " + parts[1]).matchAll(/([A-E])\)\s*([^|]+?)(?=\s*\||\s*$)/g);
+  for (const m of optMatches) options[m[1]] = m[2].trim();
+  return { question: questionText, options };
 }
 
 function parseQRChart(topicName, rawData, datasetTitle) {
