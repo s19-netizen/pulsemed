@@ -14,23 +14,23 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://pulsemed.online";
 
 const PRACTICE_META: Record<string, { title: string; description: string; keywords: string[] }> = {
   vr: {
-    title: "Free UCAT Verbal Reasoning Practice Questions 2026 | Pulsemed",
-    description: "Practice UCAT Verbal Reasoning for free — True/False/Can't Tell and MCQ questions with full explanations. Difficulty levels Bronze to Diamond. No account needed to start.",
+    title: "Free UCAT VR Practice Questions 2026 | Pulsemed",
+    description: "Free UCAT Verbal Reasoning practice — True/False/Can't Tell and MCQ questions with full explanations, Bronze to Diamond difficulty. No account needed to start.",
     keywords: ["UCAT verbal reasoning practice", "free UCAT VR questions", "UCAT true false cant tell practice", "UCAT verbal reasoning 2026", "UCAT VR free"],
   },
   dm: {
-    title: "Free UCAT Decision Making Practice Questions 2026 | Pulsemed",
-    description: "Practice UCAT Decision Making for free — syllogisms, Venn diagrams, probability and argument questions with worked explanations. Start instantly, no account needed.",
+    title: "Free UCAT DM Practice Questions 2026 | Pulsemed",
+    description: "Free UCAT Decision Making practice — syllogisms, Venn diagrams, probability and argument questions with worked explanations. Start instantly, no account needed.",
     keywords: ["UCAT decision making practice", "free UCAT DM questions", "UCAT syllogisms practice", "UCAT decision making 2026", "UCAT DM free"],
   },
   qr: {
-    title: "Free UCAT Quantitative Reasoning Practice Questions 2026 | Pulsemed",
-    description: "Practice UCAT Quantitative Reasoning for free — percentages, ratios, data interpretation and graph questions with full worked solutions. 540+ questions across all difficulty levels.",
+    title: "Free UCAT QR Practice Questions 2026 | Pulsemed",
+    description: "Free UCAT Quantitative Reasoning practice — percentages, ratios, data interpretation and graph questions with full worked solutions. 540+ questions, all difficulty levels.",
     keywords: ["UCAT quantitative reasoning practice", "free UCAT QR questions", "UCAT maths practice", "UCAT quantitative reasoning 2026", "UCAT QR free"],
   },
   sjt: {
-    title: "Free UCAT Situational Judgement Practice Questions 2026 | Pulsemed",
-    description: "Practice UCAT Situational Judgement for free — Appropriateness, Importance and Most/Least questions with full explanations and band scoring. 400+ SJT questions.",
+    title: "Free UCAT SJT Practice Questions 2026 | Pulsemed",
+    description: "Free UCAT Situational Judgement practice — Appropriateness, Importance and Most/Least questions with full explanations and band scoring. 400+ SJT questions.",
     keywords: ["UCAT situational judgement practice", "free UCAT SJT questions", "UCAT SJT 2026", "UCAT appropriateness questions", "UCAT SJT free"],
   },
 };
@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     title: meta.title,
     description: meta.description,
     keywords: meta.keywords,
-    alternates: { canonical },
+    alternates: { canonical, languages: { "en-GB": canonical } },
     openGraph: { title: meta.title, description: meta.description, url: canonical },
     twitter: { card: "summary", title: meta.title, description: meta.description },
   };

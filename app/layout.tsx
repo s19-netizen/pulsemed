@@ -2,35 +2,31 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "./Providers";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://pulsemed.app";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://pulsemed.online";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: "Pulsemed — 100% Free UCAT Prep, No Paywall, No Card Required",
-    template: "%s | Pulsemed — Free UCAT Prep",
+    default: "Pulsemed — Free UCAT Prep 2026 | No Paywall",
+    template: "%s | Pulsemed",
   },
   description:
-    "Pulsemed is completely and totally free UCAT preparation — no credit card, no paywall, no premium tier, no free trial. Take a diagnostic, get a personalised study plan, and practise VR, DM, QR and SJT with full explanations. Always 100% free for every user, forever.",
+    "100% free UCAT prep. Diagnostic, personalised study plan, and full question banks for VR, DM, QR & SJT. No credit card, no paywall — always free. Built for 2026 UK applicants.",
   keywords: [
     "free UCAT prep",
-    "completely free UCAT prep",
-    "totally free UCAT preparation",
     "free UCAT practice questions",
+    "UCAT preparation 2026",
     "UCAT practice free",
     "UCAT diagnostic test free",
-    "UCAT preparation no paywall",
+    "UCAT no paywall",
     "UCAT no subscription",
-    "UCAT no credit card",
-    "UCAT 2026 free",
     "UCAT verbal reasoning practice free",
     "UCAT decision making practice free",
     "UCAT quantitative reasoning practice free",
     "UCAT situational judgement practice free",
     "free UCAT study guide",
     "free UCAT study plan",
-    "free medical school preparation",
-    "UCAT score improvement free",
+    "UCAT 2026 UK",
     "free UCAT question bank",
     "pulsemed",
   ],
@@ -47,9 +43,9 @@ export const metadata: Metadata = {
     locale: "en_GB",
     url: BASE_URL,
     siteName: "Pulsemed",
-    title: "Pulsemed — 100% Free UCAT Prep, No Paywall, No Card Required",
+    title: "Pulsemed — Free UCAT Prep 2026 | No Paywall",
     description:
-      "Completely and totally free UCAT preparation — no credit card, no paywall, no subscription, ever. Full question banks for VR, DM, QR and SJT with personalised diagnostics and study plans.",
+      "100% free UCAT preparation — diagnostic, personalised study plans, and full question banks for VR, DM, QR & SJT. No credit card, no paywall, ever.",
     images: [
       {
         url: "/og-image.png",
@@ -61,13 +57,22 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Pulsemed — 100% Free UCAT Prep, No Paywall, No Card Required",
+    title: "Pulsemed — Free UCAT Prep 2026 | No Paywall",
     description:
-      "Completely and totally free UCAT preparation. Diagnostic, personalised study plans, full VR/DM/QR/SJT question banks. No paywall, no subscription, no credit card — ever.",
+      "100% free UCAT prep. Full question banks for VR, DM, QR & SJT, plus diagnostic and personalised study plan. No paywall, no subscription, ever.",
     images: ["/og-image.png"],
   },
-  alternates: { canonical: BASE_URL },
+  alternates: {
+    canonical: BASE_URL,
+    languages: { "en-GB": BASE_URL },
+  },
   category: "education",
+  other: {
+    "geo.region": "GB",
+    "geo.country": "GB",
+    "geo.placename": "United Kingdom",
+    "content-language": "en-GB",
+  },
 };
 
 const jsonLd = {
@@ -78,7 +83,8 @@ const jsonLd = {
       "@id": `${BASE_URL}/#website`,
       url: BASE_URL,
       name: "Pulsemed",
-      description: "100% free UCAT preparation platform",
+      inLanguage: "en-GB",
+      description: "100% free UCAT preparation platform for UK medical school applicants",
       potentialAction: {
         "@type": "SearchAction",
         target: { "@type": "EntryPoint", urlTemplate: `${BASE_URL}/study-guide/vr?q={search_term_string}` },
@@ -92,6 +98,8 @@ const jsonLd = {
       url: BASE_URL,
       logo: { "@type": "ImageObject", url: `${BASE_URL}/og-image.png` },
       description: "Free UCAT preparation for UK medical school applicants",
+      areaServed: { "@type": "Country", name: "United Kingdom" },
+      inLanguage: "en-GB",
       sameAs: [],
     },
     {
@@ -101,31 +109,32 @@ const jsonLd = {
       url: BASE_URL,
       applicationCategory: "EducationalApplication",
       operatingSystem: "Web",
+      inLanguage: "en-GB",
       description:
-        "UCAT preparation platform covering Verbal Reasoning, Decision Making, Quantitative Reasoning and Situational Judgement. 100% completely and totally free — no credit card, no paywall, no premium tier, no subscription, forever.",
+        "UCAT preparation platform covering Verbal Reasoning, Decision Making, Quantitative Reasoning and Situational Judgement. 100% free — no credit card, no paywall, no subscription, forever.",
       offers: {
         "@type": "Offer",
         price: "0",
         priceCurrency: "GBP",
         availability: "https://schema.org/InStock",
-        description: "Completely and totally free — no credit card required, no paywall, no premium tier, no subscription, always free forever",
+        description: "Completely free — no credit card, no paywall, no subscription, always",
       },
       featureList: [
-        "Diagnostic test — free",
-        "Personalised study plan — free",
-        "Full VR question bank with explanations — free",
-        "Full DM question bank with explanations — free",
-        "Full QR question bank with explanations — free",
-        "SJT practice with drag-and-drop UI — free",
-        "Timed practice sessions — free",
-        "Progress tracking — free",
-        "Mock exams — free",
-        "100% free, no paywall, no subscription, no credit card, forever",
+        "UCAT diagnostic test",
+        "Personalised study plan",
+        "Full VR question bank with worked explanations",
+        "Full DM question bank with worked explanations",
+        "Full QR question bank with worked explanations",
+        "Full SJT question bank with worked explanations",
+        "Timed mock exams",
+        "Progress tracking and accuracy analytics",
+        "100% free — no paywall, no subscription, no credit card",
       ],
       audience: {
         "@type": "EducationalAudience",
         educationalRole: "student",
         audienceType: "UK medical school applicants sitting the UCAT",
+        geographicArea: { "@type": "Country", name: "United Kingdom" },
       },
     },
     {
@@ -137,7 +146,7 @@ const jsonLd = {
           name: "Is Pulsemed completely free?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Yes. Pulsemed is 100% completely and totally free — always. There is no credit card required, no paywall, no premium tier, no subscription, and no free trial. Every feature — the diagnostic, full question banks, mock exams, study plans, and explanations — is free for every user, forever.",
+            text: "Yes. Pulsemed is 100% free — always. No credit card, no paywall, no premium tier, no subscription, no free trial. Every feature — diagnostic, full question banks, mock exams, study plans, and explanations — is free for every user, forever.",
           },
         },
         {
@@ -145,15 +154,15 @@ const jsonLd = {
           name: "What UCAT sections does Pulsemed cover?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Pulsemed covers all four UCAT sections: Verbal Reasoning (VR), Decision Making (DM), Quantitative Reasoning (QR), and Situational Judgement (SJT). Each section has a full question bank, study guide, and timed practice mode.",
+            text: "Pulsemed covers all four UCAT sections: Verbal Reasoning (VR), Decision Making (DM), Quantitative Reasoning (QR), and Situational Judgement (SJT). Each section has a full question bank, complete study guide, and timed practice mode.",
           },
         },
         {
           "@type": "Question",
-          name: "How does the diagnostic work?",
+          name: "How does the Pulsemed diagnostic work?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "The diagnostic test covers all four UCAT sections and takes around 25 minutes. Once complete, it identifies your weakest sub-skills — such as VR inference questions or DM syllogisms — and generates a personalised study plan showing exactly what to practise next.",
+            text: "The diagnostic covers all four UCAT sections in around 25 minutes. It identifies your weakest sub-skills — such as VR inference, DM syllogisms, or QR ratios — and generates a personalised study plan showing exactly what to practise next.",
           },
         },
         {
@@ -161,7 +170,23 @@ const jsonLd = {
           name: "Is Pulsemed good for UCAT 2026?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Yes. Pulsemed is built and updated specifically for UCAT 2026. The question banks, diagnostic, and study plans reflect the current UCAT format and difficulty distribution.",
+            text: "Yes. Pulsemed is built and maintained specifically for UCAT 2026. Question banks, the diagnostic, and study plans reflect the current UCAT format, timing, and difficulty distribution used by Pearson VUE.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Do I need an account to use Pulsemed?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "You can try a free sample of VR and DM questions without an account. Creating a free account unlocks the full question banks, diagnostic, personalised study plan, progress tracking, and mock exams. No credit card is ever required.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "How many UCAT practice questions does Pulsemed have?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Pulsemed has over 1,000 UCAT practice questions across VR, DM, QR and SJT, plus two full-length timed mock exams. Every question includes a worked explanation. All questions are free.",
           },
         },
       ],
@@ -171,7 +196,7 @@ const jsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en-GB">
       <head>
         <script
           type="application/ld+json"

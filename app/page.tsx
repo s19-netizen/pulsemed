@@ -8,15 +8,24 @@ import { BadgeCheck, BarChart2, BookOpen } from "lucide-react";
 
 
 export const metadata: Metadata = {
-  title: "Pulsemed — 100% Free UCAT Prep, No Paywall Ever | No Card Required",
+  title: "Free UCAT Prep 2026 — Diagnostic, Plans & Practice | Pulsemed",
   description:
-    "The only completely and totally free UCAT prep platform. Identify your weak spots in 2 minutes, get a personalised study plan, and practise VR, DM, QR and SJT with full worked explanations. 100% free — no credit card, no paywall, no subscription, ever.",
-  alternates: { canonical: "/" },
+    "The free UCAT prep platform for 2026 UK applicants. Identify weak sub-skills in 25 minutes, get a personalised study plan, and practise VR, DM, QR & SJT with full explanations. No credit card, no paywall.",
+  alternates: {
+    canonical: "/",
+    languages: { "en-GB": "/" },
+  },
   openGraph: {
-    title: "Pulsemed — 100% Free UCAT Prep, No Paywall Ever",
+    title: "Free UCAT Prep 2026 — Diagnostic, Plans & Practice | Pulsemed",
     description:
-      "Completely and totally free UCAT diagnostic, personalised study plan, and full question banks for all 4 sections. No credit card, no paywall, no subscription — always free. Built for 2026 UCAT applicants.",
+      "Free UCAT diagnostic, personalised study plan, and full question banks for VR, DM, QR & SJT. No credit card, no paywall. Built for 2026 UK applicants.",
     url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Free UCAT Prep 2026 — Diagnostic, Plans & Practice | Pulsemed",
+    description:
+      "Free UCAT diagnostic, personalised study plan, and full question banks for VR, DM, QR & SJT. No credit card, no paywall.",
   },
 };
 

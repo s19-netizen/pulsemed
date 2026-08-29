@@ -5,6 +5,8 @@ import { CATEGORY_COLORS } from "@/lib/blog-shared";
 import { notFound } from "next/navigation";
 import BlogRenderer from "../BlogRenderer";
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://pulsemed.online";
+
 export async function generateStaticParams() {
   return getAllPosts().map(p => ({ slug: p.slug }));
 }
@@ -12,11 +14,75 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const post = getPost(params.slug);
   if (!post) return {};
+  const canonical = `${BASE_URL}/blog/${params.slug}`;
   return {
     title: post.metaTitle,
     description: post.metaDescription,
-    openGraph: { title: post.metaTitle, description: post.metaDescription, images: post.heroImage ? [post.heroImage] : [] },
+    alternates: {
+      canonical,
+      languages: { "en-GB": canonical },
+    },
+    openGraph: {
+      title: post.metaTitle,
+      description: post.metaDescription,
+      url: canonical,
+      type: "article",
+      images: post.heroImage ? [{ url: post.heroImage, width: 1200, height: 630, alt: post.title }] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.metaTitle,
+      description: post.metaDescription,
+      images: post.heroImage ? [post.heroImage] : [],
+    },
   };
+}
+
+function BlogPostJsonLd({ post }: { post: NonNullable<ReturnType<typeof getPost>> }) {
+  const url = `${BASE_URL}/blog/${post.slug}`;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Pulsemed", item: BASE_URL },
+          { "@type": "ListItem", position: 2, name: "Blog", item: `${BASE_URL}/blog` },
+          { "@type": "ListItem", position: 3, name: post.title, item: url },
+        ],
+      },
+      {
+        "@type": "Article",
+        "@id": url,
+        headline: post.title,
+        description: post.metaDescription,
+        url,
+        inLanguage: "en-GB",
+        image: post.heroImage ? [{ "@type": "ImageObject", url: post.heroImage, width: 1200, height: 630 }] : undefined,
+        author: { "@type": "Organization", name: "Pulsemed", url: BASE_URL },
+        publisher: {
+          "@type": "Organization",
+          name: "Pulsemed",
+          url: BASE_URL,
+          logo: { "@type": "ImageObject", url: `${BASE_URL}/og-image.png` },
+        },
+        mainEntityOfPage: { "@type": "WebPage", "@id": url },
+        keywords: `UCAT, free UCAT prep, ${post.category}`,
+        audience: {
+          "@type": "EducationalAudience",
+          educationalRole: "student",
+          audienceType: "UK medical school applicants",
+          geographicArea: { "@type": "Country", name: "United Kingdom" },
+        },
+      },
+    ],
+  };
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
 }
 
 const SECTION_META: Record<string, { label: string; color: string; tint: string; href: string }> = {
@@ -34,21 +100,19 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const sectionInfo = post.section ? SECTION_META[post.section] : null;
   const catColor = CATEGORY_COLORS[post.category] ?? "#64748B";
 
-  // Related: same category first, then same section
   const related = allPosts
     .filter(p => p.slug !== post.slug && (p.category === post.category || p.section === post.section))
     .slice(0, 3);
 
-  // More in this category for the sidebar (up to 8)
   const morePosts = allPosts
     .filter(p => p.slug !== post.slug && p.category === post.category)
     .slice(0, 8);
 
-  // Recent posts for sidebar if category is sparse
   const recentPosts = allPosts.filter(p => p.slug !== post.slug).slice(0, 6);
 
   return (
     <div className="blog-post-page">
+      <BlogPostJsonLd post={post} />
       <Link href="/blog" className="blog-back">← All articles</Link>
 
       <header className="blog-post-header">
@@ -80,7 +144,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
             <p style={{ fontSize: 10, fontWeight: 800, color: "#93c5fd", textTransform: "uppercase", letterSpacing: ".06em", margin: "0 0 6px" }}>100% free</p>
             <h3 style={{ fontSize: 15, margin: "0 0 6px", fontWeight: 800, color: "white" }}>Start practising now</h3>
             <p style={{ fontSize: 11, color: "#94a3b8", lineHeight: 1.6, margin: "0 0 12px" }}>
-              Full question bank, diagnostic test and AI study plan — no card needed.
+              Full question bank, diagnostic test and personalised study plan — no card needed.
             </p>
             <Link href="/auth/signin" style={{ display: "block" }}>
               <button className="blog-aside-btn-primary">Sign up free →</button>
