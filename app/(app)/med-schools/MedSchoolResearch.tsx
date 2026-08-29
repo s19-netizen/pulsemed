@@ -299,9 +299,6 @@ export default function MedSchoolResearch() {
             <span className="section-badge" style={{ background: "#D1FAE5", color: "#065F46" }}>UK</span>
             <h1 style={{ fontSize: 20 }}>Schools</h1>
           </div>
-          <p style={{ fontSize: 12, color: "var(--ink-soft)", marginTop: 2 }}>
-            45 UK medical schools · 2027 entry
-          </p>
         </div>
 
         {/* Grades card */}

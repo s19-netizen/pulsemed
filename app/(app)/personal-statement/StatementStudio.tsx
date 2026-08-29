@@ -221,7 +221,7 @@ export default function StatementStudio() {
   const saveColor = saveStatus === "saved" ? "#3DBE6C" : saveStatus === "saving" ? "#f59e0b" : "#d94b3e";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, height: "calc(100vh - 100px)" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
       {/* ── Header ── */}
       <div className="page-header" style={{ paddingBottom: 0, display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
@@ -280,8 +280,8 @@ export default function StatementStudio() {
 
       {/* ── Question card ── */}
       <div className="content-card" style={{
-        flex: 1, display: "flex", flexDirection: "column", padding: 0,
-        minHeight: 0, overflow: "hidden", borderTop: `3px solid ${q.color}`,
+        display: "flex", flexDirection: "column", padding: 0,
+        minHeight: 620, borderTop: `3px solid ${q.color}`,
       }}>
 
         {/* Question title + hint */}
@@ -347,12 +347,12 @@ export default function StatementStudio() {
 
         {/* ── Review body OR textarea ── */}
         {isInReview ? (
-          <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 200px", minHeight: 0, overflow: "hidden" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 220px", minHeight: 520 }}>
 
             {/* Left: highlighted text */}
             <div style={{
-              overflowY: "auto", padding: "16px 22px",
-              fontSize: 14, lineHeight: 1.9, whiteSpace: "pre-wrap", wordBreak: "break-word",
+              padding: "20px 26px",
+              fontSize: 14, lineHeight: 2, whiteSpace: "pre-wrap", wordBreak: "break-word",
             }}>
               {segments.map((seg, i) => {
                 if (seg.annotationIdx === null) return <span key={i}>{seg.text}</span>;
@@ -387,8 +387,9 @@ export default function StatementStudio() {
 
             {/* Right: annotation / suggestion detail */}
             <div style={{
-              borderLeft: "1px solid var(--line)", overflowY: "auto",
-              padding: "14px 14px", background: "var(--surface)",
+              borderLeft: "1px solid var(--line)",
+              padding: "16px 14px", background: "var(--surface)",
+              position: "sticky", top: 0, alignSelf: "flex-start",
             }}>
               {/* ── Feedback mode right panel ── */}
               {isInFeedbackReview && (
@@ -482,10 +483,10 @@ export default function StatementStudio() {
             onChange={e => handleChange(q.id, e.target.value)}
             placeholder={`Write your response to ${q.label} here…`}
             style={{
-              flex: 1, width: "100%", resize: "none", border: "none", outline: "none",
-              padding: "18px 22px", fontSize: 14, lineHeight: 1.85,
+              flex: 1, width: "100%", resize: "vertical", border: "none", outline: "none",
+              padding: "20px 26px", fontSize: 14, lineHeight: 1.9,
               color: "var(--ink)", background: "transparent",
-              fontFamily: "inherit", boxSizing: "border-box", minHeight: 0,
+              fontFamily: "inherit", boxSizing: "border-box", minHeight: 480,
             }}
           />
         )}
