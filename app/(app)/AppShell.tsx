@@ -84,6 +84,17 @@ const NAV = [
     sections: [],
     href: () => "/mocks",
   },
+  {
+    id: "personal-statement",
+    label: "Statement",
+    icon: (
+      <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+      </svg>
+    ),
+    sections: [],
+    href: () => "/personal-statement",
+  },
 ];
 
 const SEARCH_ITEMS = [
@@ -92,6 +103,7 @@ const SEARCH_ITEMS = [
   ...SECTIONS.map(s => ({ label: `Practice · ${s.label}`, href: `/practice/${s.key}`, tag: "Practice" })),
   { label: "Study Plan", href: "/study-plan", tag: "Plan" },
   { label: "Mocks", href: "/mocks", tag: "Mocks" },
+  { label: "Personal Statement", href: "/personal-statement", tag: "Statement" },
   { label: "Settings", href: "/settings", tag: "Account" },
 ];
 
@@ -143,6 +155,7 @@ export default function AppShell({ children, user, testDate }: { children: React
   const isCurrentNav = (id: string) => {
     if (id === "mocks") return pathname === "/mocks";
     if (id === "study-plan") return pathname === "/study-plan";
+    if (id === "personal-statement") return pathname === "/personal-statement";
     if (id === "learn") return pathname.startsWith("/section") || pathname.startsWith("/guide");
     if (id === "practice") return pathname.startsWith("/practice");
     return false;
