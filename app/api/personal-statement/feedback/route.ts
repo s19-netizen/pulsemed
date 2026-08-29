@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bank from "@/lib/data/ps-bank.json";
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const MODEL    = "llama-3.3-70b-versatile";
+const MODEL    = "openai/gpt-oss-120b";
 
 type Pair     = { question: string; topic: string; weak: { extract: string; label: string; ideal_comment: string }; strong: { extract: string } };
 type Case     = { question: string; text: string; should_comment: boolean; ideal_comment: string; gold_label: string };
@@ -194,14 +194,14 @@ ${mode === "suggest" ? "Identify the weakest phrases and show suggested rewrites
         { role: "user",   content: userMessage },
       ],
       temperature: mode === "suggest" ? 0.45 : 0.35,
-      max_tokens:  700,
+      max_tokens:  2000,
     }),
   });
 
   if (!res.ok) {
     const errBody = await res.text();
     console.error("Groq error:", res.status, errBody);
-    return NextResponse.json({ error: `Groq ${res.status}: ${errBody.slice(0, 300)}` }, { status: 502 });
+    return NextResponse.json({ error: "AI unavailable right now — try again in a moment." }, { status: 502 });
   }
 
   const data = await res.json();
