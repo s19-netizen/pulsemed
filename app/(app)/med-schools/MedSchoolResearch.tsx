@@ -2,6 +2,10 @@
 import { useState, useMemo } from "react";
 import schoolsRaw from "@/lib/data/med-schools.json";
 
+function makeSlug(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type SubjectReq = { chemistry: "required" | "or-bio" | "none"; biology: "required" | "or-chem" | "none" };
@@ -222,7 +226,14 @@ function SchoolCard({ school, category, expanded, onToggle }: {
         </div>
 
         {/* Links + expand */}
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+          <a href={`/med-schools/${makeSlug(school.name)}`} style={{
+            fontSize: 11, fontWeight: 700, color: "var(--ink)",
+            background: "var(--bg)", border: "1px solid var(--line)",
+            borderRadius: 6, padding: "4px 10px", textDecoration: "none",
+          }}>
+            Full profile →
+          </a>
           {school.mscUrl && (
             <a href={school.mscUrl} target="_blank" rel="noopener noreferrer" style={{
               fontSize: 11, fontWeight: 700, color: "#2D7FF9",

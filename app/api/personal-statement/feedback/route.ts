@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bank from "@/lib/data/ps-bank.json";
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const MODEL    = "openai/gpt-oss-120b";
+const MODEL    = "llama-3.3-70b-versatile";
 
 type Pair     = { question: string; topic: string; weak: { extract: string; label: string; ideal_comment: string }; strong: { extract: string } };
 type Case     = { question: string; text: string; should_comment: boolean; ideal_comment: string; gold_label: string };
@@ -158,6 +158,10 @@ Return 2–4 suggestions. Each phrase must be copied exactly from the student's 
 }
 
 export async function POST(req: NextRequest) {
+  if (!process.env.GROQ_API_KEY) {
+    return NextResponse.json({ error: "AI service not configured — contact support." }, { status: 503 });
+  }
+
   const { question, text, mode = "feedback" } = await req.json();
 
   if (!text?.trim() || text.trim().length < 30) {
@@ -213,7 +217,5 @@ ${mode === "suggest" ? "Identify the weakest phrases and show suggested rewrites
       return NextResponse.json({ structured: parsed });
     }
   } catch { /* fall through to plain text */ }
-  return NextResponse.json({ feedback: rawText });
-
   return NextResponse.json({ feedback: rawText });
 }
