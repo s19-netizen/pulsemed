@@ -8,14 +8,14 @@ import { BadgeCheck, BarChart2, BookOpen } from "lucide-react";
 
 
 export const metadata: Metadata = {
-  title: "Pulsemed — Free UCAT Prep, Completely Free | No Card Required",
+  title: "Pulsemed — 100% Free UCAT Prep, No Paywall Ever | No Card Required",
   description:
-    "The only completely free UCAT prep platform. Identify your weak spots in 2 minutes, get a personalised study plan, and practise VR, DM, QR and SJT with full worked explanations. 100% free — no card, no paywall, ever.",
+    "The only completely and totally free UCAT prep platform. Identify your weak spots in 2 minutes, get a personalised study plan, and practise VR, DM, QR and SJT with full worked explanations. 100% free — no credit card, no paywall, no subscription, ever.",
   alternates: { canonical: "/" },
   openGraph: {
-    title: "Pulsemed — Free UCAT Prep, Completely Free",
+    title: "Pulsemed — 100% Free UCAT Prep, No Paywall Ever",
     description:
-      "Personalised UCAT diagnostic, personalised study plan, and full question banks for all 4 sections. 100% free — no card, no paywall. Built for 2026 UCAT applicants.",
+      "Completely and totally free UCAT diagnostic, personalised study plan, and full question banks for all 4 sections. No credit card, no paywall, no subscription — always free. Built for 2026 UCAT applicants.",
     url: "/",
   },
 };

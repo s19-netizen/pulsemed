@@ -6,10 +6,8 @@ import Link from "next/link";
 export default function UpgradeSuccessPage() {
   const router = useRouter();
 
-  // Force session refresh so is_paid is reflected immediately
   useEffect(() => {
-    // Small delay then redirect to dashboard
-    const t = setTimeout(() => router.push("/dashboard"), 4000);
+    const t = setTimeout(() => router.push("/dashboard"), 3000);
     return () => clearTimeout(t);
   }, [router]);
 
@@ -29,7 +27,7 @@ export default function UpgradeSuccessPage() {
           You&apos;re in!
         </h1>
         <p style={{ fontSize: 16, color: "#667", lineHeight: 1.6, margin: "0 0 32px" }}>
-          Payment confirmed. You now have full access to PulseMed.
+          You now have full access to Pulsemed — completely free, no credit card required.
           Taking you to your dashboard now…
         </p>
         <Link href="/dashboard" style={{
