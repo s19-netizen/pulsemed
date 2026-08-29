@@ -199,8 +199,9 @@ ${mode === "suggest" ? "Identify the weakest phrases and show suggested rewrites
   });
 
   if (!res.ok) {
-    console.error("Groq error:", await res.text());
-    return NextResponse.json({ error: "AI unavailable right now — try again." }, { status: 502 });
+    const errBody = await res.text();
+    console.error("Groq error:", res.status, errBody);
+    return NextResponse.json({ error: `Groq ${res.status}: ${errBody.slice(0, 300)}` }, { status: 502 });
   }
 
   const data = await res.json();
