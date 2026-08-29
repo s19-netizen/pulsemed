@@ -512,10 +512,6 @@ export default function StatementStudio() {
             style={btnStyle(isInFeedbackReview || (panel === "feedback" && hasFbText), !!isLoading || chars < 40, q.color)}>
             {isLoading === "feedback" ? "Analysing…" : "Feedback"}
           </button>
-          <button type="button" onClick={() => callAI(q.id, "suggest")} disabled={!!isLoading || chars < 40}
-            style={btnStyle(isInSuggestReview || (panel === "suggest" && hasSugText), !!isLoading || chars < 40, q.color)}>
-            {isLoading === "suggest" ? "Thinking…" : "Suggest rewrites"}
-          </button>
         </div>
 
         {/* ── Bottom panel: loading / plain fallback ── */}
