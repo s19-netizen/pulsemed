@@ -25,7 +25,7 @@ const COORDS: Record<string, [number, number]> = {
   "Brighton and Sussex Medical School":                     [50.8629, -0.0870],
   "Brunel University of London":                            [51.5328, -0.4733],
   "Cardiff University":                                     [51.4837, -3.1681],
-  "City St George’s, University of London":            [51.4275, -0.1725],
+  "City St George's, University of London":            [51.4275, -0.1725],
   "Edge Hill University":                                   [53.5727, -2.8779],
   "Hull York Medical School":                               [53.7631, -0.3276],
   "Imperial College London":                                [51.4988, -0.1749],
@@ -74,19 +74,104 @@ const TIER_CONFIG: Record<number, { label: string; bg: string; text: string; bor
   4: { label: "Accessible",       bg: "#EFF6FF", text: "#1E40AF", border: "#BFDBFE", accent: "#2563EB" },
 };
 
-const WEIGHT_LABELS: Record<string, string> = {
-  dominant:  "UCAT-dominant",
-  composite: "UCAT + academics composite",
-  minimum:   "UCAT minimum threshold",
-  none:      "No UCAT required",
+const WEIGHT_LABELS: Record<string, { label: string; desc: string; bg: string; text: string; border: string }> = {
+  dominant:  { label: "UCAT-dominant",         desc: "Your UCAT score is the biggest factor in whether you get an interview.", bg: "#EDE9FE", text: "#5B21B6", border: "#C4B5FD" },
+  composite: { label: "UCAT + grades combined", desc: "UCAT and academic scores are combined into a single ranking — both count.",         bg: "#EEF2FF", text: "#3730A3", border: "#A5B4FC" },
+  minimum:   { label: "UCAT minimum cutoff",    desc: "You need to clear a minimum UCAT threshold to proceed — it's a pass/fail gate.", bg: "#F0FDF4", text: "#065F46", border: "#A7F3D0" },
+  none:      { label: "No UCAT required",       desc: "This school does not use UCAT in its selection process.",                          bg: "#F3F4F6", text: "#374151", border: "#D1D5DB" },
+};
+
+const GRADE_COLORS: Record<string, { bg: string; text: string; border: string; glow: string }> = {
+  "A*": { bg: "#F5F3FF", text: "#5B21B6", border: "#C4B5FD", glow: "#7C3AED25" },
+  "A":  { bg: "#EEF2FF", text: "#3730A3", border: "#A5B4FC", glow: "#4338CA25" },
+  "B":  { bg: "#F0FDF4", text: "#065F46", border: "#6EE7B7", glow: "#05966925" },
+  "C":  { bg: "#FFFBEB", text: "#92400E", border: "#FCD34D", glow: "#D9770625" },
+  "D":  { bg: "#FEF2F2", text: "#991B1B", border: "#FCA5A5", glow: "#DC262625" },
+  "E":  { bg: "#F9FAFB", text: "#6B7280", border: "#D1D5DB", glow: "#6B728025" },
 };
 
 function subjectSummary(sr: SubjectReq): string {
-  if (sr.chemistry === "required" && sr.biology === "required") return "Both Chemistry and Biology";
+  if (sr.chemistry === "required" && sr.biology === "required") return "Both Chemistry and Biology required";
   if (sr.chemistry === "required") return "Chemistry required";
   if (sr.biology === "required") return "Biology required";
   if (sr.chemistry === "or-bio") return "Chemistry or Biology (at least one)";
-  return "See A-level requirement";
+  return "See A-level requirement below";
+}
+
+// ── Shared components ────────────────────────────────────────────────────────
+
+function InfoCard({ title, accent, children }: { title: string; accent?: string; children: React.ReactNode }) {
+  return (
+    <div style={{
+      background: "#fff", borderRadius: 14, overflow: "hidden",
+      border: "1.5px solid #E5E7EB", boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+    }}>
+      {accent && <div style={{ height: 3, background: accent }} />}
+      <div style={{ padding: "20px 24px" }}>
+        <p style={{
+          fontSize: 10, fontWeight: 900, textTransform: "uppercase",
+          letterSpacing: ".08em", color: "#9CA3AF", margin: "0 0 16px",
+        }}>{title}</p>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function GradeBadges({ grades }: { grades: string }) {
+  const letters = grades.match(/A\*|[A-E]/g) ?? [];
+  const slotLabels = ["1st A-level", "2nd A-level", "3rd A-level"];
+  return (
+    <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 20 }}>
+      {letters.map((g, i) => {
+        const col = GRADE_COLORS[g] ?? { bg: "#F9FAFB", text: "#374151", border: "#E5E7EB", glow: "transparent" };
+        return (
+          <div key={i} style={{ textAlign: "center" }}>
+            <div style={{
+              width: 76, height: 76, borderRadius: 16,
+              background: col.bg, border: `2.5px solid ${col.border}`,
+              boxShadow: `0 6px 24px ${col.glow}`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 30, fontWeight: 900, color: col.text,
+              letterSpacing: "-1px",
+            }}>
+              {g}
+            </div>
+            <p style={{ fontSize: 9, color: "#9CA3AF", margin: "6px 0 0", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".04em" }}>
+              {slotLabels[i] ?? `A-level ${i + 1}`}
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function BulletList({ text, accent = "#6366F1", emptyMessage }: { text: string; accent?: string; emptyMessage?: string }) {
+  if (!text?.trim()) return emptyMessage ? <p style={{ fontSize: 13, color: "#9CA3AF", margin: 0 }}>{emptyMessage}</p> : null;
+
+  const points = text
+    .split(/(?<=[.;])\s+(?=[A-Z])/)
+    .map(s => s.trim().replace(/[.;]$/, "").trim())
+    .filter(s => s.length > 8);
+
+  if (points.length <= 1) {
+    return <p style={{ fontSize: 13, lineHeight: 1.75, color: "#374151", margin: 0 }}>{text}</p>;
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {points.map((p, i) => (
+        <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+          <div style={{
+            width: 7, height: 7, borderRadius: "50%", background: accent,
+            flexShrink: 0, marginTop: 8,
+          }} />
+          <p style={{ fontSize: 13, lineHeight: 1.7, color: "#374151", margin: 0 }}>{p}.</p>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export function generateStaticParams() {
@@ -99,35 +184,6 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   return { title: `${school.name} | Pulsemed`, robots: { index: false, follow: false } };
 }
 
-// ── Card component ───────────────────────────────────────────────────────────
-
-function InfoCard({ title, accent, children }: { title: string; accent?: string; children: React.ReactNode }) {
-  return (
-    <div style={{
-      background: "#fff", borderRadius: 14, overflow: "hidden",
-      border: "1.5px solid #E5E7EB", boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-    }}>
-      {accent && <div style={{ height: 3, background: accent }} />}
-      <div style={{ padding: "18px 22px" }}>
-        <p style={{
-          fontSize: 10, fontWeight: 900, textTransform: "uppercase",
-          letterSpacing: ".08em", color: "#9CA3AF", margin: "0 0 14px",
-        }}>{title}</p>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function DataRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div style={{ display: "flex", gap: 12, paddingBottom: 10, borderBottom: "1px solid #F3F4F6" }}>
-      <span style={{ fontSize: 11, fontWeight: 700, color: "#9CA3AF", width: 150, flexShrink: 0, paddingTop: 1 }}>{label}</span>
-      <span style={{ fontSize: 13, color: "#111", lineHeight: 1.55, fontFamily: mono ? "monospace" : "inherit", fontWeight: mono ? 700 : 400 }}>{value}</span>
-    </div>
-  );
-}
-
 export default function SchoolPage({ params }: { params: { slug: string } }) {
   const school = schools.find(s => makeSlug(s.name) === params.slug);
   if (!school) notFound();
@@ -138,6 +194,7 @@ export default function SchoolPage({ params }: { params: { slug: string } }) {
     : null;
 
   const tier = TIER_CONFIG[school.tier] ?? TIER_CONFIG[4];
+  const weightInfo = WEIGHT_LABELS[school.ucatWeight] ?? WEIGHT_LABELS.none;
 
   return (
     <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", flexDirection: "column", gap: 22 }}>
@@ -172,7 +229,6 @@ export default function SchoolPage({ params }: { params: { slug: string } }) {
               <p style={{ fontSize: 13, color: "#6B7280", margin: "0 0 18px" }}>
                 📍 {school.location}
               </p>
-
               <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, padding: "5px 12px", borderRadius: 8, background: tier.bg, color: tier.text, border: `1.5px solid ${tier.border}` }}>
                   {tier.label}
@@ -219,7 +275,6 @@ export default function SchoolPage({ params }: { params: { slug: string } }) {
 
       {/* Map + quick stats */}
       <div style={{ display: "grid", gridTemplateColumns: mapSrc ? "1fr 280px" : "1fr", gap: 18 }}>
-
         {mapSrc && (
           <div style={{ borderRadius: 14, overflow: "hidden", border: "1.5px solid #E5E7EB", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
             <iframe src={mapSrc} style={{ width: "100%", height: 280, border: "none", display: "block" }} title={`Map of ${school.name}`} />
@@ -231,71 +286,163 @@ export default function SchoolPage({ params }: { params: { slug: string } }) {
 
         <InfoCard title="At a glance" accent={tier.accent}>
           <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-            <DataRow label="Min. grades" value={school.minGrades} mono />
-            <DataRow label="Subjects" value={subjectSummary(school.subjectReq)} />
-            <DataRow label="UCAT" value={WEIGHT_LABELS[school.ucatWeight] ?? school.ucatWeight} />
-            <DataRow label="Selection" value={school.selectionModel} />
-            <DataRow label="Length" value={school.length} />
-            <DataRow label="Eligibility" value={school.eligibility} />
+            {[
+              { label: "Min. grades",  value: school.minGrades,                              mono: true  },
+              { label: "Subjects",     value: subjectSummary(school.subjectReq),              mono: false },
+              { label: "UCAT",         value: weightInfo.label,                              mono: false },
+              { label: "Selection",    value: school.selectionModel,                          mono: false },
+              { label: "Length",       value: school.length,                                  mono: false },
+              { label: "Eligibility",  value: school.eligibility,                             mono: false },
+            ].map(({ label, value, mono }) => (
+              <div key={label} style={{ display: "flex", gap: 12, paddingBottom: 10, borderBottom: "1px solid #F3F4F6" }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#9CA3AF", width: 110, flexShrink: 0, paddingTop: 1 }}>{label}</span>
+                <span style={{ fontSize: 13, color: "#111", lineHeight: 1.55, fontFamily: mono ? "monospace" : "inherit", fontWeight: mono ? 800 : 400 }}>{value}</span>
+              </div>
+            ))}
           </div>
         </InfoCard>
       </div>
 
-      {/* Entry requirements */}
+      {/* ── Entry requirements ─────────────────────────────────────────────── */}
       <InfoCard title="Entry requirements" accent="#6366F1">
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+          {/* Big grade tiles */}
           <div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", margin: "0 0 6px" }}>A-level requirement</p>
-            <p style={{ fontSize: 13, lineHeight: 1.7, color: "#111", margin: 0, background: "#F9FAFB", borderRadius: 8, padding: "12px 14px" }}>
-              {school.aLevelReq}
+            <p style={{ fontSize: 11, fontWeight: 800, color: "#374151", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: ".05em" }}>
+              Minimum grades
             </p>
+            <GradeBadges grades={school.minGrades} />
+            <div style={{ background: "#F5F3FF", border: "1.5px solid #DDD6FE", borderRadius: 10, padding: "12px 16px" }}>
+              <p style={{ fontSize: 13, lineHeight: 1.7, color: "#3730A3", margin: 0, fontWeight: 500 }}>{school.aLevelReq}</p>
+            </div>
           </div>
+
+          {/* GCSE */}
           <div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "#6B7280", margin: "0 0 6px" }}>GCSE requirements</p>
-            <p style={{ fontSize: 13, lineHeight: 1.7, color: "#111", margin: 0, background: "#F9FAFB", borderRadius: 8, padding: "12px 14px" }}>
-              {school.gcseReq}
+            <p style={{ fontSize: 11, fontWeight: 800, color: "#374151", margin: "0 0 8px", textTransform: "uppercase", letterSpacing: ".05em" }}>
+              GCSE requirements
             </p>
+            <div style={{ background: "#F9FAFB", border: "1.5px solid #E5E7EB", borderRadius: 10, padding: "12px 16px" }}>
+              <p style={{ fontSize: 13, lineHeight: 1.7, color: "#374151", margin: 0 }}>{school.gcseReq}</p>
+            </div>
           </div>
         </div>
       </InfoCard>
 
-      {/* UCAT & selection */}
+      {/* ── UCAT & selection ───────────────────────────────────────────────── */}
       <InfoCard title="UCAT & selection process" accent="#8B5CF6">
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <span style={{
-              fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 20,
-              background: "#EDE9FE", color: "#5B21B6", border: "1px solid #C4B5FD",
-            }}>
-              {school.ucatPolicy}
-            </span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+          {/* Weight badge + plain-English explanation */}
+          <div style={{
+            display: "flex", gap: 14, alignItems: "flex-start",
+            background: `${weightInfo.bg}`, border: `1.5px solid ${weightInfo.border}`,
+            borderRadius: 12, padding: "14px 16px",
+          }}>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 14, fontWeight: 900, color: weightInfo.text, margin: "0 0 4px" }}>{weightInfo.label}</p>
+              <p style={{ fontSize: 13, color: "#4B5563", margin: 0, lineHeight: 1.6 }}>{weightInfo.desc}</p>
+            </div>
           </div>
-          <p style={{ fontSize: 13, lineHeight: 1.7, color: "#374151", margin: 0, background: "#FAF5FF", borderRadius: 8, padding: "12px 14px" }}>
-            {school.ucatDetail}
-          </p>
+
+          {/* Policy tag */}
+          {school.ucatPolicy && (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <span style={{
+                fontSize: 12, fontWeight: 700, padding: "5px 14px", borderRadius: 20,
+                background: "#EDE9FE", color: "#5B21B6", border: "1px solid #C4B5FD",
+              }}>
+                {school.ucatPolicy}
+              </span>
+            </div>
+          )}
+
+          {/* ucatDetail as clean bullets */}
+          <div style={{ background: "#FAF5FF", border: "1px solid #E9D5FF", borderRadius: 10, padding: "16px 18px" }}>
+            <p style={{ fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: ".07em", color: "#7C3AED", margin: "0 0 12px" }}>
+              How this school uses UCAT
+            </p>
+            <BulletList text={school.ucatDetail} accent="#8B5CF6" emptyMessage="No UCAT used in selection." />
+          </div>
         </div>
       </InfoCard>
 
-      {/* Contextual routes */}
+      {/* ── Contextual admissions ──────────────────────────────────────────── */}
       {school.contextual && (
         <InfoCard title="Contextual admissions" accent="#059669">
-          <p style={{ fontSize: 13, lineHeight: 1.7, color: "#374151", margin: 0, background: "#F0FDF4", borderRadius: 8, padding: "12px 14px" }}>
-            {school.contextualDetail}
-          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+            {/* Callout banner */}
+            <div style={{
+              background: "#ECFDF5", border: "2px solid #6EE7B7", borderRadius: 12,
+              padding: "14px 18px", display: "flex", gap: 12, alignItems: "flex-start",
+            }}>
+              <span style={{ fontSize: 22, flexShrink: 0 }}>🎯</span>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 900, color: "#065F46", margin: "0 0 4px" }}>
+                  This school gives lower offer holders a fair shot
+                </p>
+                <p style={{ fontSize: 12, color: "#047857", margin: 0, lineHeight: 1.6 }}>
+                  Contextual admissions consider your background, not just your grades. If you qualify, you may receive a reduced offer or extra consideration.
+                </p>
+              </div>
+            </div>
+
+            {/* Detail bullets */}
+            <div style={{ background: "#F0FDF4", border: "1px solid #A7F3D0", borderRadius: 10, padding: "16px 18px" }}>
+              <p style={{ fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: ".07em", color: "#059669", margin: "0 0 12px" }}>
+                What this means for you
+              </p>
+              <BulletList text={school.contextualDetail} accent="#059669" />
+            </div>
+          </div>
         </InfoCard>
       )}
 
-      {/* Teaching model */}
+      {/* ── Teaching & curriculum ──────────────────────────────────────────── */}
       <InfoCard title="Teaching & curriculum" accent="#0EA5E9">
-        <p style={{ fontSize: 13, lineHeight: 1.7, color: "#374151", margin: 0 }}>{school.teachingModel}</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+          {/* Course type pills */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 12, fontWeight: 700, padding: "5px 12px", borderRadius: 8, background: "#E0F2FE", color: "#0369A1", border: "1px solid #BAE6FD" }}>
+              {school.course}
+            </span>
+            <span style={{ fontSize: 12, fontWeight: 700, padding: "5px 12px", borderRadius: 8, background: "#F0F9FF", color: "#0C4A6E", border: "1px solid #BAE6FD" }}>
+              {school.length}
+            </span>
+          </div>
+
+          {/* Teaching model as bullets */}
+          <div style={{ background: "#F0F9FF", border: "1px solid #BAE6FD", borderRadius: 10, padding: "16px 18px" }}>
+            <p style={{ fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: ".07em", color: "#0369A1", margin: "0 0 12px" }}>
+              Course structure
+            </p>
+            <BulletList text={school.teachingModel} accent="#0EA5E9" />
+          </div>
+
+          {/* Selection model callout */}
+          {school.selectionModel && (
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "#F8FAFF", border: "1px solid #DBEAFE", borderRadius: 10, padding: "12px 16px" }}>
+              <span style={{ fontSize: 16, flexShrink: 0 }}>📋</span>
+              <div>
+                <p style={{ fontSize: 11, fontWeight: 800, color: "#1E40AF", margin: "0 0 2px", textTransform: "uppercase", letterSpacing: ".04em" }}>Interview format</p>
+                <p style={{ fontSize: 13, color: "#374151", margin: 0, lineHeight: 1.6 }}>{school.selectionModel}</p>
+              </div>
+            </div>
+          )}
+        </div>
       </InfoCard>
 
-      {/* Student life */}
+      {/* ── Student life ───────────────────────────────────────────────────── */}
       <InfoCard title="Student life & location" accent="#F59E0B">
-        <p style={{ fontSize: 13, lineHeight: 1.7, color: "#374151", margin: 0 }}>{school.studentLife}</p>
+        <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 10, padding: "16px 18px" }}>
+          <BulletList text={school.studentLife} accent="#F59E0B" />
+        </div>
       </InfoCard>
 
-      {/* Strategic note */}
+      {/* ── Strategic note ─────────────────────────────────────────────────── */}
       {school.strategicNote && (
         <div style={{
           background: "#FFFBEB", borderRadius: 14, border: "2px solid #FDE68A",

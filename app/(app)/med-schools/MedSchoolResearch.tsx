@@ -151,18 +151,33 @@ function GradeSelect({ label, value, onChange, allowNone }: {
 }
 
 function SchoolCard({ school, category }: { school: School; category: Category }) {
-  const [expanded, setExpanded] = useState(false);
   const c = CAT_CONFIG[category];
   const slug = makeSlug(school.name);
   const ucatBadgeColor = school.ucatWeight === "dominant" ? "#7C3AED" : school.ucatWeight === "none" ? "#6B7280" : "#2563EB";
 
   return (
-    <div style={{
-      background: "#fff", borderRadius: 14, overflow: "hidden",
-      border: `1.5px solid ${expanded ? c.border : "var(--line)"}`,
-      boxShadow: expanded ? `0 4px 24px ${c.accent}15` : "0 1px 4px rgba(0,0,0,0.06)",
-      transition: "all .2s",
-    }}>
+    <div
+      onClick={() => { window.location.href = `/med-schools/${slug}`; }}
+      role="link"
+      tabIndex={0}
+      onKeyDown={e => { if (e.key === "Enter") window.location.href = `/med-schools/${slug}`; }}
+      style={{
+        background: "#fff", borderRadius: 14, overflow: "hidden",
+        border: "1.5px solid var(--line)",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+        transition: "all .18s", cursor: "pointer",
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLElement).style.borderColor = c.border;
+        (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 20px ${c.accent}20`;
+        (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)";
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLElement).style.borderColor = "var(--line)";
+        (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.06)";
+        (e.currentTarget as HTMLElement).style.transform = "none";
+      }}
+    >
       <div style={{ height: 4, background: `linear-gradient(90deg, ${c.accent}, ${c.dot})` }} />
 
       <div style={{ padding: "16px 18px 14px" }}>
@@ -207,53 +222,25 @@ function SchoolCard({ school, category }: { school: School; category: Category }
         </div>
 
         <div style={{ display: "flex", gap: 7, alignItems: "center", flexWrap: "wrap" }}>
-          <a href={`/med-schools/${slug}`} style={{ fontSize: 12, fontWeight: 700, padding: "6px 14px", borderRadius: 8, background: c.accent, color: "#fff", textDecoration: "none" }}>
-            Full profile →
-          </a>
           {school.mscUrl && (
-            <a href={school.mscUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, fontWeight: 700, padding: "6px 12px", borderRadius: 8, background: "#EEF2FF", color: "#4338CA", border: "1px solid #C7D2FE", textDecoration: "none" }}>
+            <a href={school.mscUrl} target="_blank" rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
+              style={{ fontSize: 12, fontWeight: 700, padding: "6px 12px", borderRadius: 8, background: "#EEF2FF", color: "#4338CA", border: "1px solid #C7D2FE", textDecoration: "none" }}>
               MSC ↗
             </a>
           )}
           {school.uniUrl && (
-            <a href={school.uniUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, fontWeight: 700, padding: "6px 12px", borderRadius: 8, background: "#F9FAFB", color: "#374151", border: "1px solid #E5E7EB", textDecoration: "none" }}>
+            <a href={school.uniUrl} target="_blank" rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
+              style={{ fontSize: 12, fontWeight: 700, padding: "6px 12px", borderRadius: 8, background: "#F9FAFB", color: "#374151", border: "1px solid #E5E7EB", textDecoration: "none" }}>
               Apply ↗
             </a>
           )}
-          <button onClick={() => setExpanded(e => !e)} style={{ marginLeft: "auto", background: "none", border: "none", fontSize: 12, fontWeight: 700, color: "#9CA3AF", cursor: "pointer", padding: "4px 0" }}>
-            {expanded ? "Less ▲" : "Details ▼"}
-          </button>
+          <span style={{ marginLeft: "auto", fontSize: 12, fontWeight: 700, color: c.accent }}>
+            View profile →
+          </span>
         </div>
       </div>
-
-      {expanded && (
-        <div style={{ borderTop: `1px solid ${c.border}`, background: c.light, padding: "14px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
-          {school.strategicNote && (
-            <div style={{ background: "#FFFBEB", border: "1px solid #FDE68A", borderRadius: 8, padding: "10px 14px" }}>
-              <p style={{ fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: ".08em", color: "#92400E", margin: "0 0 5px" }}>Strategy</p>
-              <p style={{ fontSize: 12, lineHeight: 1.6, color: "#78350F", margin: 0 }}>{school.strategicNote}</p>
-            </div>
-          )}
-          <div>
-            <p style={{ fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: ".08em", color: "#6B7280", margin: "0 0 4px" }}>A-level requirement</p>
-            <p style={{ fontSize: 12, lineHeight: 1.55, color: "#111", margin: 0 }}>{school.aLevelReq}</p>
-          </div>
-          <div>
-            <p style={{ fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: ".08em", color: "#6B7280", margin: "0 0 4px" }}>UCAT detail</p>
-            <p style={{ fontSize: 12, lineHeight: 1.55, color: "#111", margin: 0 }}>{school.ucatDetail}</p>
-          </div>
-          {school.contextual && (
-            <div>
-              <p style={{ fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: ".08em", color: "#6B7280", margin: "0 0 4px" }}>Contextual routes</p>
-              <p style={{ fontSize: 12, lineHeight: 1.55, color: "#111", margin: 0 }}>{school.contextualDetail}</p>
-            </div>
-          )}
-          <div>
-            <p style={{ fontSize: 9, fontWeight: 900, textTransform: "uppercase", letterSpacing: ".08em", color: "#6B7280", margin: "0 0 4px" }}>Student life</p>
-            <p style={{ fontSize: 12, lineHeight: 1.55, color: "#111", margin: 0 }}>{school.studentLife}</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
