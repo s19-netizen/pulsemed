@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bank from "@/lib/data/ps-bank.json";
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const MODEL    = "llama-3.3-70b-versatile";
+const MODEL    = "openai/gpt-oss-120b";
 
 type Pair = { question: string; topic: string; weak: { extract: string; label: string; ideal_comment: string }; strong: { extract: string } };
 type Case = { question: string; text: string; should_comment: boolean; ideal_comment: string; gold_label: string };
