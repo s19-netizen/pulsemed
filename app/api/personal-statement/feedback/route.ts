@@ -134,20 +134,27 @@ ${pairsBlock}
 HIGH-QUALITY EXAMPLES (${q}):
 ${laddersBlock}
 
-YOUR FORMAT — respond with exactly this structure for 2–4 weak phrases:
-
-ORIGINAL: [quote the exact weak phrase from the student]
-ISSUE: [one punchy label — e.g. "Generic — no specific experience"]
-SUGGESTED: [a rewritten version that is more specific, reflective, and evidenced]
-WHY STRONGER: [one sentence explaining what the rewrite does differently]
-
 RULES:
 1. Only rewrite genuinely weak phrases — leave strong writing alone
-2. Each suggestion must stay in the student's voice and use their general topic/theme
+2. Each phrase must be copied verbatim from the student's text (exact characters, no paraphrasing)
 3. The suggested version must be shockingly more specific — if a reader could have written it without having lived the experience, it is not good enough
-4. FORBIDDEN in rewrites: "I have always", "Throughout my", "This experience taught me", "I realised that", "my passion for", "ever since", "I knew I wanted"
-5. FORBIDDEN in commentary: specific, reflect, elaborate, expand, "show don't tell", "more detail", develop, explore, ensure, consider, showcase, highlight
-6. Max 4 suggestions. Be concise.`;
+4. FORBIDDEN in suggested rewrites: "I have always", "Throughout my", "This experience taught me", "I realised that", "my passion for", "ever since", "I knew I wanted"
+5. FORBIDDEN in whyStronger: specific, reflect, elaborate, expand, "show don't tell", "more detail", develop, explore, ensure, consider, showcase, highlight
+6. Max 4 suggestions.
+
+OUTPUT — return valid JSON only. No markdown fences. No text outside the JSON object:
+{
+  "suggestions": [
+    {
+      "phrase": <exact verbatim phrase copied from the student's text — must appear word-for-word in their writing>,
+      "issue": <punchy label max 5 words — e.g. "Generic claim" or "No evidence behind this">,
+      "suggested": <rewritten version that is specific, evidenced, and unmistakably personal>,
+      "whyStronger": <one sentence — what does the rewrite do that the original cannot?>
+    }
+  ]
+}
+
+Return 2–4 suggestions. Each phrase must be copied exactly from the student's writing.`;
 }
 
 export async function POST(req: NextRequest) {
@@ -195,16 +202,18 @@ ${mode === "suggest" ? "Identify the weakest phrases and show suggested rewrites
   const data = await res.json();
   const rawText = data.choices?.[0]?.message?.content ?? "";
 
-  if (mode === "feedback") {
-    try {
-      const cleaned = rawText.replace(/^```(?:json)?\s*/m, "").replace(/\s*```\s*$/m, "").trim();
-      const parsed = JSON.parse(cleaned);
-      if (parsed && typeof parsed.score === "number" && Array.isArray(parsed.annotations)) {
-        return NextResponse.json({ structured: parsed });
-      }
-    } catch { /* fall through to plain text */ }
-    return NextResponse.json({ feedback: rawText });
-  }
+  // Both modes try JSON parse first; fall back to plain text
+  try {
+    const cleaned = rawText.replace(/^```(?:json)?\s*/m, "").replace(/\s*```\s*$/m, "").trim();
+    const parsed = JSON.parse(cleaned);
+    if (mode === "feedback" && parsed && typeof parsed.score === "number" && Array.isArray(parsed.annotations)) {
+      return NextResponse.json({ structured: parsed });
+    }
+    if (mode === "suggest" && parsed && Array.isArray(parsed.suggestions)) {
+      return NextResponse.json({ structured: parsed });
+    }
+  } catch { /* fall through to plain text */ }
+  return NextResponse.json({ feedback: rawText });
 
   return NextResponse.json({ feedback: rawText });
 }
