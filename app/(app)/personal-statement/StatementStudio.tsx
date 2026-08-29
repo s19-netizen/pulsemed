@@ -49,22 +49,46 @@ function loadDraft(): Record<string, string> {
   }
 }
 
+type SuggestionBlock = {
+  original: string;
+  issue: string;
+  suggested: string;
+  whyStronger: string;
+};
+
+function parseSuggestions(raw: string): SuggestionBlock[] {
+  const blocks: SuggestionBlock[] = [];
+  const chunks = raw.split(/\n(?=ORIGINAL:)/i).filter(Boolean);
+  for (const chunk of chunks) {
+    const get = (key: string) => {
+      const match = chunk.match(new RegExp(`${key}:\\s*([\\s\\S]*?)(?=\\n(?:ORIGINAL|ISSUE|SUGGESTED|WHY STRONGER):|$)`, "i"));
+      return match ? match[1].trim().replace(/^\[|\]$/g, "") : "";
+    };
+    const original = get("ORIGINAL");
+    const issue = get("ISSUE");
+    const suggested = get("SUGGESTED");
+    const whyStronger = get("WHY STRONGER");
+    if (original || suggested) blocks.push({ original, issue, suggested, whyStronger });
+  }
+  return blocks;
+}
+
 export default function StatementStudio() {
   const [active, setActive] = useState("q1");
   const [texts, setTexts] = useState<Record<string, string>>({ q1: "", q2: "", q3: "" });
   const [hints, setHints] = useState<Record<string, boolean>>({});
   const [feedback, setFeedback] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState<Record<string, boolean>>({});
+  const [suggestions, setSuggestions] = useState<Record<string, string>>({});
+  const [activePanel, setActivePanel] = useState<Record<string, "feedback" | "suggest">>({});
+  const [loading, setLoading] = useState<Record<string, "feedback" | "suggest" | null>>({});
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved">("saved");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load draft from localStorage on mount
   useEffect(() => {
     const draft = loadDraft();
     setTexts(draft);
   }, []);
 
-  // Debounced autosave
   const scheduleSave = useCallback((newTexts: Record<string, string>) => {
     setSaveStatus("unsaved");
     if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -83,29 +107,36 @@ export default function StatementStudio() {
     const next = { ...texts, [id]: val };
     setTexts(next);
     scheduleSave(next);
-    // Clear feedback when text changes significantly
-    if (feedback[id] && Math.abs(val.length - texts[id].length) > 20) {
+    if ((feedback[id] || suggestions[id]) && Math.abs(val.length - texts[id].length) > 20) {
       setFeedback(f => ({ ...f, [id]: "" }));
+      setSuggestions(s => ({ ...s, [id]: "" }));
     }
   }
 
-  async function getFeedback(id: string) {
+  async function callAI(id: string, mode: "feedback" | "suggest") {
     const text = texts[id];
     if (!text.trim() || text.trim().length < 40) return;
-    setLoading(l => ({ ...l, [id]: true }));
-    setFeedback(f => ({ ...f, [id]: "" }));
+    setLoading(l => ({ ...l, [id]: mode }));
+    setActivePanel(p => ({ ...p, [id]: mode }));
+    if (mode === "feedback") setFeedback(f => ({ ...f, [id]: "" }));
+    else setSuggestions(s => ({ ...s, [id]: "" }));
+
     try {
       const res = await fetch("/api/personal-statement/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: id, text }),
+        body: JSON.stringify({ question: id, text, mode }),
       });
       const data = await res.json();
-      setFeedback(f => ({ ...f, [id]: data.feedback ?? data.error ?? "No feedback returned." }));
+      const result = data.feedback ?? data.error ?? "No response returned.";
+      if (mode === "feedback") setFeedback(f => ({ ...f, [id]: result }));
+      else setSuggestions(s => ({ ...s, [id]: result }));
     } catch {
-      setFeedback(f => ({ ...f, [id]: "Could not get feedback — please try again." }));
+      const err = "Could not connect — please try again.";
+      if (mode === "feedback") setFeedback(f => ({ ...f, [id]: err }));
+      else setSuggestions(s => ({ ...s, [id]: err }));
     } finally {
-      setLoading(l => ({ ...l, [id]: false }));
+      setLoading(l => ({ ...l, [id]: null }));
     }
   }
 
@@ -115,6 +146,15 @@ export default function StatementStudio() {
   const q = QUESTIONS.find(q => q.id === active)!;
   const text = texts[active] ?? "";
   const chars = text.length;
+  const isLoading = loading[active];
+  const panel = activePanel[active];
+  const hasFeedback = !!feedback[active];
+  const hasSuggest = !!suggestions[active];
+  const showPanel = isLoading || hasFeedback || hasSuggest;
+
+  const parsedSuggestions = hasSuggest && panel === "suggest"
+    ? parseSuggestions(suggestions[active])
+    : [];
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 220px", gap: 20, height: "calc(100vh - 120px)", maxHeight: 780 }}>
@@ -202,43 +242,98 @@ export default function StatementStudio() {
             }}
           />
 
-          {/* Footer: char count + feedback button */}
-          <div style={{ padding: "10px 20px", borderTop: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
+          {/* Footer: char count + AI buttons */}
+          <div style={{ padding: "10px 20px", borderTop: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: charColor(chars, q.limit), flex: 1 }}>
-              {chars.toLocaleString()} / {q.limit.toLocaleString()} characters
+              {chars.toLocaleString()} / {q.limit.toLocaleString()} chars
               {chars > q.limit && <span style={{ marginLeft: 6 }}>({chars - q.limit} over)</span>}
             </span>
             <button
               type="button"
-              onClick={() => getFeedback(q.id)}
-              disabled={loading[q.id] || chars < 40}
+              onClick={() => callAI(q.id, "feedback")}
+              disabled={!!isLoading || chars < 40}
               style={{
-                padding: "7px 14px", borderRadius: 8, border: "none", fontSize: 12, fontWeight: 700,
-                background: chars < 40 ? "var(--surface)" : q.color,
-                color: chars < 40 ? "var(--ink-soft)" : "#fff",
+                padding: "7px 12px", borderRadius: 8, border: "none", fontSize: 12, fontWeight: 700,
+                background: chars < 40 ? "var(--surface)" : panel === "feedback" && (hasFeedback || isLoading === "feedback") ? q.color : "var(--surface)",
+                color: chars < 40 ? "var(--ink-soft)" : panel === "feedback" && (hasFeedback || isLoading === "feedback") ? "#fff" : q.color,
+                border: `1.5px solid ${chars < 40 ? "var(--line)" : q.color}`,
                 cursor: chars < 40 ? "default" : "pointer",
-                transition: "background .15s",
+                transition: "all .15s",
               }}
             >
-              {loading[q.id] ? "Thinking…" : "Get feedback →"}
+              {isLoading === "feedback" ? "Thinking…" : "Feedback"}
+            </button>
+            <button
+              type="button"
+              onClick={() => callAI(q.id, "suggest")}
+              disabled={!!isLoading || chars < 40}
+              style={{
+                padding: "7px 12px", borderRadius: 8, border: "none", fontSize: 12, fontWeight: 700,
+                background: chars < 40 ? "var(--surface)" : panel === "suggest" && (hasSuggest || isLoading === "suggest") ? q.color : "var(--surface)",
+                color: chars < 40 ? "var(--ink-soft)" : panel === "suggest" && (hasSuggest || isLoading === "suggest") ? "#fff" : q.color,
+                border: `1.5px solid ${chars < 40 ? "var(--line)" : q.color}`,
+                cursor: chars < 40 ? "default" : "pointer",
+                transition: "all .15s",
+              }}
+            >
+              {isLoading === "suggest" ? "Thinking…" : "Suggest rewrites"}
             </button>
           </div>
 
-          {/* AI Feedback panel */}
-          {(loading[q.id] || feedback[q.id]) && (
+          {/* AI result panel */}
+          {showPanel && (
             <div style={{
               borderTop: "1px solid var(--line)", padding: "14px 20px", background: q.tint,
-              flexShrink: 0, maxHeight: 200, overflowY: "auto",
+              flexShrink: 0, maxHeight: 230, overflowY: "auto",
             }}>
-              <p style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".06em", color: q.color, margin: "0 0 8px" }}>
-                Feedback
-              </p>
-              {loading[q.id] ? (
-                <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: 0 }}>Reading your response…</p>
+              {isLoading ? (
+                <>
+                  <p style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".06em", color: q.color, margin: "0 0 8px" }}>
+                    {isLoading === "suggest" ? "Finding weak phrases…" : "Reading your response…"}
+                  </p>
+                  <p style={{ fontSize: 13, color: "var(--ink-soft)", margin: 0 }}>This takes a few seconds</p>
+                </>
+              ) : panel === "suggest" && parsedSuggestions.length > 0 ? (
+                <>
+                  <p style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".06em", color: q.color, margin: "0 0 10px" }}>
+                    Suggested rewrites
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {parsedSuggestions.map((s, i) => (
+                      <div key={i} style={{ background: "var(--surface)", borderRadius: 8, padding: "10px 12px", border: "1px solid var(--line)" }}>
+                        {s.issue && (
+                          <p style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".05em", color: "#d94b3e", margin: "0 0 5px" }}>
+                            {s.issue}
+                          </p>
+                        )}
+                        {s.original && (
+                          <p style={{ fontSize: 12, color: "var(--ink-soft)", margin: "0 0 4px", fontStyle: "italic" }}>
+                            "{s.original}"
+                          </p>
+                        )}
+                        {s.suggested && (
+                          <p style={{ fontSize: 12, color: "var(--ink)", margin: "0 0 4px", background: q.tint, borderRadius: 5, padding: "5px 8px", borderLeft: `3px solid ${q.color}`, fontWeight: 600 }}>
+                            {s.suggested}
+                          </p>
+                        )}
+                        {s.whyStronger && (
+                          <p style={{ fontSize: 11, color: "var(--ink-soft)", margin: 0, lineHeight: 1.5 }}>
+                            {s.whyStronger}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </>
               ) : (
-                <p style={{ fontSize: 13, lineHeight: 1.65, margin: 0, color: "var(--ink)", whiteSpace: "pre-wrap" }}>
-                  {feedback[q.id]}
-                </p>
+                <>
+                  <p style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: ".06em", color: q.color, margin: "0 0 8px" }}>
+                    {panel === "suggest" ? "Suggested rewrites" : "Feedback"}
+                  </p>
+                  <p style={{ fontSize: 13, lineHeight: 1.65, margin: 0, color: "var(--ink)", whiteSpace: "pre-wrap" }}>
+                    {panel === "suggest" ? suggestions[active] : feedback[active]}
+                  </p>
+                </>
               )}
             </div>
           )}

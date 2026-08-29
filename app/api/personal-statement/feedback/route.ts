@@ -4,117 +4,127 @@ import bank from "@/lib/data/ps-bank.json";
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const MODEL    = "openai/gpt-oss-120b";
 
-type Pair = { question: string; topic: string; weak: { extract: string; label: string; ideal_comment: string }; strong: { extract: string } };
-type Case = { question: string; text: string; should_comment: boolean; ideal_comment: string; gold_label: string };
-type Ladder = { question: string; rating: number; band: string; extract: string; reflection: number; specificity: number };
-type TaxItem = { label: string; definition: string; behaviour: string; example: string };
+type Pair     = { question: string; topic: string; weak: { extract: string; label: string; ideal_comment: string }; strong: { extract: string } };
+type Case     = { question: string; text: string; should_comment: boolean; ideal_comment: string; gold_label: string };
+type Ladder   = { question: string; rating: number; band: string; extract: string };
+type TaxItem  = { label: string; definition: string; behaviour: string; example: string };
 
-const pairs:     Pair[]    = bank.pairs     as Pair[];
-const borderline: Case[]   = bank.borderline as Case[];
-const ladders:   Ladder[]  = bank.ladders   as Ladder[];
-const taxonomy:  TaxItem[] = bank.taxonomy  as TaxItem[];
+const pairs:      Pair[]    = bank.pairs      as Pair[];
+const borderline: Case[]    = bank.borderline as Case[];
+const ladders:    Ladder[]  = bank.ladders    as Ladder[];
+const taxonomy:   TaxItem[] = bank.taxonomy   as TaxItem[];
 
-const QMAP: Record<string, string> = {
-  q1: "Q1",
-  q2: "Q2",
-  q3: "Q3",
+const QMAP: Record<string, string> = { q1: "Q1", q2: "Q2", q3: "Q3" };
+const QLABELS: Record<string, string> = {
+  q1: "Why do you want to study this course?",
+  q2: "How have your qualifications and studies prepared you?",
+  q3: "What else have you done to prepare, and why will it help?",
 };
 
 function sample<T>(arr: T[], n: number): T[] {
-  const shuffled = [...arr].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, n);
+  return [...arr].sort(() => Math.random() - 0.5).slice(0, n);
 }
 
-function buildSystemPrompt(question: string): string {
+function bankContext(question: string) {
   const q = QMAP[question] ?? "Q1";
 
-  // Taxonomy — all 24 labels, always included
   const taxonomyBlock = taxonomy.map(t =>
-    `• ${t.label}: ${t.definition}\n  → Behaviour: ${t.behaviour}\n  → Example pattern: "${t.example}"`
-  ).join("\n\n");
+    `• ${t.label}: ${t.definition} → ${t.behaviour}`
+  ).join("\n");
 
-  // 5 annotated pairs for this question
   const qPairs = pairs.filter(p => p.question === q);
-  const selectedPairs = sample(qPairs, 5);
-  const pairsBlock = selectedPairs.map(p => `
-TOPIC: ${p.topic}
-WEAK (label: ${p.weak.label}):
-"${p.weak.extract}"
-→ Ideal comment: "${p.weak.ideal_comment}"
+  const pairsBlock = sample(qPairs, 5).map(p =>
+    `WEAK (${p.weak.label}): "${p.weak.extract}"\nSTRONG: "${p.strong.extract}"\nCOMMENT: "${p.weak.ideal_comment}"`
+  ).join("\n---\n");
 
-STRONG version of same topic:
-"${p.strong.extract}"`
-  ).join("\n\n---\n");
-
-  // 4 borderline cases: 2 that need comment, 2 that don't
   const qCases = borderline.filter(c => c.question === q);
-  const needsComment = sample(qCases.filter(c => c.should_comment), 2);
-  const noComment    = sample(qCases.filter(c => !c.should_comment), 2);
-  const casesBlock = [...needsComment, ...noComment].map(c => `
-TEXT: "${c.text}"
-SHOULD COMMENT: ${c.should_comment ? "YES" : "NO"}
-IDEAL RESPONSE: "${c.ideal_comment}"`
-  ).join("\n\n---\n");
+  const casesBlock = [
+    ...sample(qCases.filter(c => c.should_comment), 2),
+    ...sample(qCases.filter(c => !c.should_comment), 2),
+  ].map(c =>
+    `TEXT: "${c.text}"\nSHOULD COMMENT: ${c.should_comment ? "YES" : "NO"}\nIDEAL: "${c.ideal_comment}"`
+  ).join("\n---\n");
 
-  // 3 rating ladder extracts: one low (1-3), one mid (5-6), one high (8-10)
   const qLadders = ladders.filter(l => l.question === q);
-  const low  = sample(qLadders.filter(l => l.rating <= 3), 1);
-  const mid  = sample(qLadders.filter(l => l.rating >= 5 && l.rating <= 6), 1);
-  const high = sample(qLadders.filter(l => l.rating >= 8), 1);
-  const laddersBlock = [...low, ...mid, ...high].map(l => `
-Rating ${l.rating}/10 (${l.band}):
-"${l.extract}"`
-  ).join("\n\n---\n");
+  const laddersBlock = [
+    ...sample(qLadders.filter(l => l.rating <= 3), 1),
+    ...sample(qLadders.filter(l => l.rating >= 5 && l.rating <= 6), 1),
+    ...sample(qLadders.filter(l => l.rating >= 8), 1),
+  ].map(l => `Rating ${l.rating}/10: "${l.extract}"`).join("\n---\n");
 
-  return `You are a UCAS personal statement coach specialising in medicine applications. You give honest, specific coaching feedback — you never rewrite the student's text.
+  return { taxonomyBlock, pairsBlock, casesBlock, laddersBlock, q };
+}
 
-══ ISSUE LABELS ══
-These are the exact issues you may identify. Use these labels internally to guide your response:
+function buildFeedbackPrompt(question: string): string {
+  const { taxonomyBlock, pairsBlock, casesBlock, laddersBlock, q } = bankContext(question);
+  return `You are a UCAS medicine personal statement coach. Give honest coaching feedback — never rewrite the student's text.
 
+ISSUE LABELS (use internally):
 ${taxonomyBlock}
 
-══ ANNOTATED EXAMPLES (${q}) ══
-Study these weak extracts, their labels, and the ideal coaching comment:
-
+WEAK→STRONG EXAMPLES (${q}):
 ${pairsBlock}
 
-══ BORDERLINE CALIBRATION ══
-These examples show when to comment and when to leave writing alone:
-
+BORDERLINE CALIBRATION:
 ${casesBlock}
 
-══ QUALITY CALIBRATION ══
-These are real examples at different quality levels for ${q}:
-
+QUALITY SCALE:
 ${laddersBlock}
 
-══ YOUR RULES ══
+RULES:
 1. Never rewrite the student's text
-2. Identify 2–4 specific issues — reference actual phrases from their writing
-3. For each issue: name what is happening, then ask a coaching question that pushes them to think deeper
-4. If something is already strong, say so in one sentence and move on
-5. If the writing is too short to assess properly, say so
-6. Max 220 words total. Plain English. No bullet padding.
-7. Do NOT label your issues explicitly (don't write "GENERIC:" in your response) — just address them naturally`;
+2. Reference actual phrases from their writing
+3. For each issue, ask a coaching question that pushes them to think deeper
+4. If something is already strong, say so briefly and move on
+5. Max 220 words. Plain English. No bullet padding.`;
+}
+
+function buildSuggestPrompt(question: string): string {
+  const { taxonomyBlock, pairsBlock, laddersBlock, q } = bankContext(question);
+  return `You are a UCAS medicine personal statement editor. Your job is to show the student what their weakest sentences could look like if rewritten at a higher level — so they understand the direction to aim for, not a final answer to copy.
+
+ISSUE LABELS (to identify what is weak):
+${taxonomyBlock}
+
+STRONG EXAMPLE WRITING (${q}) — use these as your quality benchmark:
+${pairsBlock}
+
+HIGH-QUALITY EXAMPLES (${q}):
+${laddersBlock}
+
+YOUR FORMAT — respond with exactly this structure for 2–4 weak phrases:
+
+ORIGINAL: [quote the exact weak phrase from the student]
+ISSUE: [one-line label — e.g. "Generic — no specific experience"]
+SUGGESTED: [a rewritten version that is more specific, reflective, and evidenced]
+WHY STRONGER: [one sentence explaining what the rewrite does differently]
+
+RULES:
+1. Only suggest rewrites for genuinely weak sentences — leave strong writing alone
+2. Each suggestion must stay in the student's voice and use their general topic/theme
+3. Suggestions show a direction, not a final answer — they should adapt, not copy
+4. Max 4 suggestions. Be concise.`;
 }
 
 export async function POST(req: NextRequest) {
-  const { question, text } = await req.json();
+  const { question, text, mode = "feedback" } = await req.json();
 
   if (!text?.trim() || text.trim().length < 30) {
     return NextResponse.json({ error: "Write at least a sentence before requesting feedback." }, { status: 400 });
   }
 
-  const qLabel = { q1: "Why do you want to study this course?", q2: "How have your qualifications and studies prepared you?", q3: "What else have you done to prepare, and why will it help?" }[question as string] ?? "";
+  const systemPrompt = mode === "suggest"
+    ? buildSuggestPrompt(question)
+    : buildFeedbackPrompt(question);
 
-  const userMessage = `UCAS question: ${qLabel}
+  const userMessage = `UCAS ${QMAP[question] ?? "Q1"}: ${QLABELS[question] ?? ""}
 
 Student's writing:
 """
 ${text.trim()}
 """
 
-Give focused coaching feedback on this response.`;
+${mode === "suggest" ? "Identify the weakest phrases and show suggested rewrites." : "Give focused coaching feedback."}`;
 
   const res = await fetch(GROQ_URL, {
     method: "POST",
@@ -125,17 +135,17 @@ Give focused coaching feedback on this response.`;
     body: JSON.stringify({
       model: MODEL,
       messages: [
-        { role: "system", content: buildSystemPrompt(question) },
+        { role: "system", content: systemPrompt },
         { role: "user",   content: userMessage },
       ],
-      temperature: 0.25,
-      max_tokens:  420,
+      temperature: mode === "suggest" ? 0.3 : 0.25,
+      max_tokens:  500,
     }),
   });
 
   if (!res.ok) {
     console.error("Groq error:", await res.text());
-    return NextResponse.json({ error: "AI feedback unavailable right now." }, { status: 502 });
+    return NextResponse.json({ error: "AI unavailable right now — try again." }, { status: 502 });
   }
 
   const data = await res.json();
