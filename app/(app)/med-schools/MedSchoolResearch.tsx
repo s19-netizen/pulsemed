@@ -329,10 +329,10 @@ export default function MedSchoolResearch() {
     : "#d94b3e";
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: 20, height: "calc(100vh - 120px)", maxHeight: 780 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "240px 1fr", gap: 20 }}>
 
       {/* ── Left: profile inputs ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 14, minHeight: 0, overflowY: "auto" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
 
         <div className="page-header" style={{ paddingBottom: 0 }}>
           <p className="eyebrow">Application</p>
@@ -409,10 +409,10 @@ export default function MedSchoolResearch() {
       </div>
 
       {/* ── Right: results ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12, minHeight: 0 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
 
         {/* Category tabs */}
-        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 8 }}>
           {(["stretch", "likely", "safe"] as Category[]).map(cat => {
             const c = CAT_COLORS[cat];
             const isActive = filter === cat;
@@ -441,7 +441,7 @@ export default function MedSchoolResearch() {
         </div>
 
         {/* School cards */}
-        <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 10, paddingRight: 2 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {shown.length === 0 ? (
             <div style={{
               flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
