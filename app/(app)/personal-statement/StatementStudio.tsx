@@ -253,7 +253,7 @@ export default function StatementStudio() {
               onClick={() => callAI(q.id, "feedback")}
               disabled={!!isLoading || chars < 40}
               style={{
-                padding: "7px 12px", borderRadius: 8, border: "none", fontSize: 12, fontWeight: 700,
+                padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 700,
                 background: chars < 40 ? "var(--surface)" : panel === "feedback" && (hasFeedback || isLoading === "feedback") ? q.color : "var(--surface)",
                 color: chars < 40 ? "var(--ink-soft)" : panel === "feedback" && (hasFeedback || isLoading === "feedback") ? "#fff" : q.color,
                 border: `1.5px solid ${chars < 40 ? "var(--line)" : q.color}`,
@@ -268,7 +268,7 @@ export default function StatementStudio() {
               onClick={() => callAI(q.id, "suggest")}
               disabled={!!isLoading || chars < 40}
               style={{
-                padding: "7px 12px", borderRadius: 8, border: "none", fontSize: 12, fontWeight: 700,
+                padding: "7px 12px", borderRadius: 8, fontSize: 12, fontWeight: 700,
                 background: chars < 40 ? "var(--surface)" : panel === "suggest" && (hasSuggest || isLoading === "suggest") ? q.color : "var(--surface)",
                 color: chars < 40 ? "var(--ink-soft)" : panel === "suggest" && (hasSuggest || isLoading === "suggest") ? "#fff" : q.color,
                 border: `1.5px solid ${chars < 40 ? "var(--line)" : q.color}`,
