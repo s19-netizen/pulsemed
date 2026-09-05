@@ -45,11 +45,13 @@ export async function GET(req: NextRequest) {
   }
 
   // Fetch admin MCQ questions in parallel
-  const { data: adminQs } = await supabase
+  let adminQuery = supabase
     .from("admin_qs")
     .select("id, question_text, options, correct, explanations, subtype, difficulty, passage_id, admin_passages(content, chart)")
     .eq("section", "dm")
     .in("difficulty", difficulties);
+  if (families.length > 0) adminQuery = adminQuery.in("subtype", families);
+  const { data: adminQs } = await adminQuery;
 
   // Split count: ~60% YN-5 sets, ~40% admin MCQ
   const mcqTarget = Math.round(count * 0.4);

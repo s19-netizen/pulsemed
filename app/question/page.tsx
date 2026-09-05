@@ -870,7 +870,9 @@ function QuestionSession() {
     let endpoint = "";
     if (useQRBank) endpoint = `/api/questions/qr?difficulty=${encodeURIComponent(difficulty)}&count=${count}`;
     else if (useDMBank) {
-      const family = params.get("type") ?? "";
+      const subtypesParam = params.get("subtypes") ?? "";
+      const typeParam = params.get("type") ?? "";
+      const family = subtypesParam && subtypesParam !== "all" ? subtypesParam : typeParam;
       endpoint = `/api/questions/dm?difficulty=${encodeURIComponent(difficulty)}&count=${count}${family ? `&family=${encodeURIComponent(family)}` : ""}`;
     } else {
       const subtypeParam = params.get("subtype") ?? "";
